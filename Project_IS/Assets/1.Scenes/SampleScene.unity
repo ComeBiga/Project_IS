@@ -997,11 +997,6 @@ PrefabInstance:
       propertyPath: m_IsActive
       value: 1
       objectReference: {fileID: 0}
-    - target: {fileID: 2561486926390778882, guid: ceb8b399c04f657409507b2c79c6d8a7,
-        type: 3}
-      propertyPath: _pushPullLayer.m_Bits
-      value: 128
-      objectReference: {fileID: 0}
     - target: {fileID: 3395877443170664856, guid: ceb8b399c04f657409507b2c79c6d8a7,
         type: 3}
       propertyPath: m_LocalPosition.x

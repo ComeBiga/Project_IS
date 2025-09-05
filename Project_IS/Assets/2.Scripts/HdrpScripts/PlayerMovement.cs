@@ -6,6 +6,7 @@ using UnityEngine;
 public class PlayerMovement : MonoBehaviour
 {
     public Vector3 Velocity => mRigidbody.velocity;
+    public float MoveSpeed => _moveSpeed;
     public bool Jumping => mbJumping;
     public bool IsGrounded => mbIsGrounded;
     public Vector3 Position => transform.position;
@@ -126,6 +127,22 @@ public class PlayerMovement : MonoBehaviour
         }
 
         return targetRotation;
+    }
+
+    public Vector3 DirectionToVector()
+    {
+        return DirectionToVector(mDirection);
+    }
+
+    // 해당 방향을 나타내는 Vector3 값을 반환
+    public static Vector3 DirectionToVector(EDirection direction)
+    {
+        if (direction == EDirection.Right)
+            return Vector3.right;
+        else if (direction == EDirection.Left)
+            return Vector3.left;
+        else
+            return Vector3.zero;
     }
 
     // Quaternion 값으로부터 방향을 반환
