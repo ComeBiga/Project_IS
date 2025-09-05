@@ -103,6 +103,28 @@ AnimatorStateTransition:
   m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
+--- !u!1101 &-8475947979187141096
+AnimatorStateTransition:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_Conditions: []
+  m_DstStateMachine: {fileID: 0}
+  m_DstState: {fileID: -3636562299162635407}
+  m_Solo: 0
+  m_Mute: 0
+  m_IsExit: 0
+  serializedVersion: 3
+  m_TransitionDuration: 0.25
+  m_TransitionOffset: 0
+  m_ExitTime: 0.7413793
+  m_HasExitTime: 1
+  m_HasFixedDuration: 1
+  m_InterruptionSource: 0
+  m_OrderedInterruption: 1
+  m_CanTransitionToSelf: 1
 --- !u!1102 &-7473915804304762202
 AnimatorState:
   serializedVersion: 6
@@ -149,7 +171,7 @@ AnimatorStateTransition:
   m_DstStateMachine: {fileID: 0}
   m_DstState: {fileID: -2453394121011076204}
   m_Solo: 0
-  m_Mute: 0
+  m_Mute: 1
   m_IsExit: 0
   serializedVersion: 3
   m_TransitionDuration: 0.05
@@ -197,6 +219,34 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f718ce8b52eee6945ad1fe787ef2c9e6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+--- !u!1101 &-6529126745059941760
+AnimatorStateTransition:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_Conditions:
+  - m_ConditionMode: 6
+    m_ConditionEvent: State
+    m_EventTreshold: 5
+  - m_ConditionMode: 3
+    m_ConditionEvent: Vertical
+    m_EventTreshold: 0.1
+  m_DstStateMachine: {fileID: 0}
+  m_DstState: {fileID: 6511450070952904636}
+  m_Solo: 0
+  m_Mute: 0
+  m_IsExit: 0
+  serializedVersion: 3
+  m_TransitionDuration: 0.05
+  m_TransitionOffset: 0
+  m_ExitTime: 0
+  m_HasExitTime: 0
+  m_HasFixedDuration: 1
+  m_InterruptionSource: 0
+  m_OrderedInterruption: 1
+  m_CanTransitionToSelf: 0
 --- !u!1107 &-6403751709471773514
 AnimatorStateMachine:
   serializedVersion: 6
@@ -215,6 +265,9 @@ AnimatorStateMachine:
   - serializedVersion: 1
     m_State: {fileID: 5905408038974352675}
     m_Position: {x: 420, y: 170, z: 0}
+  - serializedVersion: 1
+    m_State: {fileID: 6511450070952904636}
+    m_Position: {x: 420, y: 0, z: 0}
   m_ChildStateMachines: []
   m_AnyStateTransitions: []
   m_EntryTransitions: []
@@ -665,7 +718,7 @@ AnimatorState:
   m_Motion: {fileID: 1827226128182048838, guid: f4fae8002e3a418439b235487dd042e9,
     type: 3}
   m_Tag: ClimbUp
-  m_SpeedParameter: 
+  m_SpeedParameter: Vertical
   m_MirrorParameter: 
   m_CycleOffsetParameter: 
   m_TimeParameter: 
@@ -1285,6 +1338,7 @@ AnimatorStateMachine:
   - {fileID: 4443837863190527198}
   - {fileID: 8749934636265870014}
   - {fileID: -1307901733638925190}
+  - {fileID: -6529126745059941760}
   m_EntryTransitions: []
   m_StateMachineTransitions:
   - first: {fileID: 1378974064586148880}
@@ -1297,6 +1351,18 @@ AnimatorStateMachine:
   m_ExitPosition: {x: 1050, y: 130, z: 0}
   m_ParentStateMachinePosition: {x: 800, y: 20, z: 0}
   m_DefaultState: {fileID: -3636562299162635407}
+--- !u!114 &2906636797786227072
+MonoBehaviour:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: efab08e274263e04396061e36caa78b1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1101 &2966617233419626208
 AnimatorStateTransition:
   m_ObjectHideFlags: 1
@@ -1680,7 +1746,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: ClimbDown_RightDirection
-  m_Speed: 1.5
+  m_Speed: 2
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 5249525958673370893}
@@ -1784,6 +1850,35 @@ AnimatorStateTransition:
   m_InterruptionSource: 3
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
+--- !u!1102 &6511450070952904636
+AnimatorState:
+  serializedVersion: 6
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Traversal_Platform_170cm_ClimbOver_fromRun
+  m_Speed: 1
+  m_CycleOffset: 0
+  m_Transitions:
+  - {fileID: -8475947979187141096}
+  m_StateMachineBehaviours:
+  - {fileID: 2906636797786227072}
+  m_Position: {x: 50, y: 50, z: 0}
+  m_IKOnFeet: 0
+  m_WriteDefaultValues: 1
+  m_Mirror: 0
+  m_SpeedParameterActive: 0
+  m_MirrorParameterActive: 0
+  m_CycleOffsetParameterActive: 0
+  m_TimeParameterActive: 0
+  m_Motion: {fileID: 1827226128182048838, guid: 87c680028a9fc7c4ca4fac72ce507999,
+    type: 3}
+  m_Tag: ClimbUp
+  m_SpeedParameter: 
+  m_MirrorParameter: 
+  m_CycleOffsetParameter: 
+  m_TimeParameter: 
 --- !u!1101 &7111741875454810942
 AnimatorStateTransition:
   m_ObjectHideFlags: 1
@@ -1938,7 +2033,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: ClimbDown_LeftDirection
-  m_Speed: 1.5
+  m_Speed: 2
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 2388127832224938426}

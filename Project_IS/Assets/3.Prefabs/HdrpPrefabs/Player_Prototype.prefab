@@ -289,7 +289,7 @@ MonoBehaviour:
   _pushPullRadius: 1
   _pushPullLayer:
     serializedVersion: 2
-    m_Bits: 0
+    m_Bits: 128
   _pushPullZDistance: 0.6
   _pushPullPassByZSpeed: 2
 --- !u!114 &6697929909091780849
@@ -334,6 +334,8 @@ MonoBehaviour:
   key: 3
   _startHeight: 0.2
   _distanceToCharacter: 0.3
+  _startClimbUpDuration: 0.2
+  _endToPlatformTopTime: 0.6
   _endToPlatformXSpeed: 3
   _startClimbDownXSpeed: 5
   _startClimbDownYSpeed: 2
@@ -366,12 +368,14 @@ MonoBehaviour:
   key: 5
   _lerpRotationDuration: 0.2
   _lerpYPosDuration: 0.2
-  _climbUpYSpeed: 2
-  _climbUpZSpeed: 3
+  _climbUpYSpeed: 1
+  _climbUpZSpeed: 5
+  _climbUpZDelay: 0.4
   _lerpZPosDuration: 0.2
   _climbDownRotateSpeed: 3
-  _climbDownYSpeed: 1.5
+  _climbDownYSpeed: 1
   _climbDownZSpeed: 1.8
+  _climbDownEndTime: 0.8
 --- !u!114 &8686870357759620641
 MonoBehaviour:
   m_ObjectHideFlags: 0
