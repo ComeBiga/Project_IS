@@ -3,15 +3,16 @@ using System.Collections.Generic;
 using UnityEngine;
 
 [RequireComponent(typeof(Rigidbody))]
-public class PushPullObject : MonoBehaviour
+public class PushPullObject : InteractableObject
 {
     public float PushPullSpeed => _pushPullSpeed;
-    public BoxCollider BoxCollider => mBoxCollider;
+    // public BoxCollider BoxCollider => mBoxCollider;
 
+    [Header("PushPullObject")]
     [SerializeField] private float _pushPullSpeed = 1f;
 
     private Rigidbody mRigidbody;
-    private BoxCollider mBoxCollider;
+    // private BoxCollider mBoxCollider;
 
     public void PushPull(Vector3 velocity)
     {
@@ -19,9 +20,11 @@ public class PushPullObject : MonoBehaviour
     }
 
     // Start is called before the first frame update
-    void Start()
+    protected override void Start()
     {
+        base.Start();
+
         mRigidbody = GetComponent<Rigidbody>();
-        mBoxCollider = GetComponent<BoxCollider>();
+        // mBoxCollider = GetComponent<BoxCollider>();
     }
 }

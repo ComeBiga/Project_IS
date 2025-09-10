@@ -152,7 +152,9 @@ public class PlayerLadderState : PlayerStateBase
 
         mLadderDirection = mLadderHandler.GetLadderDirection();
         mPreviousDirection = mController.Movement.Direction;
-        mController.Movement.SetDirection(mLadderDirection);
+
+        if(mLadderDirection != PlayerMovement.EDirection.Forward)
+            mController.Movement.SetDirection(mLadderDirection);
 
         mbStartFromBottom = startFromBottom;
 
@@ -366,9 +368,13 @@ public class PlayerLadderState : PlayerStateBase
         {
             targetPosition.x = mStepPositions[mCurrentStepIndex].x - _distanceToCharacter;
         }
-        else
+        else if (mLadderDirection == PlayerMovement.EDirection.Left)
         {
             targetPosition.x = mStepPositions[mCurrentStepIndex].x + _distanceToCharacter;
+        }
+        else if (mLadderDirection == PlayerMovement.EDirection.Forward)
+        {
+            targetPosition.x = mStepPositions[mCurrentStepIndex].x;
         }
 
         targetPosition.y = mStepPositions[mCurrentStepIndex].y;
@@ -452,10 +458,21 @@ public class PlayerLadderState : PlayerStateBase
             AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
 
             Vector3 deltaPosition = mController.Animator.Animator.deltaPosition;
-            if (animatorStateInfo.normalizedTime > _endToPlatformTopTime)
-                deltaPosition.x *= (transform.position.x < mStepPositions[TopStepIndex].x + .5f) ? _endToPlatformXSpeed : 0f;
-            // deltaPosition.y *= (transform.position.y < mStepPositions[TopStepIndex].y) ? 1.2f : 0f;
-            deltaPosition.z = 0f;
+
+            if(mLadderDirection == PlayerMovement.EDirection.Forward)
+            {
+                if (animatorStateInfo.normalizedTime > _endToPlatformTopTime)
+                    deltaPosition.z *= (transform.position.z < mStepPositions[TopStepIndex].z + .5f) ? _endToPlatformXSpeed : 0f;
+                // deltaPosition.y *= (transform.position.y < mStepPositions[TopStepIndex].y) ? 1.2f : 0f;
+                deltaPosition.x = 0f;
+            }
+            else
+            {
+                if (animatorStateInfo.normalizedTime > _endToPlatformTopTime)
+                    deltaPosition.x *= (transform.position.x < mStepPositions[TopStepIndex].x + .5f) ? _endToPlatformXSpeed : 0f;
+                // deltaPosition.y *= (transform.position.y < mStepPositions[TopStepIndex].y) ? 1.2f : 0f;
+                deltaPosition.z = 0f;
+            }
 
             transform.position += deltaPosition;
 

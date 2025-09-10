@@ -161,7 +161,7 @@ CapsuleCollider:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 712958953486247521}
-  m_Material: {fileID: 13400000, guid: 6cab778e2f567654d831b38c30eca802, type: 2}
+  m_Material: {fileID: 13400000, guid: 8a9edb855a2f2ac4893e1fe0838c136e, type: 2}
   m_IncludeLayers:
     serializedVersion: 2
     m_Bits: 0
@@ -286,12 +286,11 @@ MonoBehaviour:
   key: 0
   _ladderRadius: 0.5
   _trPushPullOrigin: {fileID: 8792568983045832387}
-  _pushPullRadius: 1
+  _pushPullMaxDistance: 5
   _pushPullLayer:
     serializedVersion: 2
     m_Bits: 128
   _pushPullZDistance: 0.6
-  _pushPullPassByZSpeed: 2
 --- !u!114 &6697929909091780849
 MonoBehaviour:
   m_ObjectHideFlags: 0

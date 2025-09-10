@@ -13,7 +13,7 @@ public class PlayerMovement : MonoBehaviour
     public EDirection Direction => mDirection;
     public EDirection OppositeDirection => (mDirection == EDirection.Left) ? EDirection.Right : EDirection.Left;
 
-    public enum EDirection { Left, Right };
+    public enum EDirection { Left, Right, Forward };
 
     [Header("Move")]
     [SerializeField] private float _moveSpeed = 5f;
@@ -155,6 +155,8 @@ public class PlayerMovement : MonoBehaviour
             return -1;
         else if (Mathf.Approximately(rotation.eulerAngles.y, 270f))
             return -1;
+        else if (Mathf.Approximately(rotation.eulerAngles.y, Number.DEG_0))
+            return 2;
         else
             return 0;
     }
