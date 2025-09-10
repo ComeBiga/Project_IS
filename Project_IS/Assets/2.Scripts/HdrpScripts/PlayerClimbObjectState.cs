@@ -19,7 +19,8 @@ public class PlayerClimbObjectState : PlayerStateBase
     [SerializeField][Range(0f, 1f)] private float _climbDownEndTime = .6f;
 
     private Animator mAnimator;
-    private PushPullObject mPushPullObject;
+    private InteractableObject mInteractableObject;
+    private PlayerMovement.EDirection mClimbDirection;
     private bool mbClimbing = false;                // 오르기/내리기 중인지
     private bool mbClimbUp;                         // 오르기 인지 내리기 인지
 
@@ -72,10 +73,13 @@ public class PlayerClimbObjectState : PlayerStateBase
 
     }
 
-    public void SetClimbObject(PushPullObject pushPullObject, bool climbUp)
+    public void SetClimbObject(InteractableObject interactableObject, bool climbUp)
     {
-        mPushPullObject = pushPullObject;
+        mInteractableObject = interactableObject;
         mbClimbUp = climbUp;
+
+        mClimbDirection = mInteractableObject.SidePassable ? 
+                        PlayerMovement.EDirection.Forward : mController.Movement.Direction;
 
         // 오르기 인지 내리기 인지 AnimatorController에서 체크는 아래 parameter로 한다.
         if (mbClimbUp)
@@ -108,11 +112,20 @@ public class PlayerClimbObjectState : PlayerStateBase
     private IEnumerator eClimbUp()
     {
         // 애니메이션 시작할 때 y를 보정해주는 위치
-        Bounds ppoBounds = mPushPullObject.BoxCollider.bounds;
+        Bounds ppoBounds = mInteractableObject.BoxCollider.bounds;
         Vector3 targetPos = transform.position;
         targetPos.y = ppoBounds.max.y;
 
-        Quaternion targetRotation = Quaternion.Euler(Vector3.zero);
+        Quaternion targetRotation;
+
+        if (mClimbDirection == PlayerMovement.EDirection.Forward)
+        {
+            targetRotation = Quaternion.Euler(Vector3.zero);
+        }
+        else
+        {
+            targetRotation = transform.rotation;
+        }
 
         mController.Animator.SetVelocityY(0f);
 
@@ -178,16 +191,35 @@ public class PlayerClimbObjectState : PlayerStateBase
             }
 
             Vector3 deltaPosition = mAnimator.deltaPosition;
-            deltaPosition.x = 0f;
-            deltaPosition.y *= _climbUpYSpeed;
-            // 캐릭터 z 위치가 0까지만 이동하게 조건을 줌
-            if (animatorStateInfo.normalizedTime > _climbUpZDelay)
+
+            if(mClimbDirection == PlayerMovement.EDirection.Forward)
             {
-                deltaPosition.z *= (transform.position.z < 0f) ? _climbUpZSpeed : 0f;
-                mController.Movement.UpdateRotation();
+                deltaPosition.x = 0f;
+                deltaPosition.y *= _climbUpYSpeed;
+                // 캐릭터 z 위치가 0까지만 이동하게 조건을 줌
+                if (animatorStateInfo.normalizedTime > _climbUpZDelay)
+                {
+                    deltaPosition.z *= (transform.position.z < 0f) ? _climbUpZSpeed : 0f;
+                    mController.Movement.UpdateRotation();
+                }
+                else
+                {
+                    deltaPosition.z = 0f;
+                }
             }
-            else
+            else if(mClimbDirection == PlayerMovement.EDirection.Right)
             {
+                // 캐릭터 x 위치가 0까지만 이동하게 조건을 줌
+                if (animatorStateInfo.normalizedTime > _climbUpZDelay)
+                {
+                    deltaPosition.x *= (transform.position.x < ppoBounds.min.x + .35f) ? _climbUpZSpeed : 0f;
+                    mController.Movement.UpdateRotation();
+                }
+                else
+                {
+                    deltaPosition.x = 0f;
+                }
+                deltaPosition.y *= _climbUpYSpeed;
                 deltaPosition.z = 0f;
             }
 
@@ -200,7 +232,7 @@ public class PlayerClimbObjectState : PlayerStateBase
     private IEnumerator eClimbDown()
     {
         // 애니메이션 시작할 때 z를 보정해주는 위치
-        Bounds ppoBounds = mPushPullObject.BoxCollider.bounds;
+        Bounds ppoBounds = mInteractableObject.BoxCollider.bounds;
         Vector3 targetPos = transform.position;
         targetPos.z = ppoBounds.min.z;
 

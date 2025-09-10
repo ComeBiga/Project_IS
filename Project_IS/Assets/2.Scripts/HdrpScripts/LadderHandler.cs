@@ -1,6 +1,7 @@
 using PropMaker;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 using UnityEngine.Assertions;
 
@@ -21,6 +22,8 @@ public class LadderHandler : MonoBehaviour
             direction = PlayerMovement.EDirection.Right;
         else if(result == -1)
             direction = PlayerMovement.EDirection.Left;
+        else if(result == 2)
+            direction = PlayerMovement.EDirection.Forward;
 
         return direction;
     }
@@ -34,5 +37,11 @@ public class LadderHandler : MonoBehaviour
     void Start()
     {
         mLadder = GetComponent<Ladder>();
+    }
+
+    private void OnDrawGizmosSelected()
+    {        
+        Handles.color = Color.red;
+        Handles.ArrowHandleCap(0, transform.position, Quaternion.identity, 2f, EventType.Repaint);
     }
 }
