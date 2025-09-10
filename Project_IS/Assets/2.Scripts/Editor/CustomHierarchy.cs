@@ -51,7 +51,7 @@ public class CustomHierarchy : MonoBehaviour
             //    }
             //}
 
-            gameObject.SetActive(GUI.Toggle(new Rect(selectionRect.xMax, selectionRect.yMin, 16, 16), gameObject.activeSelf, ""));
+            gameObject.SetActive(GUI.Toggle(new Rect(selectionRect.xMax - 16f, selectionRect.yMin, 16, 16), gameObject.activeSelf, ""));
         }
     }
 }
