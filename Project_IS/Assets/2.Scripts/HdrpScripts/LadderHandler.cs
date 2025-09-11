@@ -6,7 +6,7 @@ using UnityEngine;
 using UnityEngine.Assertions;
 
 [RequireComponent(typeof(Ladder))]
-public class LadderHandler : MonoBehaviour
+public class LadderHandler : InteractableObject
 {
     private Ladder mLadder;
 
@@ -34,8 +34,10 @@ public class LadderHandler : MonoBehaviour
     }
 
     // Start is called before the first frame update
-    void Start()
+    protected override void Start()
     {
+        base.Start();
+
         mLadder = GetComponent<Ladder>();
     }
 

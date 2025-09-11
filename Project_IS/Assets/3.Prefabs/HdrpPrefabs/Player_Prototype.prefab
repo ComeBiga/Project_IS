@@ -284,6 +284,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   key: 0
+  _interactableLayer:
+    serializedVersion: 2
+    m_Bits: 1024
+  _interactableMaxDistance: 5
   _ladderRadius: 0.5
   _trPushPullOrigin: {fileID: 8792568983045832387}
   _pushPullMaxDistance: 5

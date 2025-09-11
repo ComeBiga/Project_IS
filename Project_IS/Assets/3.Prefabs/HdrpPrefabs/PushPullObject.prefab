@@ -201,4 +201,6 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _sidePassable: 1
+  _pushable: 1
+  _canClimb: 1
   _pushPullSpeed: 1
