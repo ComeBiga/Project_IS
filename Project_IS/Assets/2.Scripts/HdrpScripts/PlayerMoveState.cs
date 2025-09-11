@@ -14,27 +14,15 @@ public class PlayerMoveState : PlayerStateBase
     [SerializeField] private float _interactableMaxDistance = 5f;   // 상호작용 탐지 거리
     [SerializeField] private float _interactableOffsetY = 1f;       // 상호작용 origin Y offset
     [SerializeField] private float _interactableDistance = .5f;     // 상호작용 거리
+    [SerializeField] private float _sidePassZDistance = .6f;     // 비켜지나가는 z길이
 
     [Header("Ladder")]
     [SerializeField] private float _ladderRadius = .5f;   // 사다리 탐지 반경
-
-    [Header("PushPull")]
-    [SerializeField] private Transform _trPushPullOrigin;
-    // Interactable로 통합하면서 수정되지 않은 부분이 남아있음
-    [SerializeField] private float _pushPullMaxDistance = 5f;
-    [SerializeField] private LayerMask _pushPullLayer;
-    // Interactable로 통합하면서 수정되지 않은 부분이 남아있음
-    // ZDistance는 새 변수를 추가 해줘야할 듯
-    [SerializeField] private float _pushPullZDistance;
 
     private float mDefaultHeight;           // 낙하 상태로 전환할 때 기준이 되는 높이
     private Vector3 mPreviousForward;       // 회전을 시작하면 어느 방향으로 도는지 체크해야되기 때문에 이전 방향을 저장
     private bool mbDirectionChanged = false;
     private bool mbRotating = false;        // 현재 사용되는 곳은 없지만 회전을 체크하는 변수이기 때문에 유지
-
-    private PushPullObject mPushPullObject = null;  // 현재 사용되지 않음
-
-    private bool mbCheckPushPullObject = false;  // 현재 사용되지 않음
 
     public override void EnterState()
     {
@@ -180,16 +168,6 @@ public class PlayerMoveState : PlayerStateBase
         int bHitDirection = checkInteractableObject(out RaycastHit interactableHitInfo);
 
         updateInteractable(bHitDirection, interactableHitInfo);
-
-        //// PushPull
-        //int bPushPullCheck = checkPushPullObject(out RaycastHit pushPullHitInfo);
-
-        //updatePushPull(bPushPullCheck, pushPullHitInfo);
-
-        //// Side Passable Obstacle
-        //int bSidePassbleObstacleCheck = checkSidePassableObstacle(out RaycastHit sidePassableHitInfo);
-
-        //updateSidePassableObstacle(bSidePassbleObstacleCheck, sidePassableHitInfo);
     }
 
     private bool checkLadderObject(out Collider[] collider)
@@ -274,12 +252,12 @@ public class PlayerMoveState : PlayerStateBase
             float distanceToEdge = Mathf.Min(distanceToMin, distanceToMax);
 
             // 전방의 오브젝트를 옆으로 비켜지나가는 코드
-            if (interactableObject.SidePassable && characterPos.z > -_pushPullZDistance)
+            if (interactableObject.SidePassable && characterPos.z > -_sidePassZDistance)
             {
                 // 가까운 모서리를 기준으로 zDistance 떨어진 점을 targetPos로 설정
                 Vector3 targetPos = (characterPos.x < bounds.center.x) ? bounds.min : bounds.max;
                 targetPos.y = 0f;
-                targetPos.z = -_pushPullZDistance;
+                targetPos.z = -_sidePassZDistance;
 
                 // targetPos까지의 방향을 normalize해서 x:z 비율로 velocity.z를 계산 
                 Vector3 direction = targetPos - characterPos;
@@ -289,37 +267,6 @@ public class PlayerMoveState : PlayerStateBase
                 velocity.z = velocity.x * (normalized.z / normalized.x);    // velocity.x : velocity.z = normalized.x : normalized.z
                 mController.Movement.SetVelocity(velocity);
             }
-
-            //// Ladder
-            //if(hitInfo.collider.tag == "Ladder")
-            //{
-            //    if (distanceToEdge < _interactableDistance && mController.InputHandler.MoveInput.y > .1f)
-            //    {
-            //        PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder) as PlayerLadderState;
-            //        var ladderHandler = interactableObject as LadderHandler;
-
-            //        //// Top에서 위 키 입력했을 때 사다리 타는 걸 방지하기 위함
-            //        //if (ladderStateBase.IsOverRange(ladderHandler))
-            //        //    return;
-
-            //        ladderStateBase.SetLadder(ladderHandler, startFromBottom: true);
-            //        mController.StateMachine.SwitchState(PlayerStateMachine.EState.Ladder);
-
-            //        return;
-            //    }
-            //}
-            //else if (hitInfo.collider.tag == "LadderTop")
-            //{
-            //    if (distanceToEdge < _interactableDistance && mController.InputHandler.MoveInput.y < -.1f)
-            //    {
-            //        PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder) as PlayerLadderState;
-            //        var ladderHandler = interactableObject.GetComponentInParent<LadderHandler>();
-            //        ladderStateBase.SetLadder(ladderHandler, startFromBottom: false);
-            //        mController.StateMachine.SwitchState(PlayerStateMachine.EState.Ladder);
-
-            //        return;
-            //    }
-            //}
 
             // Climb Object Up
             if (interactableObject.CanClimb && distanceToEdge < _interactableDistance && mController.InputHandler.MoveInput.y > .1f)
@@ -380,7 +327,7 @@ public class PlayerMoveState : PlayerStateBase
             {
                 Vector3 targetPos = (characterPos.x < bounds.center.x) ? bounds.min : bounds.max;
                 // 오브젝트를 감지할 수 있는 최대 거리까지 서서히 맞춰주게 함
-                targetPos.x += (characterPos.x < bounds.center.x) ? -_pushPullMaxDistance : _pushPullMaxDistance;
+                targetPos.x += (characterPos.x < bounds.center.x) ? -_interactableMaxDistance : _interactableMaxDistance;
                 targetPos.y = 0f;
                 targetPos.z = 0f;
 
@@ -401,333 +348,6 @@ public class PlayerMoveState : PlayerStateBase
             mController.Movement.SetVelocity(velocity);
         }
     }
-
-    // PushPull은 Interactable로 통합하면서 사용되지 않음
-    //private int checkPushPullObject(out RaycastHit hitInfo)
-    //{
-    //    Vector3 origin = _trPushPullOrigin.position;
-    //    origin.z = 0f;
-
-    //    // RaycastHit hitInfo;
-
-    //    bool bFrontCasted = Physics.Raycast(origin,
-    //                                    mController.Movement.DirectionToVector(),
-    //                                    out hitInfo,
-    //                                    _pushPullMaxDistance,
-    //                                    _pushPullLayer);
-
-    //    if (bFrontCasted)
-    //        return 1;
-
-    //    bool bSideCasted = Physics.Raycast(_trPushPullOrigin.position,
-    //                                Vector3.forward,
-    //                                out hitInfo,
-    //                                _pushPullMaxDistance,
-    //                                _pushPullLayer);
-
-    //    if (bSideCasted)
-    //        return 2;
-
-    //    bool bUnderCasted = Physics.Raycast(transform.position,
-    //                                Vector3.down,
-    //                                out hitInfo,
-    //                                .1f,
-    //                                _pushPullLayer);
-
-    //    if (bUnderCasted)
-    //        return 3;
-
-    //    bool bBackCasted = Physics.Raycast(origin,
-    //                                PlayerMovement.DirectionToVector(mController.Movement.OppositeDirection),
-    //                                out hitInfo,
-    //                                _pushPullMaxDistance,
-    //                                _pushPullLayer);
-
-    //    if(bBackCasted)
-    //        return 0;
-
-    //    return -1;
-    //}
-
-    //private void updatePushPull(int type, RaycastHit hitInfo)
-    //{
-    //    // front
-    //    if (type == 1)
-    //    {
-    //        PushPullObject pushPullObject = hitInfo.collider.GetComponent<PushPullObject>();
-    //        Bounds bounds = pushPullObject.BoxCollider.bounds;
-    //        Vector3 characterPos = transform.position;
-
-    //        if (characterPos.z > -_pushPullZDistance)
-    //        {
-    //            Vector3 targetPos = (characterPos.x < bounds.center.x) ? bounds.min : bounds.max;
-    //            targetPos.y = 0f;
-    //            targetPos.z = -_pushPullZDistance;
-
-    //            Vector3 direction = targetPos - characterPos;
-    //            Vector3 normalized = direction.normalized;
-
-    //            Debug.Log(normalized);
-
-    //            Vector3 velocity = mController.Movement.Velocity;
-    //            velocity.z = velocity.x * (normalized.z / normalized.x);    // velocity.x : velocity.z = normalized.x : normalized.z
-    //            Debug.Log(velocity);
-    //            mController.Movement.SetVelocity(velocity);
-    //        }
-
-    //        // Climb Object Up
-    //        if (mController.InputHandler.MoveInput.y > .1f)
-    //        {
-    //            PlayerClimbObjectState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbObject) as PlayerClimbObjectState;
-    //            pushPullState.SetClimbObject(pushPullObject, climbUp: true);
-    //            mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbObject);
-    //        }
-    //    }
-    //    // side
-    //    else if (type == 2)
-    //    {
-    //        Vector3 velocity = mController.Movement.Velocity;
-    //        velocity.z = 0f;
-    //        mController.Movement.SetVelocity(velocity);
-
-    //        PushPullObject pushPullObject = hitInfo.collider.GetComponent<PushPullObject>();
-
-    //        if (mController.InputHandler.IsInteracting)
-    //        {
-    //            PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
-    //            pushPullState.SetPushPullObject(pushPullObject);
-    //            mController.StateMachine.SwitchState(PlayerStateMachine.EState.PushPull);
-    //        }
-
-    //        // Climb Object Up
-    //        if (mController.InputHandler.MoveInput.y > .1f)
-    //        {
-    //            PlayerClimbObjectState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbObject) as PlayerClimbObjectState;
-    //            pushPullState.SetClimbObject(pushPullObject, climbUp: true);
-    //            mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbObject);
-    //        }
-    //    }
-    //    // under
-    //    else if (type == 3)
-    //    {
-    //        // Climb Object Down
-    //        if (mController.InputHandler.MoveInput.y < -.1f)
-    //        {
-    //            PushPullObject pushPullObject = hitInfo.collider.GetComponent<PushPullObject>();
-
-    //            PlayerClimbObjectState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbObject) as PlayerClimbObjectState;
-    //            pushPullState.SetClimbObject(pushPullObject, climbUp: false);
-    //            mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbObject);
-    //        }
-    //    }
-    //    // back
-    //    else if (type == 0)
-    //    {
-    //        PushPullObject pushPullObject = hitInfo.collider.GetComponent<PushPullObject>();
-    //        Bounds bounds = pushPullObject.BoxCollider.bounds;
-    //        Vector3 characterPos = transform.position;
-
-    //        if (characterPos.z < 0f)
-    //        {
-    //            Vector3 targetPos = (characterPos.x < bounds.center.x) ? bounds.min : bounds.max;
-    //            targetPos.x += (characterPos.x < bounds.center.x) ? -_pushPullMaxDistance : _pushPullMaxDistance;
-    //            targetPos.y = 0f;
-    //            targetPos.z = 0f;
-
-    //            Vector3 direction = targetPos - characterPos;
-    //            Vector3 normalized = direction.normalized;
-
-    //            // Debug.Log(normalized);
-
-    //            Vector3 velocity = mController.Movement.Velocity;
-    //            velocity.z = velocity.x * (normalized.z / normalized.x);    // velocity.x : velocity.z = normalized.x : normalized.z
-    //            // Debug.Log(velocity);
-    //            mController.Movement.SetVelocity(velocity);
-    //        }
-    //    }
-    //    // none
-    //    else
-    //    {
-    //        Vector3 velocity = mController.Movement.Velocity;
-    //        velocity.z = 0f;
-    //        mController.Movement.SetVelocity(velocity);
-    //    }
-    //}
-
-    //private int checkSidePassableObstacle(out RaycastHit hitInfo)
-    //{
-    //    Vector3 origin = _trPushPullOrigin.position;
-    //    origin.z = 0f;
-
-    //    // RaycastHit hitInfo;
-
-    //    bool bFrontCasted = Physics.Raycast(origin,
-    //                                    mController.Movement.DirectionToVector(),
-    //                                    out hitInfo,
-    //                                    _pushPullMaxDistance);
-    //                                    // _pushPullLayer);
-
-    //    if (bFrontCasted)
-    //    {
-    //        if(hitInfo.collider.GetComponent<InteractableObject>() != null)
-    //        {
-    //            var interactableObject = hitInfo.collider.GetComponent<InteractableObject>();
-
-    //            if(interactableObject.SidePassable)
-    //                return 1;
-    //        }
-    //    }
-
-    //    bool bSideCasted = Physics.Raycast(_trPushPullOrigin.position,
-    //                                    Vector3.forward,
-    //                                    out hitInfo,
-    //                                    _pushPullMaxDistance);
-    //                                    // _pushPullLayer);
-
-    //    if (bSideCasted)
-    //    {
-    //        if (hitInfo.collider.GetComponent<InteractableObject>() != null)
-    //        {
-    //            var interactableObject = hitInfo.collider.GetComponent<InteractableObject>();
-
-    //            if (interactableObject.SidePassable)
-    //                return 2;
-    //        }
-    //    }
-
-    //    bool bUnderCasted = Physics.Raycast(transform.position,
-    //                                        Vector3.down,
-    //                                        out hitInfo,
-    //                                        .1f);
-    //                                        // _pushPullLayer);
-
-    //    if (bUnderCasted)
-    //    {
-    //        if (hitInfo.collider.GetComponent<InteractableObject>() != null)
-    //        {
-    //            var interactableObject = hitInfo.collider.GetComponent<InteractableObject>();
-
-    //            if (interactableObject.SidePassable)
-    //                return 3;
-    //        }
-    //    }
-
-    //    bool bBackCasted = Physics.Raycast(origin,
-    //                                PlayerMovement.DirectionToVector(mController.Movement.OppositeDirection),
-    //                                out hitInfo,
-    //                                _pushPullMaxDistance);
-    //                                // _pushPullLayer);
-
-    //    if(bBackCasted)
-    //    {
-    //        if (hitInfo.collider.GetComponent<InteractableObject>() != null)
-    //        {
-    //            var interactableObject = hitInfo.collider.GetComponent<InteractableObject>();
-
-    //            if (interactableObject.SidePassable)
-    //                return 0;
-    //        }
-    //    }
-
-    //    return -1;
-    //}
-
-    //private void updateSidePassableObstacle(int type, RaycastHit hitInfo)
-    //{
-    //    if(hitInfo.collider == null)
-    //        return;
-
-    //    if (hitInfo.collider.GetComponent<InteractableObject>() == null)
-    //        return;
-
-    //    // front
-    //    if (type == 1)
-    //    {
-    //        BoxCollider boxCollider = hitInfo.collider.GetComponent<BoxCollider>();
-    //        Bounds bounds = boxCollider.bounds;
-    //        Vector3 characterPos = transform.position;
-
-    //        if (characterPos.z > -_pushPullZDistance)
-    //        {
-    //            Vector3 targetPos = (characterPos.x < bounds.center.x) ? bounds.min : bounds.max;
-    //            targetPos.y = 0f;
-    //            targetPos.z = -_pushPullZDistance;
-
-    //            Vector3 direction = targetPos - characterPos;
-    //            Vector3 normalized = direction.normalized;
-
-    //            Vector3 velocity = mController.Movement.Velocity;
-    //            velocity.z = velocity.x * (normalized.z / normalized.x);    // velocity.x : velocity.z = normalized.x : normalized.z
-    //            mController.Movement.SetVelocity(velocity);
-    //        }
-    //    }
-    //    // side
-    //    else if (type == 2)
-    //    {
-    //        Vector3 velocity = mController.Movement.Velocity;
-    //        velocity.z = 0f;
-    //        mController.Movement.SetVelocity(velocity);
-
-    //        //PushPullObject pushPullObject = hitInfo.collider.GetComponent<PushPullObject>();
-
-    //        //if (mController.InputHandler.IsInteracting)
-    //        //{
-    //        //    PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
-    //        //    pushPullState.SetPushPullObject(pushPullObject);
-    //        //    mController.StateMachine.SwitchState(PlayerStateMachine.EState.PushPull);
-    //        //}
-
-    //        //// Climb Object Up
-    //        //if (mController.InputHandler.MoveInput.y > .1f)
-    //        //{
-    //        //    PlayerClimbObjectState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbObject) as PlayerClimbObjectState;
-    //        //    pushPullState.SetClimbObject(pushPullObject, climbUp: true);
-    //        //    mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbObject);
-    //        //}
-    //    }
-    //    // under
-    //    else if (type == 3)
-    //    {
-    //        //// Climb Object Down
-    //        //if (mController.InputHandler.MoveInput.y < -.1f)
-    //        //{
-    //        //    PushPullObject pushPullObject = hitInfo.collider.GetComponent<PushPullObject>();
-
-    //        //    PlayerClimbObjectState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbObject) as PlayerClimbObjectState;
-    //        //    pushPullState.SetClimbObject(pushPullObject, climbUp: false);
-    //        //    mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbObject);
-    //        //}
-    //    }
-    //    // back
-    //    else if (type == 0)
-    //    {
-    //        BoxCollider boxCollider = hitInfo.collider.GetComponent<BoxCollider>();
-    //        Bounds bounds = boxCollider.bounds;
-    //        Vector3 characterPos = transform.position;
-
-    //        if (characterPos.z < 0f)
-    //        {
-    //            Vector3 targetPos = (characterPos.x < bounds.center.x) ? bounds.min : bounds.max;
-    //            targetPos.x += (characterPos.x < bounds.center.x) ? -_pushPullMaxDistance : _pushPullMaxDistance;
-    //            targetPos.y = 0f;
-    //            targetPos.z = 0f;
-
-    //            Vector3 direction = targetPos - characterPos;
-    //            Vector3 normalized = direction.normalized;
-
-    //            Vector3 velocity = mController.Movement.Velocity;
-    //            velocity.z = velocity.x * (normalized.z / normalized.x);    // velocity.x : velocity.z = normalized.x : normalized.z
-    //            mController.Movement.SetVelocity(velocity);
-    //        }
-    //    }
-    //    // none
-    //    else
-    //    {
-    //        Vector3 velocity = mController.Movement.Velocity;
-    //        velocity.z = 0f;
-    //        mController.Movement.SetVelocity(velocity);
-    //    }
-    //}
 
     private void OnDrawGizmosSelected()
     {
