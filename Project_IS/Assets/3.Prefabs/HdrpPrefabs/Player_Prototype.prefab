@@ -130,6 +130,7 @@ GameObject:
   - component: {fileID: 592085405196062304}
   - component: {fileID: 4025819839599777680}
   - component: {fileID: 8686870357759620641}
+  - component: {fileID: 5974772966008876441}
   m_Layer: 0
   m_Name: Player_Prototype
   m_TagString: Untagged
@@ -216,6 +217,8 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 818b0feb72d07dd4f94ab719c9a6e5ff, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _axisSensitivity: 3.5
+  _axisDeadZone: 0.3
 --- !u!114 &4114197322998774063
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -271,6 +274,7 @@ MonoBehaviour:
   - {fileID: 592085405196062304}
   - {fileID: 4025819839599777680}
   - {fileID: 8686870357759620641}
+  - {fileID: 5974772966008876441}
 --- !u!114 &2561486926390778882
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -288,13 +292,10 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 1024
   _interactableMaxDistance: 5
+  _interactableOffsetY: 1
+  _interactableDistance: 0.5
+  _sidePassZDistance: 0.6
   _ladderRadius: 0.5
-  _trPushPullOrigin: {fileID: 8792568983045832387}
-  _pushPullMaxDistance: 5
-  _pushPullLayer:
-    serializedVersion: 2
-    m_Bits: 128
-  _pushPullZDistance: 0.6
 --- !u!114 &6697929909091780849
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -309,6 +310,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   key: 1
   type: 0
+  _climbLedgeState: {fileID: 5974772966008876441}
 --- !u!114 &2592239910151229511
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -322,6 +324,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   key: 2
+  _climbLedgeState: {fileID: 5974772966008876441}
 --- !u!114 &794937472454055995
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -393,6 +396,22 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   key: 6
   _heavyLandingVelocityY: -10
+--- !u!114 &5974772966008876441
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 712958953486247521}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 69c42ab857c53de489731e4f18e8ed43, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  key: 7
+  _lerpYOffset: 0.5
+  _raycastDistance: 0.5
+  _ledgeRange: 0.3
 --- !u!1 &7065434943730406711
 GameObject:
   m_ObjectHideFlags: 0

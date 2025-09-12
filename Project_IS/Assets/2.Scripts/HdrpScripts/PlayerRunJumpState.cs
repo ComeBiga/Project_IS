@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PlayerRunJumpState : PlayerStateBase
 {
+    [SerializeField] private PlayerClimbLedgeState _climbLedgeState;
+
     private Vector3 mMoveInput;
     private float mDefaultHeight;
 
@@ -49,7 +51,14 @@ public class PlayerRunJumpState : PlayerStateBase
             return;
         }
 
-        if(transform.position.y < mDefaultHeight - 2f)
+        if (_climbLedgeState.CheckLedge(out RaycastHit hitInfo))
+        {
+            _climbLedgeState.SetLedge(hitInfo.collider.bounds);
+            mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbLedge);
+            return;
+        }
+
+        if (transform.position.y < mDefaultHeight - .5f)
         {
             mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
             return;

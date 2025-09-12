@@ -52,6 +52,8 @@ public class PlayerFallState : PlayerStateBase
 
     public void EndLanding()
     {
+        PlayerMoveState moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+        moveState.EnterToIdle();
         mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
     }
 }

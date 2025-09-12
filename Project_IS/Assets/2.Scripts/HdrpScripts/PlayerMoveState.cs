@@ -19,6 +19,7 @@ public class PlayerMoveState : PlayerStateBase
     [Header("Ladder")]
     [SerializeField] private float _ladderRadius = .5f;   // 사다리 탐지 반경
 
+    private bool mbEnterToIdle = false;     // MoveState로 전환될 때 키입력 초기화
     private float mDefaultHeight;           // 낙하 상태로 전환할 때 기준이 되는 높이
     private Vector3 mPreviousForward;       // 회전을 시작하면 어느 방향으로 도는지 체크해야되기 때문에 이전 방향을 저장
     private bool mbDirectionChanged = false;
@@ -30,6 +31,12 @@ public class PlayerMoveState : PlayerStateBase
 
         mPreviousForward = mController.Movement.Direction == PlayerMovement.EDirection.Left ?
                            Vector3.left : Vector3.right;
+
+        if(mbEnterToIdle)
+        {
+            mController.InputHandler.ResetMoveInput();
+            mbEnterToIdle = false;
+        }
     }
 
     public override void ExitState()
@@ -120,7 +127,7 @@ public class PlayerMoveState : PlayerStateBase
         }
 
         // Fall
-        if (transform.position.y < mDefaultHeight - 2f) // 낙하 시작 거리를 변수로 빼는게 좋을 듯
+        if (transform.position.y < mDefaultHeight - .5f) // 낙하 시작 거리를 변수로 빼는게 좋을 듯
         {
             mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
 
@@ -168,6 +175,11 @@ public class PlayerMoveState : PlayerStateBase
         int bHitDirection = checkInteractableObject(out RaycastHit interactableHitInfo);
 
         updateInteractable(bHitDirection, interactableHitInfo);
+    }
+
+    public void EnterToIdle()
+    {
+        mbEnterToIdle = true;
     }
 
     private bool checkLadderObject(out Collider[] collider)

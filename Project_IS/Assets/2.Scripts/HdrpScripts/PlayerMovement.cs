@@ -12,6 +12,7 @@ public class PlayerMovement : MonoBehaviour
     public Vector3 Position => transform.position;
     public EDirection Direction => mDirection;
     public EDirection OppositeDirection => (mDirection == EDirection.Left) ? EDirection.Right : EDirection.Left;
+    public float Height => mCapsuleCollider.height;
 
     public enum EDirection { Left, Right, Forward };
 
