@@ -22,7 +22,7 @@ public class RopeVerlet : MonoBehaviour
     {
         public Transform transform;
         public int segmentIndex;
-        public HumanBodyBones humanBodyBone;
+        public HumanBodyBones humanBodyBone;        // 캐릭터가 Grab하는 부위
         public bool active;
 
         public GrabPoint(Transform t, int index, HumanBodyBones humanBodyBone)
@@ -46,14 +46,15 @@ public class RopeVerlet : MonoBehaviour
     [SerializeField] private bool _showPendulumInfo = false;
 
     [Header("Rope")]
-    [SerializeField] private int _numOfRopeSegments = 50;
-    [SerializeField] private float _ropeSegmentLength = 0.225f;
+    [SerializeField] private int _numOfRopeSegments = 50;               // 총 Segment 개수
+    [SerializeField] private float _ropeSegmentLength = 0.225f;         // Segment 당 길이
 
     [Header("Grab Points")]
     [SerializeField] private List<GrabPoint> _grabPoints = new List<GrabPoint>();
-    // [SerializeField] private GrabPoint[] _grabPoints;
-    [SerializeField] private Transform _JointPoint;
-    [SerializeField] private int _JointPointIndex = 9;
+    [SerializeField] private Transform _JointPoint;                     // jointPoint의 transform .._trJointPoint로 변수명 수정하기
+    [SerializeField] private int _JointPointIndex = 9;                  
+    // 아래는 Force를 물리적으로 가하는 방식으로 계산할 때 사용한 변수들
+    // 각속도로 계산을 하는 방식으로 수정하면서 사용되지 않음
     [SerializeField] private int _swingIndex = 9;
     [SerializeField] private float _swingForce = 10f;
     [SerializeField] private float _swingAddForce = 10f;
@@ -62,12 +63,13 @@ public class RopeVerlet : MonoBehaviour
     [SerializeField] private float _outForce = .1f;
     [SerializeField] private float _outForceTime = 1f;
     [SerializeField] private float _forceDamping = .1f;
+    // 테스트 용 클래스여서 클래스 자체로 제거를 해줄듯
     [SerializeField] private AnimationSwinger _animationSwinger;
 
     [Header("Physics")]
     [SerializeField] private Vector3 _gravityForce = new Vector3(0f, -2f, 0f);
     [SerializeField] private float _dampingFactor = 0.98f;
-    [SerializeField] private bool _onlyTrigger = true;
+    [SerializeField] private bool _onlyTrigger = true;              // true이면 물리적인 충돌을 체크하지 않음
     [SerializeField] private LayerMask _collisionLayerMask;
     [SerializeField] private float _collisionRadius = 0.1f;
     [SerializeField] private float _bounceFactor = 0.1f;
@@ -92,6 +94,9 @@ public class RopeVerlet : MonoBehaviour
     private List<RopeSegment> mRopeSegments = new List<RopeSegment>();
 
     private Vector3 mRopeStartPoint;
+
+    // 아래는 Force를 물리적으로 가하는 방식으로 계산할 때 사용한 변수들
+    // 각속도로 계산을 하는 방식으로 수정하면서 사용되지 않음
     private float mDeltaForce = 0f;
     private float mDeltaOutForce = 0f;
     private float mRemainAccel = 0f;
@@ -100,16 +105,20 @@ public class RopeVerlet : MonoBehaviour
     private Vector3 mDirForce;
     private Vector3 mDirAngle;
     private Vector3 mOriginForce;
-    private Vector3 mMinPoint;
+    private float mSinFromAngle = 0f;   // Force를 물리적으로 가하는 방식일 때 스윙되는 각에 따라 강도를 다르게 주기위한 변수
+
+    // 아래는 디버그 용도로 사용된 변수들
+    private Vector3 mMinPoint;          // 로프가 얼마나 스윙되는 지 시각적으로 보기위한 변수
+                                        // 관련 코드가 일반 모드에서만 작성이 돼있어서 Pendulum용으로 새로 작성하던지 제거하면 될 듯
     private Vector3 mMaxPoint;
-    private Vector3 mFinalForce;
-    private float mTimer = 0f;
-    private float mSinFromAngle = 0f;
-    private float mDeltaTorque = 0f;
+    private Vector3 mFinalForce;        // Force가 어떻게 변화하는 지 시각적으로 보기위한 변수
 
-    private float theta = 0f;
-    private float omega = 0f;
+    // 각속도로 계산하는 방식에 사용되는 변수들
+    private float mDeltaTorque = 0f;                    // 주어진 토크
+    private float theta = 0f;                           // 각도
+    private float omega = 0f;                           // 각가속도
 
+    // 각 모드로 전환될 때 한 번만 실행되는 코드를 위해서 선언
     private bool mbEnterNormal = false;
     private bool mbEnterPendulum = false;
 
@@ -227,6 +236,8 @@ public class RopeVerlet : MonoBehaviour
 
     private void Update()
     {
+        // 스윙을 테스트하기 위한 키입력 코드
+        // 현재는 PlayerRopeClimbState에서 처리
         //if(Input.GetKeyDown(KeyCode.Y))
         //{
         //    mDeltaForce = _swingForce;
@@ -235,8 +246,6 @@ public class RopeVerlet : MonoBehaviour
         //    mRemainOutForce = _outForce * mSinFromAngle;
         //    // mbSwingForce = true;
         //    mDeltaTorque = _swingTorque;
-
-        //    mTimer = 0f;
         //}
         //if(Input.GetKeyDown(KeyCode.T))
         //{
@@ -246,10 +255,10 @@ public class RopeVerlet : MonoBehaviour
         //    mRemainOutForce = _outForce * mSinFromAngle;
         //    // mbSwingForce = true;
         //    mDeltaTorque = -_swingTorque;
-
-        //    mTimer = 0f;
         //}
 
+        // 로프 타기를 테스트하기 위한 키입력 코드
+        // 현재는 PlayerRopeClimbState에서 처리
         //if (Input.GetKeyDown(KeyCode.U))
         //{
         //    AddIndex(-1);
@@ -263,13 +272,6 @@ public class RopeVerlet : MonoBehaviour
         //{
         //    mMinPoint = Vector3.zero;
         //    mMaxPoint = Vector3.zero;
-        //}
-
-        //mTimer += Time.deltaTime;
-
-        //if(mTimer > .5f)
-        //{
-        //    mbSwingForce = false;
         //}
 
         DrawRope();
@@ -316,6 +318,8 @@ public class RopeVerlet : MonoBehaviour
 
         //}
 
+        // 일반 모드에서 단진자 모드로 전환될 때 자연스럽게 전환시키기 위해서
+        // 일반 모드에서도 각속도와 각을 계산(일반 모드에서 각속도와 각이 사용되지는 않음)
         if(!_usePendulum)
         {
             Vector3 dirForAngle = (mRopeSegments[_JointPointIndex].currentPosition - mRopeSegments[0].currentPosition).normalized;
@@ -358,6 +362,7 @@ public class RopeVerlet : MonoBehaviour
 
             bool bGrab = false;
 
+            // Grab되는 Point들은 위치를 계산하지 않음
             for (int j = 0; j < _grabPoints.Count; j++)
             {
                 if (i == _grabPoints[j].segmentIndex)
@@ -368,7 +373,7 @@ public class RopeVerlet : MonoBehaviour
                     //segment.currentPosition = _grabPoints[j].transform.position;
                     //mRopeSegments[i] = segment;
                     bGrab = true;
-                    continue;
+                    continue;       // 어차피 index가 같은 segment를 찾으면 더이상 찾을 이유가 없기 때문에 break로 수정해주면 될듯
                 }
             }
 
@@ -389,6 +394,7 @@ public class RopeVerlet : MonoBehaviour
             float sinFromAngle = Mathf.Sin(angle * Mathf.Deg2Rad);
             mSinFromAngle = sinFromAngle;
 
+            // theta와 omega를 계산하기 위한 코드인데 Update로 옮겨서 제거해주면 됨 =====
             //theta = angle * Mathf.Deg2Rad;
 
             //if(dirForAngle.x < 0f)
@@ -404,9 +410,12 @@ public class RopeVerlet : MonoBehaviour
             //omega += alpha * Time.fixedDeltaTime;
             //omega = Mathf.Clamp(omega, -_maxOmegaMagnitude, _maxOmegaMagnitude);
             //Debug.Log($"[0] Theta: {theta}({angle}), sin(theta):{sinTheta}, alpha:{alpha}, Omega: {omega}, L: {distanceToFirst}");
+            // ==========
 
             // segment.currentPosition += dirForAngle * _outForce * Time.fixedDeltaTime;
 
+            // 현재 일반 모드에서는 Swing을 해주지 않음
+            // 일반 모드 코드에서 Swing 관련 코드는 제거해주면 될 거 같음
             // Swinging
             if (i == _swingIndex)
             {
@@ -490,12 +499,15 @@ public class RopeVerlet : MonoBehaviour
 
         onAfterSimulateSegments?.Invoke();
 
+        // 테스트 용 AnimationSwinger 클래스로 캐릭터 위치를 Joint로 고정하는 코드
+        // 현재 관련 코드는 onAfterSimulateSegments로 PlayerRopeClimbState에서 처리하기 때문에 제거하기
         if (_animationSwinger.target != null)
         {
             _animationSwinger.UpdatePos();
             // Debug.Log("Rope Update");
         }
 
+        // Grab되는 Segment들을 해당 위치로 고정
         for (int i = 0; i < mRopeSegments.Count; i++)
         {
             RopeSegment segment = mRopeSegments[i];
@@ -509,7 +521,7 @@ public class RopeVerlet : MonoBehaviour
 
                     segment.currentPosition = _grabPoints[j].transform.position;
                     mRopeSegments[i] = segment;
-                    continue;
+                    continue;   // 어차피 index가 같은 segment를 찾으면 더이상 찾을 이유가 없기 때문에 break로 수정해주면 될듯
                 }
             }
         }
@@ -538,6 +550,8 @@ public class RopeVerlet : MonoBehaviour
         mDeltaTorque = Mathf.Lerp(mDeltaTorque, 0f, _swingTorqueDamping);
 
         float sinTheta = Mathf.Sin(theta);
+        
+        // 각가속도
         float alpha = -(_pendulumGravity / distanceToFirst) * sinTheta
                       + (tau / distanceToFirst * distanceToFirst) - _pendulumDamping * omega;
 
@@ -587,6 +601,8 @@ public class RopeVerlet : MonoBehaviour
         onAfterSimulateSegments?.Invoke();
 
         // Character To JointPoint
+        // 테스트 용 AnimationSwinger 클래스로 캐릭터 위치를 Joint로 고정하는 코드
+        // 현재 관련 코드는 onAfterSimulateSegments로 PlayerRopeClimbState에서 처리하기 때문에 제거하기
         if (_animationSwinger.target != null)
         {
             _animationSwinger.UpdatePos();
@@ -620,6 +636,7 @@ public class RopeVerlet : MonoBehaviour
         firstSegment.currentPosition = transform.position;
         mRopeSegments[0] = firstSegment;
 
+        // Joint Segment는 고정된 위치기 때문에 굳이 계산해주지 않아도 된다
         //// Joint Point is fixed
         //RopeSegment jointSegment = mRopeSegments[_JointPointIndex];
         //Vector3 jointPos = firstSegment.currentPosition;
@@ -627,6 +644,8 @@ public class RopeVerlet : MonoBehaviour
         //jointSegment.currentPosition = jointPos;
         //mRopeSegments[_JointPointIndex] = jointSegment;
 
+        // 첫 Segment와 Joint Segment가 계산되고 그 사이 Segment들은 고정된 위치여서
+        // Constraint를 굳이 계산해주지 않아도 된다
         //// first to joint point
         //Vector3 dirFirstToJoint = (mRopeSegments[_JointPointIndex].currentPosition - mRopeSegments[0].currentPosition).normalized;
 
@@ -639,6 +658,8 @@ public class RopeVerlet : MonoBehaviour
         //    mRopeSegments[i] = currentSegment;
         //}
 
+        // Constraint를 0부터 하는 지 Joint Segment부터 하는 지에 따라 결과가 다른 거 같다
+        // 나중에 테스트 해보고 나은 결과로 수정하면 될 거 같다
         //int index = _JointPointIndex;
         int index = 0;
 
@@ -661,6 +682,7 @@ public class RopeVerlet : MonoBehaviour
 
                     for (int j = 0; j < _grabPoints.Count; j++)
                     {
+                        // Grab되는 Segment를 기준으로 바로 위나 아래 Segment 쪽으로 당겨지거나 밀리지 않게 계산
                         if (i == _grabPoints[j].segmentIndex)
                         {
                             if (!_grabPoints[j].active)
@@ -792,6 +814,7 @@ public class RopeVerlet : MonoBehaviour
         //Gizmos.DrawSphere(mMinPoint, .2f);
         //Gizmos.DrawSphere(mMaxPoint, .2f);
 
+        // 일반 모드에서 Force의 Gizmos인데 제거하면 될 듯
         Gizmos.DrawRay(mOriginForce, mFinalForce * 3f);
     }
 }
