@@ -38,7 +38,7 @@ public class RopeVerlet : MonoBehaviour
     public event System.Action onAfterSimulateSegments = null;
 
     public List<GrabPoint> GrabPoints => _grabPoints;
-    public Transform JointPoint => _JointPoint;
+    public Transform JointPoint => _trJointPoint;
     public int JointPointIndex => _JointPointIndex;
 
     [Header("Debug")]
@@ -51,7 +51,7 @@ public class RopeVerlet : MonoBehaviour
 
     [Header("Grab Points")]
     [SerializeField] private List<GrabPoint> _grabPoints = new List<GrabPoint>();
-    [SerializeField] private Transform _JointPoint;                     // jointPoint의 transform .._trJointPoint로 변수명 수정하기
+    [SerializeField] private Transform _trJointPoint;                     // jointPoint의 transform .._trJointPoint로 변수명 수정하기
     [SerializeField] private int _JointPointIndex = 9;
 
     [Header("Physics")]
@@ -199,7 +199,7 @@ public class RopeVerlet : MonoBehaviour
             mRopeStartPoint.y -= _ropeSegmentLength;
         }
 
-        _JointPoint.position = mRopeSegments[_JointPointIndex].currentPosition;
+        _trJointPoint.position = mRopeSegments[_JointPointIndex].currentPosition;
     }
 
     private void Update()
@@ -314,7 +314,7 @@ public class RopeVerlet : MonoBehaviour
 
             if (i == _JointPointIndex)
             {
-                _JointPoint.position = segment.currentPosition;
+                _trJointPoint.position = segment.currentPosition;
             }
 
             mRopeSegments[i] = segment;
@@ -382,9 +382,9 @@ public class RopeVerlet : MonoBehaviour
 
         mRopeSegments[_JointPointIndex] = segment;
 
-        _JointPoint.position = segment.currentPosition;
+        _trJointPoint.position = segment.currentPosition;
         Vector3 dirToFirst = (mRopeSegments[0].currentPosition - segment.currentPosition).normalized;
-        _JointPoint.up = dirToFirst;
+        _trJointPoint.up = dirToFirst;
 
         // First to Joint Point
         Vector3 dirFirstToJoint = (mRopeSegments[_JointPointIndex].currentPosition - mRopeSegments[0].currentPosition).normalized;

@@ -4442,8 +4442,10 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   key: 8
   _showWireSphere: 0
+  _printDetectedSegmentIndex: 0
   _offsetY: 1.5
   _detectionRadius: 0.5
+  _jointIndexOffset: -2
   _climbOnceDistance: 0.57
   _startDistanceFromJoint: 0.225
   _startDistanceToForward: -0.1
@@ -5018,17 +5020,8 @@ MonoBehaviour:
   _numOfRopeSegments: 45
   _ropeSegmentLength: 0.225
   _grabPoints: []
-  _JointPoint: {fileID: 874332742}
+  _trJointPoint: {fileID: 874332742}
   _JointPointIndex: 9
-  _swingIndex: 9
-  _swingForce: 5
-  _swingAddForce: 30
-  _swingAccelerate: 0.2
-  _swingAccMultiplier: 1
-  _outForce: 10
-  _outForceTime: 1
-  _forceDamping: 0.03
-  _animationSwinger: {fileID: 686008950}
   _gravityForce: {x: 0, y: -0.98, z: 0}
   _dampingFactor: 0.98
   _onlyTrigger: 1

@@ -15,6 +15,7 @@ public class PlayerRopeClimbState : PlayerStateBase
     [SerializeField] private float _detectionRadius = 0.5f;
 
     [Header("Climb")]
+    [SerializeField] private int _jointIndexOffset = -2;
     [SerializeField] private float _climbOnceDistance = .57f;
     [SerializeField] private float _startDistanceFromJoint = .225f;
     [SerializeField] private float _startDistanceToForward = .225f;
@@ -57,13 +58,8 @@ public class PlayerRopeClimbState : PlayerStateBase
 
         mGoalNormalizedTime = 0f;
         mDistanceFromJoint = _startDistanceFromJoint;
-        mRopeHandler.RemoveListenerOnAfterSimulateSegments(updatePos);
-        mRopeHandler.AddListenerOnAfterSimulateSegments(updatePos);
 
-        mRopeHandler.AddGrabPoint(indexFromJoint: 1, _trRightHand, HumanBodyBones.RightMiddleProximal);
-        mRopeHandler.AddGrabPoint(indexFromJoint: 2, _trLeftHand, HumanBodyBones.LeftMiddleProximal);
-        mRopeHandler.AddGrabPoint(indexFromJoint: 9, _trRightToe, HumanBodyBones.RightToes);
-        mRopeHandler.StartClimb(mDetectedSegmentIndex);
+        StartCoroutine(eStartClimb());
     }
 
     public override void ExitState()
@@ -360,7 +356,6 @@ public class PlayerRopeClimbState : PlayerStateBase
     private void updatePos()
     {
         Transform trJointPoint = mRopeHandler.GetJointPointTransform();
-        // Vector3 handPos = mAnimator.GetBoneTransform(HumanBodyBones.RightMiddleProximal).position;
         // Vector3 handPos = mAnimator.GetBoneTransform(HumanBodyBones.Chest).position;
         Vector3 handPos = _trRightHand.position;
 
@@ -371,6 +366,27 @@ public class PlayerRopeClimbState : PlayerStateBase
 
         transform.position += toTarget;
         transform.rotation = Quaternion.LookRotation(newForward, trJointPoint.up);
+    }
+
+    private IEnumerator eStartClimb()
+    {
+        while(true)
+        {
+            AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+
+            if (animatorStateInfo.IsTag("ClimbRope"))
+                break;
+
+            yield return null;
+        }
+
+        mRopeHandler.RemoveListenerOnAfterSimulateSegments(updatePos);
+        mRopeHandler.AddListenerOnAfterSimulateSegments(updatePos);
+
+        mRopeHandler.AddGrabPoint(indexFromJoint: 1, _trRightHand, HumanBodyBones.RightMiddleProximal);
+        mRopeHandler.AddGrabPoint(indexFromJoint: 2, _trLeftHand, HumanBodyBones.LeftMiddleProximal);
+        mRopeHandler.AddGrabPoint(indexFromJoint: 9, _trRightToe, HumanBodyBones.RightToes);
+        mRopeHandler.StartClimb(mDetectedSegmentIndex + _jointIndexOffset);
     }
 
     private IEnumerator eJumpAway()
