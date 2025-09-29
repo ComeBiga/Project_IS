@@ -174,6 +174,13 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    public void ForceJump()
+    {
+        mbJumping = true;
+        mRigidbody.AddForce(Vector3.up * _jumpForce, ForceMode.Impulse);
+        mGroundCheckDisableTimer = _groundCheckDisableDuration;
+    }
+
     public void StopJump()
     {
         mbJumping = false;

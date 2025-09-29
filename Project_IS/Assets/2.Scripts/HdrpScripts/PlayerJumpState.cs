@@ -9,6 +9,7 @@ public class PlayerJumpState : PlayerStateBase
     public EType type = EType.Idle;
 
     [SerializeField] private PlayerClimbLedgeState _climbLedgeState;
+    [SerializeField] private PlayerRopeClimbState _ropeClimbState;
 
     private Vector3 mMoveInput;
     private Animator mAnimator;

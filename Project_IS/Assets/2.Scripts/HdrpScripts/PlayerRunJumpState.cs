@@ -4,6 +4,8 @@ using UnityEngine;
 
 public class PlayerRunJumpState : PlayerStateBase
 {
+    public bool jumpUpward = true;
+
     [SerializeField] private PlayerClimbLedgeState _climbLedgeState;
 
     private Vector3 mMoveInput;
@@ -11,7 +13,8 @@ public class PlayerRunJumpState : PlayerStateBase
 
     public override void EnterState()
     {
-        mController.Movement.Jump();
+        if(jumpUpward)
+            mController.Movement.Jump();
 
         //mController.Animator.SetRunJump();
         mController.Animator.SetJump();
@@ -19,6 +22,7 @@ public class PlayerRunJumpState : PlayerStateBase
 
     public override void ExitState()
     {
+        jumpUpward = true;
         // mController.Animator.SetLanding();
     }
 
@@ -58,7 +62,7 @@ public class PlayerRunJumpState : PlayerStateBase
             return;
         }
 
-        if (transform.position.y < mDefaultHeight - .5f)
+        if (transform.position.y < mDefaultHeight - .1f)
         {
             mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
             return;

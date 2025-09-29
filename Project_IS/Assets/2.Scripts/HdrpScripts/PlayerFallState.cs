@@ -16,12 +16,12 @@ public class PlayerFallState : PlayerStateBase
         mMinVelocityY = 0f;
 
         mController.Animator.ResetLanding();
-        mController.Animator.SetInputXMagnitude(0f);
+        // mController.Animator.SetInputXMagnitude(0f);
     }
 
     public override void ExitState()
     {
-
+        // mController.Animator.SetInputXMagnitude(0f);
     }
 
     public override void Tick()
@@ -36,6 +36,7 @@ public class PlayerFallState : PlayerStateBase
         {
             mbLanding = true;
             mController.Movement.SetVelocity(Vector3.zero);
+            mController.Animator.SetInputXMagnitude(0f);
 
             if (mMinVelocityY < _heavyLandingVelocityY)
             {

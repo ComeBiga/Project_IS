@@ -127,11 +127,15 @@ public class PlayerMoveState : PlayerStateBase
         }
 
         // Fall
-        if (transform.position.y < mDefaultHeight - .5f) // 낙하 시작 거리를 변수로 빼는게 좋을 듯
+        if (!mController.Movement.IsGrounded && transform.position.y < mDefaultHeight - .1f) // 낙하 시작 거리를 변수로 빼는게 좋을 듯
         {
             mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
 
             return;
+        }
+        else
+        {
+            mDefaultHeight = transform.position.y;
         }
 
         // Ladder
