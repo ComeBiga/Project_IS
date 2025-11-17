@@ -45,10 +45,11 @@ public class PlayerJumpState : PlayerStateBase
         }
 
         // if(checkLedge(out RaycastHit hitInfo))
-        if(_climbLedgeState.CheckLedge(out RaycastHit hitInfo))
+        if(_climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo))
         {
             // var climbLedgeState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbLedge) as PlayerClimbLedgeState;
-            _climbLedgeState.SetLedge(hitInfo.collider.bounds);
+            // _climbLedgeState.SetLedge(hitInfo.collider.bounds);
+            _climbLedgeState.SetInfo(climbLedgeInfo);
             mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbLedge);
             return;
         }

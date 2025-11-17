@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
 
 public class PlayerRunJumpState : PlayerStateBase
@@ -55,14 +56,19 @@ public class PlayerRunJumpState : PlayerStateBase
             return;
         }
 
-        if (_climbLedgeState.CheckLedge(out RaycastHit hitInfo))
+        if (_climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo))
         {
-            _climbLedgeState.SetLedge(hitInfo.collider.bounds);
+            // _climbLedgeState.SetLedge(hitInfo.collider.bounds);
+            _climbLedgeState.SetInfo(climbLedgeInfo);
             mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbLedge);
             return;
         }
 
-        if (transform.position.y < mDefaultHeight - .1f)
+        // fall
+        PlayerFallState fallState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Fall) as PlayerFallState;
+
+        if (fallState.CheckFall())
+        // if (transform.position.y < mDefaultHeight - .1f)
         {
             mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
             return;

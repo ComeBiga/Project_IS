@@ -27,18 +27,21 @@ public class PushPullObject : InteractableObject
             mBoxCollider.material = _matNoFriction;
     }
 
-    public bool PushPull(Vector3 velocity)
+    public bool PushPull(PlayerController playerController, Vector3 velocity)
     {
+        // Debug.Log($"velocity {mRigidbody.velocity}, angular velocity {mRigidbody.angularVelocity}");
+
         Vector3 finalVelocity = mRigidbody.velocity;
         finalVelocity.x = Mathf.Abs(mRigidbody.velocity.x) > Mathf.Abs(velocity.x) ? mRigidbody.velocity.x : velocity.x;
         mRigidbody.velocity = finalVelocity;
         // mRigidbody.AddForce(velocity, ForceMode.Force);
 
         // mRigidbody.AddForceAtPosition(velocity, mBoxCollider.bounds.center, ForceMode.Force);
-        Debug.Log($"velocity {mRigidbody.velocity}, angular velocity {mRigidbody.angularVelocity}");
 
         //if (Mathf.Abs(mRigidbody.velocity.y) > 1f)
         //    return false;
+
+        // playerController.Movement.SetVelocity(mRigidbody.velocity);
 
         return true;
     }

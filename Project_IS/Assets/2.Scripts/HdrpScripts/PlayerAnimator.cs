@@ -24,6 +24,7 @@ public class PlayerAnimator : MonoBehaviour
     private readonly int TurnLHash = Animator.StringToHash("TurnL");
     private readonly int TurnRHash = Animator.StringToHash("TurnR");
     private readonly int LadderTopHash = Animator.StringToHash("LadderTop");
+    private readonly int IndexHash = Animator.StringToHash("Index");
 
     private Animator mAnimator;
 
@@ -95,6 +96,11 @@ public class PlayerAnimator : MonoBehaviour
     public void SetLadderTop(bool value)
     {
         mAnimator.SetBool(LadderTopHash, value);
+    }
+
+    public void SetIndex(int value)
+    {
+        mAnimator.SetInteger(IndexHash, value);
     }
 
     private void Awake()

@@ -1,14 +1,29 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static PlayerClimbLedgeState;
 
 public class PlayerClimbLedgeState : PlayerStateBase
 {
-    [SerializeField] private float _lerpYOffset = 1f;
+    public struct ClimbLedgeInfo
+    {
+        public Bounds ledgeBounds;
+        public int checkIndex;
+    }
+
+    [SerializeField] private float _lerpXOffset = .2f;
+    [SerializeField] private float _lerpYOffsetOverHead = 1f;
+    [SerializeField] private float _lerpYOffsetChest = 1f;
+    [SerializeField] private float _lerpYOffsetStomach = 1f;
+    [SerializeField] private float _lerpYOffsetKnee = 1f;
     [SerializeField] private float _raycastDistance = .5f;
+    [Range(2, 10)]
+    [SerializeField] private int _raycastCount = 2;
     [SerializeField] private float _ledgeRange = .3f;
 
     private Animator mAnimator;
+    private ClimbLedgeInfo mClimbLedgeInfo;
     private Bounds mLedgeBounds;
 
     private bool mbClimb = false;
@@ -23,9 +38,11 @@ public class PlayerClimbLedgeState : PlayerStateBase
     public override void EnterState()
     {
         mController.Movement.SetVelocity(Vector3.zero);
+        mController.Movement.SetKinematic(true);
         mController.Movement.SetUseGravity(false);
         mController.Movement.SetColliderActive(false);
 
+        mController.Animator.SetIndex(mClimbLedgeInfo.checkIndex);
         mController.Animator.SetInputXMagnitude(0f);
 
         mbClimb = true;
@@ -35,6 +52,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
     public override void ExitState()
     {
+        mController.Movement.SetKinematic(false);
         mController.Movement.SetUseGravity(true);
         mController.Movement.SetColliderActive(true);        
     }
@@ -44,30 +62,48 @@ public class PlayerClimbLedgeState : PlayerStateBase
         
     }
 
+    public void SetInfo(ClimbLedgeInfo climbLedgeInfo)
+    {
+        mClimbLedgeInfo = climbLedgeInfo;
+    }
+
+    [Obsolete]
     public void SetLedge(Bounds ledgeBounds)
     {
         mLedgeBounds = ledgeBounds;
     }
 
-    public bool CheckLedge(out RaycastHit hitInfo)
+    public bool CheckLedge(out ClimbLedgeInfo climbLedgeInfo)
     {
+        climbLedgeInfo = new ClimbLedgeInfo();
+
         Vector3 origin = getOrigin();
         Vector3 direction = getDirection();
 
-        bool bCheck = Physics.Raycast(origin, direction, out hitInfo, _raycastDistance, LayerMask.GetMask("Ground"));
-
-        if (bCheck)
+        for(int i = 0; i < _raycastCount; i++)
         {
-            Bounds bounds = hitInfo.collider.bounds;
-            float ledgeY = bounds.max.y;
-            float range = _ledgeRange;
+            Vector3 pos = origin;
+            pos.y -= getSpacing() * i;
 
-            if (origin.y > ledgeY - range && origin.y < ledgeY + range)
+            bool bCheck = Physics.Raycast(pos, direction, out RaycastHit hitInfo, _raycastDistance, LayerMask.GetMask("Ground"));
+
+            if (bCheck)
             {
-                return true;
+                Bounds bounds = hitInfo.collider.bounds;
+                float ledgeY = bounds.max.y;
+                float range = _ledgeRange;
+
+                if (pos.y > ledgeY - range && pos.y < ledgeY + range)
+                {
+                    climbLedgeInfo.ledgeBounds = bounds;
+                    climbLedgeInfo.checkIndex = i;
+                    return true;
+                }
             }
         }
 
+        climbLedgeInfo.ledgeBounds = new Bounds();
+        climbLedgeInfo.checkIndex = -1;
         return false;
     }
 
@@ -82,8 +118,30 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
     private IEnumerator eClimbLedge()
     {
-        float originY = transform.position.y + mController.Movement.Height;
-        float targetY = mLedgeBounds.max.y - mController.Movement.Height + _lerpYOffset;
+        // float originY = transform.position.y + mController.Movement.Height;
+        // float targetY = mLedgeBounds.max.y - mController.Movement.Height + _lerpYOffset;
+        // float targetY = mClimbLedgeInfo.ledgeBounds.max.y - mController.Movement.Height + _lerpYOffset;
+        float targetX = (mController.Movement.Direction == PlayerMovement.EDirection.Left) ? mClimbLedgeInfo.ledgeBounds.max.x + _lerpXOffset: mClimbLedgeInfo.ledgeBounds.min.x - _lerpXOffset;
+        float targetY = mClimbLedgeInfo.ledgeBounds.max.y;
+
+        switch (mClimbLedgeInfo.checkIndex)
+        {
+            case 0:
+                targetY -= _lerpYOffsetOverHead;
+                break;
+            case 1:
+                targetY -= _lerpYOffsetChest;
+                break;
+            case 2:
+                targetY -= _lerpYOffsetStomach;
+                break;
+            case 3:
+                targetY -= _lerpYOffsetKnee;
+                break;
+            default:
+                targetY -= _lerpYOffsetKnee;
+                break;
+        }
 
         float timer = 0f;
         float duration = .2f;
@@ -93,6 +151,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
             float t = timer / duration;
 
             Vector3 newPos = transform.position;
+            newPos.x = Mathf.Lerp(transform.position.x, targetX, t);
             newPos.y = Mathf.Lerp(transform.position.y, targetY, t);
 
             transform.position = newPos;
@@ -108,6 +167,8 @@ public class PlayerClimbLedgeState : PlayerStateBase
         while(mbClimb)
         {
             Vector3 deltaPosition = mAnimator.deltaPosition;
+            if (transform.position.y > mClimbLedgeInfo.ledgeBounds.max.y)
+                deltaPosition.y = 0f;
             deltaPosition.z = 0f;
 
             transform.position += deltaPosition;
@@ -128,12 +189,32 @@ public class PlayerClimbLedgeState : PlayerStateBase
         return mController.Movement.DirectionToVector();
     }
 
+    private float getSpacing()
+    {
+        return mController.Movement.Height / (_raycastCount - 1);
+    }
+
+    [ContextMenu("Print Spacing")]
+    private void printSpacing()
+    {
+        Debug.Log(getSpacing());
+        Debug.Log(mController.Movement.Height);
+    }
+
     private void OnDrawGizmosSelected()
     {
         if (!Application.isPlaying)
             return;
 
-        Gizmos.color = Color.red;
-        Gizmos.DrawRay(getOrigin(), getDirection() * _raycastDistance);
+        //Vector3 origin = getOrigin();
+        //Gizmos.color = Color.red;
+
+        //for (int i = 0; i < _raycastCount; i++)
+        //{
+        //    Vector3 pos = origin;
+        //    pos.y -= getSpacing() * i;
+        //    Gizmos.DrawRay(pos, getDirection() * _raycastDistance);
+        //}
+        // Gizmos.DrawRay(getOrigin(), getDirection() * _raycastDistance);
     }
 }

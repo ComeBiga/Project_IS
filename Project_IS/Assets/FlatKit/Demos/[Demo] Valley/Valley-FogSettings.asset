@@ -72,8 +72,8 @@ MonoBehaviour:
   useDistance: 1
   distanceGradient:
     serializedVersion: 2
-    key0: {r: 0, g: 0.85213137, b: 1, a: 0.09803922}
-    key1: {r: 1, g: 0.99326676, b: 0.5707547, a: 1}
+    key0: {r: 0, g: 0.85213137, b: 1, a: 0}
+    key1: {r: 1, g: 0.99326676, b: 0.5707547, a: 0.8784314}
     key2: {r: 0, g: 0, b: 0, a: 1}
     key3: {r: 0, g: 0, b: 0, a: 0}
     key4: {r: 0, g: 0, b: 0, a: 0}
@@ -97,7 +97,7 @@ MonoBehaviour:
     atime6: 0
     atime7: 0
     m_Mode: 0
-    m_ColorSpace: -1
+    m_ColorSpace: 0
     m_NumColorKeys: 2
     m_NumAlphaKeys: 3
   near: 27
@@ -141,4 +141,4 @@ MonoBehaviour:
   distanceHeightBlend: 0.251
   renderEvent: 550
   applyInSceneView: 1
-  effectMaterial: {fileID: 0}
+  effectMaterial: {fileID: -5893212418065708504}

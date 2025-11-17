@@ -32,6 +32,7 @@ public class PlayerMovement : MonoBehaviour
 
     private Rigidbody mRigidbody;
     private CapsuleCollider mCapsuleCollider;
+    private PhysicMaterial mPhysicsMaterial;
     private EDirection mDirection = EDirection.Right;
     private bool mbJumping = false;
     private bool mbIsGrounded = false;
@@ -41,6 +42,7 @@ public class PlayerMovement : MonoBehaviour
     {
         mRigidbody = GetComponent<Rigidbody>();
         mCapsuleCollider = GetComponent<CapsuleCollider>();
+        mPhysicsMaterial = mCapsuleCollider.material;
 
         mRigidbody.MoveRotation(DirectionToRotation(mDirection));
     }
@@ -191,6 +193,11 @@ public class PlayerMovement : MonoBehaviour
         mRigidbody.isKinematic = false;
     }
 
+    public void SetKinematic(bool value)
+    {
+        mRigidbody.isKinematic = value;
+    }
+
     public void SetUseGravity(bool value)
     {
         mRigidbody.useGravity = value;
@@ -199,6 +206,14 @@ public class PlayerMovement : MonoBehaviour
     public void SetColliderActive(bool value)
     {
         mCapsuleCollider.enabled = value;
+    }
+
+    public void SetFriction(bool value)
+    {
+        if (value)
+            mCapsuleCollider.material = mPhysicsMaterial;
+        else
+            mCapsuleCollider.material = null;
     }
 
     public void Tick()

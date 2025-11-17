@@ -6,6 +6,9 @@ public class PlayerPushPullState : PlayerStateBase
 {
     private Animator mAnimator;
     private PushPullObject mPushPullObject;
+    private int mType; // side: 0, front: 1
+    private int mAnimType = 0; // idle: 0, push: 1, pull: 2
+    private PlayerMovement.EDirection mDirection;
 
     private bool mbPushPull = true;
 
@@ -24,9 +27,14 @@ public class PlayerPushPullState : PlayerStateBase
     {
         mbActiveIK = false;
 
+        mDirection = mController.Movement.Direction;
+        mController.Animator.SetIndex(mType);
+
         // mController.Movement.PushPull(Vector2.zero, 0f);
-        transform.rotation = Quaternion.Euler(0f, 0f, 0f);
+        if (mType == 0)
+            transform.rotation = Quaternion.Euler(0f, 0f, 0f);
         // mPushPullObject.SetFriction(false);
+        mController.Movement.SetFriction(false);
 
         //mController.Animator.onAnimationIK -= updateAnimationIK;
         //mController.Animator.onAnimationIK += updateAnimationIK;
@@ -37,6 +45,7 @@ public class PlayerPushPullState : PlayerStateBase
     public override void ExitState()
     {
         // mPushPullObject.SetFriction(true);
+        mController.Movement.SetFriction(true);
 
         // mController.Animator.onAnimationIK -= updateAnimationIK;
     }
@@ -45,9 +54,37 @@ public class PlayerPushPullState : PlayerStateBase
     {
         if (!mController.InputHandler.IsInteracting || !mbPushPull)
         {
+            mAnimType = 0;
+            mController.Animator.SetIndex(mAnimType);
             mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
             return;
         }
+
+        if(mType == 1)
+        {
+            if (mDirection == PlayerMovement.EDirection.Left)
+            {
+                if (mController.InputHandler.MoveInput.x > .1f)
+                    mAnimType = 2; // pull
+                else if (mController.InputHandler.MoveInput.x < -.1f)
+                    mAnimType = 1; // push
+                else
+                    mAnimType = 0; // idle
+            }
+            else
+            {
+                if (mController.InputHandler.MoveInput.x > .1f)
+                    mAnimType = 1; // push
+                else if (mController.InputHandler.MoveInput.x < -.1f)
+                    mAnimType = 2; // pull
+                else
+                    mAnimType = 0; // idle
+            }
+
+            mController.Animator.SetIndex(mAnimType);
+        }
+
+        mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
 
         // mController.Movement.Move(mController.InputHandler.MoveInput);
         // Debug.Log(mAnimator.velocity);
@@ -60,30 +97,42 @@ public class PlayerPushPullState : PlayerStateBase
 
         if(moveInputX > .1f)
         {
-            mPushPullObject.SetFriction(false);
+            // mPushPullObject.SetFriction(false);
             pushPullMultiplier = 1f;
         }
         else if(moveInputX < -.1f)
         {
-            mPushPullObject.SetFriction(false);
+            // mPushPullObject.SetFriction(false);
             pushPullMultiplier = -1f;
         }
         else
         {
-            mPushPullObject.SetFriction(true);
+            // mPushPullObject.SetFriction(true);
         }
 
         mController.Movement.SetVelocity(pushPullMultiplier * Vector3.right * .8f);
         mController.Animator.SetHorizontal(pushPullMultiplier);
 
+        // Debug.Log(mController.Movement.Velocity);
+
         // Debug.Log(animationVelocity);
         // mPushPullObject.PushPull(animationVelocity);
-        mbPushPull = mPushPullObject.PushPull(pushPullMultiplier * Vector3.right * .8f);
+        mbPushPull = mPushPullObject.PushPull(mController, pushPullMultiplier * Vector3.right * .8f);
+
     }
 
     public void SetPushPullObject(PushPullObject pushPullObject)
     {
         mPushPullObject = pushPullObject;
+    }
+
+    /// <summary>
+    /// side : 0, front : 1
+    /// </summary>
+    /// <param name="type"></param>
+    public void SetType(int type)
+    {
+        mType = type;
     }
 
     private IEnumerator eHandIKPos()

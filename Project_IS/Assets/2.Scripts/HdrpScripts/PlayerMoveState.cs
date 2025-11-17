@@ -3,12 +3,21 @@ using System.Collections;
 using System.Collections.Generic;
 using Unity.VisualScripting;
 using UnityEditor;
+using UnityEditor.PackageManager;
 using UnityEditor.ShaderGraph.Internal;
 using UnityEngine;
 using static PlayerMovement;
 
 public class PlayerMoveState : PlayerStateBase
 {
+    [Header("Debug")]
+    [SerializeField] private bool _drawInteractableRay = true;
+    [SerializeField] private bool _drawFrontWallCheckRay = true;
+
+    [Header("FrontWallCheck")]
+    [SerializeField] private LayerMask _frontWallCheckLayer;
+    [SerializeField] private float _frontWallCheckDistance = .3f;     // 전방 벽 체크 거리
+
     [Header("Interactable")]
     [SerializeField] private LayerMask _interactableLayer;
     [SerializeField] private float _interactableMaxDistance = 5f;   // 상호작용 탐지 거리
@@ -47,8 +56,11 @@ public class PlayerMoveState : PlayerStateBase
     public override void Tick()
     {
         // Move
-        mController.Movement.Move(mController.InputHandler.MoveInput);
-        mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
+        checkWallForMove(out Vector2 resultMoveInput);
+        mController.Movement.Move(resultMoveInput);
+        mController.Animator.SetInputXMagnitude(Mathf.Abs(resultMoveInput.x));
+        // mController.Movement.Move(mController.InputHandler.MoveInput);
+        //mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
 
         // Set Direction
         // 키입력이 들어오고 방향이 바뀌는 찰나 시점에 대한 코드
@@ -127,16 +139,25 @@ public class PlayerMoveState : PlayerStateBase
         }
 
         // Fall
-        if (!mController.Movement.IsGrounded && transform.position.y < mDefaultHeight - .1f) // 낙하 시작 거리를 변수로 빼는게 좋을 듯
+        PlayerFallState fallState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Fall) as PlayerFallState;
+
+        if(fallState.CheckFall())
+        // if (mController.Movement.Velocity.y < -1f)
         {
             mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
 
             return;
         }
-        else
-        {
-            mDefaultHeight = transform.position.y;
-        }
+        //if (!mController.Movement.IsGrounded && transform.position.y < mDefaultHeight - .1f) // 낙하 시작 거리를 변수로 빼는게 좋을 듯
+        //{
+        //    mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
+
+        //    return;
+        //}
+        //else
+        //{
+        //    mDefaultHeight = transform.position.y;
+        //}
 
         // Ladder
         if (checkLadderObject(out Collider[] ladderColliders))
@@ -184,6 +205,46 @@ public class PlayerMoveState : PlayerStateBase
     public void EnterToIdle()
     {
         mbEnterToIdle = true;
+    }
+
+    private bool checkWallForMove(out Vector2 resultMoveInput)
+    {
+        // z가 0일 때의 위치
+        Vector3 pathOrigin = transform.position;
+        pathOrigin.y += _interactableOffsetY;
+        pathOrigin.z = 0f;
+
+        // 현재 캐릭터의 위치
+        Vector3 characterOrigin = transform.position;
+        characterOrigin.y += _interactableOffsetY;
+
+        // 현재 캐릭터 발을 기준으로 한 위치
+        Vector3 characterFeetOrigin = transform.position;
+
+        bool bFrontCasted = Physics.Raycast(pathOrigin,
+                                        mController.Movement.DirectionToVector(),
+                                        out RaycastHit hitInfo,
+                                        _frontWallCheckDistance,
+                                        _frontWallCheckLayer);
+
+        Vector2 moveInput = mController.InputHandler.MoveInput;
+
+        if (bFrontCasted)
+        {
+            if(mController.Movement.Direction == EDirection.Right)
+            {
+                if (moveInput.x > 0f)
+                    moveInput.x = 0f;
+            }
+            else
+            {
+                if (moveInput.x < 0f)
+                    moveInput.x = 0f;
+            }
+        }
+
+        resultMoveInput = moveInput;
+        return bFrontCasted;
     }
 
     private bool checkLadderObject(out Collider[] collider)
@@ -284,6 +345,15 @@ public class PlayerMoveState : PlayerStateBase
                 mController.Movement.SetVelocity(velocity);
             }
 
+            // PushPull Front
+            if (interactableObject.Pushable && distanceToEdge < _interactableDistance && mController.InputHandler.IsInteracting)
+            {
+                PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
+                pushPullState.SetPushPullObject(interactableObject as PushPullObject);
+                pushPullState.SetType(1);
+                mController.StateMachine.SwitchState(PlayerStateMachine.EState.PushPull);
+            }
+
             // Climb Object Up
             if (interactableObject.CanClimb && distanceToEdge < _interactableDistance && mController.InputHandler.MoveInput.y > .1f)
             {
@@ -307,6 +377,7 @@ public class PlayerMoveState : PlayerStateBase
             {
                 PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
                 pushPullState.SetPushPullObject(interactableObject as PushPullObject);
+                pushPullState.SetType(0);
                 mController.StateMachine.SwitchState(PlayerStateMachine.EState.PushPull);
             }
 
@@ -370,26 +441,43 @@ public class PlayerMoveState : PlayerStateBase
         if(EditorApplication.isPlaying == false)
             return;
 
+        if(_drawInteractableRay)
+        {
+            Vector3 pathOrigin = transform.position;
+            pathOrigin.y += _interactableOffsetY;
+            pathOrigin.z = 0f;
 
-        Vector3 pathOrigin = transform.position;
-        pathOrigin.y += _interactableOffsetY;
-        pathOrigin.z = 0f;
+            Vector3 characterOrigin = transform.position;
+            characterOrigin.y += _interactableOffsetY;
 
-        Vector3 characterOrigin = transform.position;
-        characterOrigin.y += _interactableOffsetY;
+            Vector3 characterFeetOrigin = transform.position;
 
-        Vector3 characterFeetOrigin = transform.position;
+            // front
+            Gizmos.color = Color.red;
+            Gizmos.DrawRay(pathOrigin, mController.Movement.DirectionToVector() * _interactableMaxDistance);
+            // back
+            Gizmos.DrawRay(pathOrigin, PlayerMovement.DirectionToVector(mController.Movement.OppositeDirection) * _interactableMaxDistance);
+            // side
+            Gizmos.color = Color.blue;
+            Gizmos.DrawRay(characterOrigin, Vector3.forward * _interactableMaxDistance);
+            // under
+            Gizmos.color = Color.green;
+            Gizmos.DrawRay(characterFeetOrigin, Vector3.down * .1f);
+        }
 
-        // front
-        Gizmos.color = Color.red;
-        Gizmos.DrawRay(pathOrigin, mController.Movement.DirectionToVector() * _interactableMaxDistance);
-        // back
-        Gizmos.DrawRay(pathOrigin, PlayerMovement.DirectionToVector(mController.Movement.OppositeDirection) * _interactableMaxDistance);
-        // side
-        Gizmos.color = Color.blue;
-        Gizmos.DrawRay(characterOrigin, Vector3.forward * _interactableMaxDistance);
-        // under
-        Gizmos.color = Color.green;
-        Gizmos.DrawRay(characterFeetOrigin, Vector3.down * .1f);
+        if(_drawFrontWallCheckRay)
+        {
+            // z가 0일 때의 위치
+            Vector3 pathOrigin = transform.position;
+            pathOrigin.y += _interactableOffsetY;
+            pathOrigin.z = 0f;
+
+            Vector3 dir = mController.Movement.DirectionToVector();
+
+            Debug.Log($"{pathOrigin}, {dir}");
+
+            Gizmos.color = Color.red;
+            Gizmos.DrawRay(pathOrigin, dir * _frontWallCheckDistance);
+        }
     }
 }

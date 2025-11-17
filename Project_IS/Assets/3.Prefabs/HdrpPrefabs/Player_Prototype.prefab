@@ -131,7 +131,8 @@ GameObject:
   - component: {fileID: 4025819839599777680}
   - component: {fileID: 8686870357759620641}
   - component: {fileID: 5974772966008876441}
-  m_Layer: 0
+  - component: {fileID: 4227745180388004774}
+  m_Layer: 20
   m_Name: Player_Prototype
   m_TagString: Untagged
   m_Icon: {fileID: 0}
@@ -275,6 +276,7 @@ MonoBehaviour:
   - {fileID: 4025819839599777680}
   - {fileID: 8686870357759620641}
   - {fileID: 5974772966008876441}
+  - {fileID: 4227745180388004774}
 --- !u!114 &2561486926390778882
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -288,6 +290,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   key: 0
+  _drawInteractableRay: 0
+  _drawFrontWallCheckRay: 0
+  _frontWallCheckLayer:
+    serializedVersion: 2
+    m_Bits: 320
+  _frontWallCheckDistance: 0.3
   _interactableLayer:
     serializedVersion: 2
     m_Bits: 1024
@@ -311,6 +319,7 @@ MonoBehaviour:
   key: 1
   type: 0
   _climbLedgeState: {fileID: 5974772966008876441}
+  _ropeClimbState: {fileID: 0}
 --- !u!114 &2592239910151229511
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -324,6 +333,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   key: 2
+  jumpUpward: 1
   _climbLedgeState: {fileID: 5974772966008876441}
 --- !u!114 &794937472454055995
 MonoBehaviour:
@@ -395,7 +405,10 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   key: 6
+  _climbLedgeState: {fileID: 5974772966008876441}
+  _fallStartVelocityY: -1
   _heavyLandingVelocityY: -10
+  _runningLandingSpeed: 0.8
 --- !u!114 &5974772966008876441
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -410,8 +423,37 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   key: 7
   _lerpYOffset: 0.5
+  _lerpYOffsetOverHead: 1.27
+  _lerpYOffsetChest: 0.9
+  _lerpYOffsetStomach: 0.5
+  _lerpYOffsetKnee: 0.1
   _raycastDistance: 0.5
+  _raycastCount: 5
   _ledgeRange: 0.3
+--- !u!114 &4227745180388004774
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 712958953486247521}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 5bbc958da3d543445bf224d6e8b60869, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  key: 8
+  _showWireSphere: 0
+  _printDetectedSegmentIndex: 0
+  _offsetY: 1.5
+  _detectionRadius: 0.5
+  _jointIndexOffset: -2
+  _climbOnceDistance: 0.57
+  _startDistanceFromJoint: 0.225
+  _startDistanceToForward: -0.1
+  _trRightHand: {fileID: 3314374348132005034}
+  _trLeftHand: {fileID: 2392789529978900517}
+  _trRightToe: {fileID: 6573185757273274993}
 --- !u!1 &7065434943730406711
 GameObject:
   m_ObjectHideFlags: 0
@@ -547,6 +589,11 @@ PrefabInstance:
       propertyPath: m_Name
       value: HumanDummy_F Orange
       objectReference: {fileID: 0}
+    - target: {fileID: 6950045690647101734, guid: a2946f7bb3734fb45837bffca017fc9a,
+        type: 3}
+      propertyPath: m_Materials.Array.data[0]
+      value: 
+      objectReference: {fileID: 2100000, guid: e1cdf546547fd314d98b0fc1e96de9eb, type: 2}
     m_RemovedComponents: []
     m_RemovedGameObjects: []
     m_AddedGameObjects:
@@ -560,6 +607,24 @@ PrefabInstance:
       insertIndex: -1
       addedObject: {fileID: 1767484170403361306}
   m_SourcePrefab: {fileID: 100100000, guid: a2946f7bb3734fb45837bffca017fc9a, type: 3}
+--- !u!4 &2392789529978900517 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 2108867969298246076, guid: a2946f7bb3734fb45837bffca017fc9a,
+    type: 3}
+  m_PrefabInstance: {fileID: 4355211018919623065}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &3314374348132005034 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1265463872718966067, guid: a2946f7bb3734fb45837bffca017fc9a,
+    type: 3}
+  m_PrefabInstance: {fileID: 4355211018919623065}
+  m_PrefabAsset: {fileID: 0}
+--- !u!4 &6573185757273274993 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 7442326779869266920, guid: a2946f7bb3734fb45837bffca017fc9a,
+    type: 3}
+  m_PrefabInstance: {fileID: 4355211018919623065}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &8523039032113523909 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 5347808569829381468, guid: a2946f7bb3734fb45837bffca017fc9a,
