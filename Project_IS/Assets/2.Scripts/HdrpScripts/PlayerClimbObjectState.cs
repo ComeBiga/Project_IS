@@ -196,10 +196,14 @@ public class PlayerClimbObjectState : PlayerStateBase
             {
                 deltaPosition.x = 0f;
                 deltaPosition.y *= _climbUpYSpeed;
+
                 // 캐릭터 z 위치가 0까지만 이동하게 조건을 줌
+                var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+
                 if (animatorStateInfo.normalizedTime > _climbUpZDelay)
                 {
-                    deltaPosition.z *= (transform.position.z < 0f) ? _climbUpZSpeed : 0f;
+                    // deltaPosition.z *= (transform.position.z < 0f) ? _climbUpZSpeed : 0f;
+                    deltaPosition.z *= (transform.position.z < moveState.PathZPosition) ? _climbUpZSpeed : 0f;
                     mController.Movement.UpdateRotation();
                 }
                 else

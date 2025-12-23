@@ -10,6 +10,8 @@ using static PlayerMovement;
 
 public class PlayerMoveState : PlayerStateBase
 {
+    public float PathZPosition => mPathZPosition;
+
     [Header("Debug")]
     [SerializeField] private bool _drawInteractableRay = true;
     [SerializeField] private bool _drawFrontWallCheckRay = true;
@@ -33,6 +35,7 @@ public class PlayerMoveState : PlayerStateBase
     private Vector3 mPreviousForward;       // 회전을 시작하면 어느 방향으로 도는지 체크해야되기 때문에 이전 방향을 저장
     private bool mbDirectionChanged = false;
     private bool mbRotating = false;        // 현재 사용되는 곳은 없지만 회전을 체크하는 변수이기 때문에 유지
+    private float mPathZPosition = 0f;    // 캐릭터가 지나가는 길의 z위치를 저장하는 변수
 
     public override void EnterState()
     {
@@ -207,6 +210,11 @@ public class PlayerMoveState : PlayerStateBase
         mbEnterToIdle = true;
     }
 
+    private void Start()
+    {
+        mPathZPosition = transform.position.z;
+    }
+
     private bool checkWallForMove(out Vector2 resultMoveInput)
     {
         // z가 0일 때의 위치
@@ -266,7 +274,8 @@ public class PlayerMoveState : PlayerStateBase
         // z가 0일 때의 위치
         Vector3 pathOrigin = transform.position;
         pathOrigin.y += _interactableOffsetY;
-        pathOrigin.z = 0f;
+        // pathOrigin.z = 0f;
+        pathOrigin.z = mPathZPosition;
 
         // 현재 캐릭터의 위치
         Vector3 characterOrigin = transform.position;
@@ -329,12 +338,13 @@ public class PlayerMoveState : PlayerStateBase
             float distanceToEdge = Mathf.Min(distanceToMin, distanceToMax);
 
             // 전방의 오브젝트를 옆으로 비켜지나가는 코드
-            if (interactableObject.SidePassable && characterPos.z > -_sidePassZDistance)
+            if (interactableObject.SidePassable && characterPos.z > mPathZPosition - _sidePassZDistance)
             {
                 // 가까운 모서리를 기준으로 zDistance 떨어진 점을 targetPos로 설정
                 Vector3 targetPos = (characterPos.x < bounds.center.x) ? bounds.min : bounds.max;
-                targetPos.y = 0f;
-                targetPos.z = -_sidePassZDistance;
+                // targetPos.y = 0f;
+                targetPos.y = characterPos.y;
+                targetPos.z = mPathZPosition - _sidePassZDistance;
 
                 // targetPos까지의 방향을 normalize해서 x:z 비율로 velocity.z를 계산 
                 Vector3 direction = targetPos - characterPos;
@@ -410,13 +420,13 @@ public class PlayerMoveState : PlayerStateBase
             Vector3 characterPos = transform.position;
 
             // 오브젝트를 비켜지나가고 나서 z위치를 다시 0으로 맞춰주는 코드
-            if (interactableObject.SidePassable && characterPos.z < 0f)
+            if (interactableObject.SidePassable && characterPos.z < mPathZPosition)
             {
                 Vector3 targetPos = (characterPos.x < bounds.center.x) ? bounds.min : bounds.max;
                 // 오브젝트를 감지할 수 있는 최대 거리까지 서서히 맞춰주게 함
                 targetPos.x += (characterPos.x < bounds.center.x) ? -_interactableMaxDistance : _interactableMaxDistance;
-                targetPos.y = 0f;
-                targetPos.z = 0f;
+                targetPos.y = characterPos.y;
+                targetPos.z = mPathZPosition;
 
                 Vector3 direction = targetPos - characterPos;
                 Vector3 normalized = direction.normalized;
@@ -445,7 +455,8 @@ public class PlayerMoveState : PlayerStateBase
         {
             Vector3 pathOrigin = transform.position;
             pathOrigin.y += _interactableOffsetY;
-            pathOrigin.z = 0f;
+            // pathOrigin.z = 0f;
+            pathOrigin.z = mPathZPosition;
 
             Vector3 characterOrigin = transform.position;
             characterOrigin.y += _interactableOffsetY;
@@ -470,7 +481,8 @@ public class PlayerMoveState : PlayerStateBase
             // z가 0일 때의 위치
             Vector3 pathOrigin = transform.position;
             pathOrigin.y += _interactableOffsetY;
-            pathOrigin.z = 0f;
+            // pathOrigin.z = 0f;
+            pathOrigin.z = mPathZPosition;
 
             Vector3 dir = mController.Movement.DirectionToVector();
 
