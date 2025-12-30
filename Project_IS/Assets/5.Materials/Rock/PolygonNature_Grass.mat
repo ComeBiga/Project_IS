@@ -20,7 +20,7 @@ Material:
   m_CorrespondingSourceObject: {fileID: 0}
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
-  m_Name: PolygonNature_Snow
+  m_Name: PolygonNature_Grass
   m_Shader: {fileID: -6465566751694194690, guid: db22b85f411629b449320721e4ac7e40,
     type: 3}
   m_Parent: {fileID: 0}
@@ -42,7 +42,7 @@ Material:
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - DirtTexture:
-        m_Texture: {fileID: 2800000, guid: 66bfffbfc1446e24dbf6081d20fc9daa, type: 3}
+        m_Texture: {fileID: 2800000, guid: 7ef065304a725da489fc8e335b04b82a, type: 3}
         m_Scale: {x: 1, y: 1}
         m_Offset: {x: 0, y: 0}
     - _Black:
@@ -166,11 +166,11 @@ Material:
     - _QueueOffset: 0
     - _Smoothness: 0
     - _SmoothnessTextureChannel: 0
-    - _SnowLevel: 10.08
+    - _SnowLevel: 10.38
     - _Specular: 0
     - _SpecularHighlights: 1
     - _SrcBlend: 1
-    - _Tiling: 0
+    - _Tiling: 0.3
     - _Tree_Wave: 5.56
     - _Tree_WindAmount: 0.5
     - _Tree_WindSpeed: 0
