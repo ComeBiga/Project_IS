@@ -98,6 +98,9 @@ public class PlayerLadderState : PlayerStateBase
         mController.Movement.SetColliderActive(true);
         mController.Animator.SetLadderTop(false);
 
+        PlayerMoveState moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+        moveState.EnterToIdle();
+
         mbLadderTop = false;
 
         mbActiveIK = false;
@@ -106,7 +109,7 @@ public class PlayerLadderState : PlayerStateBase
 
     public override void Tick()
     {
-
+        mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
     }
 
     public bool IsInRange(LadderHandler ladderHandler)
