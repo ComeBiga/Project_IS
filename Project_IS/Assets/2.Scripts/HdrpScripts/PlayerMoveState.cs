@@ -11,6 +11,9 @@ using static PlayerMovement;
 public class PlayerMoveState : PlayerStateBase
 {
     public float PathZPosition => mPathZPosition;
+    public float InteractableMaxDistance => _interactableMaxDistance;
+    public float InteractableOffsetY => _interactableOffsetY;
+    public float InteractableDistance => _interactableDistance;
 
     [Header("Debug")]
     [SerializeField] private bool _drawInteractableRay = true;
@@ -125,19 +128,22 @@ public class PlayerMoveState : PlayerStateBase
         // Jump
         if (mController.InputHandler.JumpPressed)
         {
-            // 점프 입력이 됐을 때 이동 입력이 있으면 무조건 RunJump
-            if (mController.InputHandler.MoveInput.x > .01f || mController.InputHandler.MoveInput.x < -.01f)
-            {
-                PlayerRunJumpState runJumpState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.RunJump) as PlayerRunJumpState;
-                runJumpState.SetDefaultHeight(mDefaultHeight);
+            if(mController.Movement.IsGrounded)
+            { 
+                // 점프 입력이 됐을 때 이동 입력이 있으면 무조건 RunJump
+                if (mController.InputHandler.MoveInput.x > .01f || mController.InputHandler.MoveInput.x < -.01f)
+                {
+                    PlayerRunJumpState runJumpState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.RunJump) as PlayerRunJumpState;
+                    runJumpState.SetDefaultHeight(mDefaultHeight);
 
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.RunJump);
-                mController.InputHandler.ResetJump();
-            }
-            else
-            {
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.IdleJump);
-                mController.InputHandler.ResetJump();
+                    mController.StateMachine.SwitchState(PlayerStateMachine.EState.RunJump);
+                    mController.InputHandler.ResetJump();
+                }
+                else
+                {
+                    mController.StateMachine.SwitchState(PlayerStateMachine.EState.IdleJump);
+                    mController.InputHandler.ResetJump();
+                }
             }
         }
 
@@ -165,38 +171,40 @@ public class PlayerMoveState : PlayerStateBase
         // Ladder
         if (checkLadderObject(out Collider[] ladderColliders))
         {
-            foreach (Collider ladderCollider in ladderColliders)
-            {
-                // Bottom
-                if (mController.InputHandler.MoveInput.y > .1f)
-                {
-                    if (ladderCollider.tag == "LadderTop")
-                        continue;
+            switchToLadderState(ladderColliders);
+            //foreach (Collider ladderCollider in ladderColliders)
+            //{
+            //    // Bottom
+            //    // Todo: InputHandler.IsUpPressed() 정의하기
+            //    if (mController.InputHandler.MoveInput.y > .1f)
+            //    {
+            //        if (ladderCollider.tag == "LadderTop")
+            //            continue;
 
-                    PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder) as PlayerLadderState;
-                    LadderHandler ladderHandler = ladderCollider.GetComponent<LadderHandler>();
+            //        PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder) as PlayerLadderState;
+            //        LadderHandler ladderHandler = ladderCollider.GetComponent<LadderHandler>();
 
-                    // Top에서 위 키 입력했을 때 사다리 타는 걸 방지하기 위함
-                    if (ladderStateBase.IsOverRange(ladderHandler))
-                        continue;
+            //        // Top에서 위 키 입력했을 때 사다리 타는 걸 방지하기 위함
+            //        if (ladderStateBase.IsOverRange(ladderHandler))
+            //            continue;
 
-                    ladderStateBase.SetLadder(ladderHandler, startFromBottom: true);
+            //        ladderStateBase.SetLadder(ladderHandler, startFromBottom: true);
 
-                    mController.StateMachine.SwitchState(PlayerStateMachine.EState.Ladder);
-                }
-                // Top
-                else if (mController.InputHandler.MoveInput.y < -.1f)
-                {
-                    if (ladderCollider.tag != "LadderTop")
-                        continue;
+            //        mController.StateMachine.SwitchState(PlayerStateMachine.EState.Ladder);
+            //    }
+            //    // Top
+            //    else if (mController.InputHandler.MoveInput.y < -.1f)
+            //    {
+            //        if (ladderCollider.tag != "LadderTop")
+            //            continue;
 
-                    PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder) as PlayerLadderState;
-                    LadderHandler ladderHandler = ladderCollider.GetComponentInParent<LadderHandler>();
-                    ladderStateBase.SetLadder(ladderHandler, startFromBottom: false);
+            //        PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder) as PlayerLadderState;
+            //        LadderHandler ladderHandler = ladderCollider.GetComponentInParent<LadderHandler>();
+            //        ladderStateBase.SetLadder(ladderHandler, startFromBottom: false);
 
-                    mController.StateMachine.SwitchState(PlayerStateMachine.EState.Ladder);
-                }
-            }
+            //        mController.StateMachine.SwitchState(PlayerStateMachine.EState.Ladder);
+            //    }
+            //}
         }
 
         // Interactable
@@ -269,6 +277,47 @@ public class PlayerMoveState : PlayerStateBase
         return false;
     }
 
+    private bool switchToLadderState(Collider[] ladderColliders)
+    {
+        foreach (Collider ladderCollider in ladderColliders)
+        {
+            // Bottom
+            // Todo: InputHandler.IsUpPressed() 정의하기
+            if (mController.InputHandler.MoveInput.y > .1f)
+            {
+                if (ladderCollider.tag == "LadderTop")
+                    continue;
+
+                PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder) as PlayerLadderState;
+                LadderHandler ladderHandler = ladderCollider.GetComponent<LadderHandler>();
+
+                // Top에서 위 키 입력했을 때 사다리 타는 걸 방지하기 위함
+                if (ladderStateBase.IsOverRange(ladderHandler))
+                    continue;
+
+                ladderStateBase.SetLadder(ladderHandler, startFromBottom: true);
+
+                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Ladder);
+                return true;
+            }
+            // Top
+            else if (mController.InputHandler.MoveInput.y < -.1f)
+            {
+                if (ladderCollider.tag != "LadderTop")
+                    continue;
+
+                PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder) as PlayerLadderState;
+                LadderHandler ladderHandler = ladderCollider.GetComponentInParent<LadderHandler>();
+                ladderStateBase.SetLadder(ladderHandler, startFromBottom: false);
+
+                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Ladder);
+                return true;
+            }
+        }
+
+        return false;
+    }
+
     private int checkInteractableObject(out RaycastHit hitInfo)
     {
         // z가 0일 때의 위치
@@ -329,7 +378,8 @@ public class PlayerMoveState : PlayerStateBase
         if (type == 1)
         {
             var interactableObject = hitInfo.collider.GetComponentInParent<InteractableObject>();
-            Bounds bounds = interactableObject.BoxCollider.bounds;
+            // Bounds bounds = interactableObject.BoxCollider.bounds;
+            Bounds bounds = hitInfo.collider.bounds;
             Vector3 characterPos = transform.position;
 
             // 현재 캐릭터 위치와 오브젝트의 가까운 모서리까지의 거리
@@ -371,6 +421,18 @@ public class PlayerMoveState : PlayerStateBase
                 climbObjectState.SetClimbObject(interactableObject, climbUp: true);
                 mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbObject);
             }
+
+            // Ladder
+            if ((interactableObject.CompareTag("Ladder") || hitInfo.collider.CompareTag("LadderTop"))
+                && distanceToEdge < _interactableDistance)
+            {
+                Collider[] ladderCollider = new Collider[1];
+                ladderCollider[0] = hitInfo.collider;
+                bool bSwitched = switchToLadderState(ladderCollider);
+
+                if (bSwitched)
+                    return;
+            }
         }
         // side
         else if (type == 2)
@@ -398,6 +460,17 @@ public class PlayerMoveState : PlayerStateBase
                 climbObjectState.SetClimbObject(interactableObject, climbUp: true);
                 mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbObject);
             }
+
+            // Ladder
+            if ((interactableObject.CompareTag("Ladder") || hitInfo.collider.CompareTag("LadderTop")))
+            {
+                Collider[] ladderCollider = new Collider[1];
+                ladderCollider[0] = hitInfo.collider;
+                bool bSwitched = switchToLadderState(ladderCollider);
+
+                if (bSwitched)
+                    return;
+            }
         }
         // under
         else if (type == 3)
@@ -419,6 +492,11 @@ public class PlayerMoveState : PlayerStateBase
             Bounds bounds = interactableObject.BoxCollider.bounds;
             Vector3 characterPos = transform.position;
 
+            // 현재 캐릭터 위치와 오브젝트의 가까운 모서리까지의 거리
+            float distanceToMin = Mathf.Abs(characterPos.x - bounds.min.x);
+            float distanceToMax = Mathf.Abs(characterPos.x - bounds.max.x);
+            float distanceToEdge = Mathf.Min(distanceToMin, distanceToMax);
+
             // 오브젝트를 비켜지나가고 나서 z위치를 다시 0으로 맞춰주는 코드
             if (interactableObject.SidePassable && characterPos.z < mPathZPosition)
             {
@@ -434,6 +512,18 @@ public class PlayerMoveState : PlayerStateBase
                 Vector3 velocity = mController.Movement.Velocity;
                 velocity.z = velocity.x * (normalized.z / normalized.x);    // velocity.x : velocity.z = normalized.x : normalized.z
                 mController.Movement.SetVelocity(velocity);
+            }
+
+            // Ladder
+            if ((interactableObject.CompareTag("Ladder") || hitInfo.collider.CompareTag("LadderTop"))
+                && distanceToEdge < _interactableDistance)
+            {
+                Collider[] ladderCollider = new Collider[1];
+                ladderCollider[0] = hitInfo.collider;
+                bool bSwitched = switchToLadderState(ladderCollider);
+
+                if (bSwitched)
+                    return;
             }
         }
         // none

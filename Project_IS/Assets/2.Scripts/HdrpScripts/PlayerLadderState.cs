@@ -32,6 +32,7 @@ public class PlayerLadderState : PlayerStateBase
     private int mCurrentStepIndex = 0;
     private int mMaxStepIndex;        // 매달려 있을 수 있는 가장 높은 StepIndex
 
+    private bool mbClimbLoop = false;
     private float mStepNormalizedTime = 0f;     // 애니메이션 normalizedTime과 비교하기 위한 값
     private bool mbClimbing = false;
     private float mClimbMultiplier = 0f;        // 애니메이션 Speed Multiplier
@@ -40,6 +41,7 @@ public class PlayerLadderState : PlayerStateBase
     private PlayerMovement.EDirection mPreviousDirection;
     private PlayerMovement.EDirection mLadderDirection;     // 사다리 방향 사다리 타기 종료 후 캐릭터 방향 처리 용
     private float mRotatedAngles = 0f;
+    private bool mbIsSameDirectionStart;
 
     // IK
     private bool mbActiveIK = false;
@@ -68,6 +70,7 @@ public class PlayerLadderState : PlayerStateBase
         mController.Movement.SetColliderActive(false);
         // mController.Animator.SetLadderTop(false);        // 맨 위에서 시작 시 LadderTop과 함께 시작함
 
+        mbClimbLoop = true;
         // Top에서 시작 시 어떤 값으로 시작하는 지 확인할 필요 있음
         // => animationStateInfo.normalizedTimed은 Top, Bottom 상관없이 애니메이션 시작될 때 0부터 시작
         mStepNormalizedTime = 0f;                           
@@ -105,10 +108,34 @@ public class PlayerLadderState : PlayerStateBase
 
         mbActiveIK = false;
         mController.Animator.onAnimationIK -= updateAnimatorIK;
+        mController.Animator.SetVertical(0f);
     }
 
     public override void Tick()
     {
+        if(mLadderDirection == PlayerMovement.EDirection.Right)
+        {
+            if (mController.InputHandler.MoveInput.x < 0.1f)
+            {
+                if(mController.InputHandler.JumpPressed)
+                {
+                    mbClimbLoop = false;
+
+                    mController.Movement.SetDirection(PlayerMovement.EDirection.Left);
+                    mController.StateMachine.SwitchState(PlayerStateMachine.EState.RunJump);
+
+                    mController.InputHandler.ResetJump();
+                }
+            }
+        }
+        else if(mLadderDirection == PlayerMovement.EDirection.Left)
+        {
+            if (mController.InputHandler.MoveInput.x > 0.1f)
+            {
+
+            }
+        }
+
         mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
     }
 
@@ -153,8 +180,10 @@ public class PlayerLadderState : PlayerStateBase
         mLadderHandler = ladderHandler;
         mStepPositions = mLadderHandler.GetStepPositions();
 
+        // direction
         mLadderDirection = mLadderHandler.GetLadderDirection();
         mPreviousDirection = mController.Movement.Direction;
+        mbIsSameDirectionStart = mLadderDirection == mController.Movement.Direction;
 
         if(mLadderDirection != PlayerMovement.EDirection.Forward)
             mController.Movement.SetDirection(mLadderDirection);
@@ -206,6 +235,54 @@ public class PlayerLadderState : PlayerStateBase
         }
     }
 
+    public bool SetLadderInMiddle(LadderHandler ladderHandler)
+    {
+        mLadderHandler = ladderHandler;
+        mStepPositions = mLadderHandler.GetStepPositions();
+
+        // direction
+        mLadderDirection = mLadderHandler.GetLadderDirection();
+        mPreviousDirection = mController.Movement.Direction;
+        mbIsSameDirectionStart = mLadderDirection == mController.Movement.Direction;
+
+        if (mLadderDirection != PlayerMovement.EDirection.Forward)
+            mController.Movement.SetDirection(mLadderDirection);
+
+        // Step
+        for(int i = 0; i < mStepPositions.Count; i++)
+        {
+            if(transform.position.y < mStepPositions[i].y)
+            {
+                mCurrentStepIndex = i - 1;
+
+                if (mCurrentStepIndex < 0)
+                    return false;
+
+                break;
+            }
+        }
+
+        // mCurrentStepIndex = 0;
+        mMaxStepIndex = TopStepIndex - DISTANCE_FOOT_TO_HAND_STRETCH;
+
+        // IK
+        if(mCurrentStepIndex % 2 == 0)
+        {
+            mLeftHandStepNum = mCurrentStepIndex + DISTANCE_FOOT_TO_HAND_DEFAULT;
+            mRightHandStepNum = mCurrentStepIndex + DISTANCE_FOOT_TO_HAND_DEFAULT;
+        }
+        else
+        {
+            mLeftHandStepNum = mCurrentStepIndex + DISTANCE_FOOT_TO_HAND_DEFAULT + 1;
+            mRightHandStepNum = mCurrentStepIndex + DISTANCE_FOOT_TO_HAND_DEFAULT - 1;
+        }
+
+        mLeftHandIKWeight = 0f;
+        mRightHandIKWeight = 0f;
+
+        return true;
+    }
+
     public void EndToPlatform()
     {
         mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
@@ -225,8 +302,17 @@ public class PlayerLadderState : PlayerStateBase
         }
 
         // mbActiveIK = true;
+        if (mCurrentStepIndex % 2 == 1)
+        {
+            //mbClimbing = true;
+            //mbIsHandDefault = !mbIsHandDefault;
+            //mClimbMultiplier = 1f;
+            mStepNormalizedTime += .5f;
+            //mClimbType = EClimbType.ClimbUp;
+            mAnimator.Play(mAnimator.GetCurrentAnimatorStateInfo(0).fullPathHash, 0, .5f);
+        }
 
-        while (true)
+        while (mbClimbLoop)
         {
             AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
 
@@ -383,6 +469,11 @@ public class PlayerLadderState : PlayerStateBase
         targetPosition.y = mStepPositions[mCurrentStepIndex].y;
         // transform.position = targetPosition;
 
+        if(mLadderHandler.SidePassable)
+        {
+            targetPosition.z = mLadderHandler.transform.position.z;
+        }
+
         Quaternion targetRotation = mController.Movement.DirectionToRotation(mLadderDirection);
         transform.rotation = targetRotation;
 
@@ -516,17 +607,29 @@ public class PlayerLadderState : PlayerStateBase
             // deltaPosition
             Vector3 deltaPosition = mController.Animator.Animator.deltaPosition;
             // 일정 위치까지 이동 시키기 위해서 일정 위치 전 까지는 deltaPosition을 배수 처리
+            // x
             if(mLadderDirection == PlayerMovement.EDirection.Right)
             {
                 deltaPosition.x *= (transform.position.x > mStepPositions[mCurrentStepIndex].x - _distanceToCharacter) ? _startClimbDownXSpeed : 0f;
+
+                if (mbIsSameDirectionStart)
+                    deltaPosition.x *= -1f;
             }
             else
             {
                 deltaPosition.x *= (transform.position.x < mStepPositions[mCurrentStepIndex].x + _distanceToCharacter) ? _startClimbDownXSpeed : 0f;
+
+                if (mbIsSameDirectionStart)
+                    deltaPosition.x *= -1f;
             }
+
+            // y
             if (animatorStateInfo.normalizedTime > .6f)
                 deltaPosition.y *= (transform.position.y > mStepPositions[mCurrentStepIndex].y) ? _startClimbDownYSpeed : 0f;
+
+            // z
             deltaPosition.z = 0f;
+            Debug.Log($"origin: {mController.Animator.Animator.deltaPosition}, result: {deltaPosition}");
             transform.position += deltaPosition;
 
             // deltaRotation

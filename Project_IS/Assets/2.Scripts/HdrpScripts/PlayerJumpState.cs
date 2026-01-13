@@ -24,7 +24,7 @@ public class PlayerJumpState : PlayerStateBase
 
     public override void EnterState()
     {
-        mController.Movement.Jump();
+        mController.Movement.JumpUp();
 
         mController.Animator.SetJump();
     }

@@ -22,6 +22,7 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Jump")]
     [SerializeField] private float _jumpForce = 5f;
+    [SerializeField] private float _minJumpVelocityX = 2f;
     [SerializeField] private Transform _trGroundCheck;
     [SerializeField] private float _groundCheckRadius = .1f;
     [SerializeField] private float _groundCheckDisableDuration = .2f;   // 점프 직후 점프 중복 방지를 위해 바닥 체크하지 않는 시간
@@ -164,16 +165,31 @@ public class PlayerMovement : MonoBehaviour
             return 0;
     }
 
-    public void Jump()
+    public void JumpUp()
     {
-        if(mbIsGrounded)
-        {
-            mbJumping = true;
-            mRigidbody.AddForce(Vector3.up * _jumpForce, ForceMode.Impulse);
-            mGroundCheckDisableTimer = _groundCheckDisableDuration;
+        mbJumping = true;
+        mGroundCheckDisableTimer = _groundCheckDisableDuration;
 
-            // _animator.SetJump();
-        }
+        Vector3 direction = Vector3.up;
+
+        mRigidbody.velocity = direction * _jumpForce;
+    }
+
+    public void JumpFoward()
+    {
+        mbJumping = true;
+        mGroundCheckDisableTimer = _groundCheckDisableDuration;
+
+        Vector3 direction = Vector3.up;
+
+        if (mDirection == EDirection.Right)
+            direction += Vector3.right;
+        else if (mDirection == EDirection.Left)
+            direction += Vector3.left;
+
+        mRigidbody.velocity = new Vector3(direction.x * _minJumpVelocityX,
+                                        direction.y * _jumpForce,
+                                        direction.z);
     }
 
     public void ForceJump()
@@ -181,6 +197,25 @@ public class PlayerMovement : MonoBehaviour
         mbJumping = true;
         mRigidbody.AddForce(Vector3.up * _jumpForce, ForceMode.Impulse);
         mGroundCheckDisableTimer = _groundCheckDisableDuration;
+    }
+
+    public void UpdateJump(Vector2 moveInput)
+    {
+        Vector3 velocity = mRigidbody.velocity;
+        velocity.x = moveInput.x * _moveSpeed;
+
+        if (mDirection == EDirection.Left)
+        {
+            if (velocity.x > -_minJumpVelocityX)
+                velocity.x = -_minJumpVelocityX;
+        }
+        else if(mDirection == EDirection.Right)
+        {
+            if (velocity.x < _minJumpVelocityX)
+                velocity.x = _minJumpVelocityX;
+        }
+
+        mRigidbody.velocity = velocity;
     }
 
     public void StopJump()
