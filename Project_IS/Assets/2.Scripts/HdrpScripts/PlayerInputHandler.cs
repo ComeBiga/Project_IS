@@ -5,6 +5,7 @@ using UnityEngine;
 public class PlayerInputHandler : MonoBehaviour
 {
     public Vector2 MoveInput { get ; private set; }
+    public Vector2 MoveInputRaw { get ; private set; }
     public bool JumpPressed { get; private set; }
     public bool IsInteracting { get; private set; }
     public bool DownPressed { get; private set; }
@@ -34,18 +35,24 @@ public class PlayerInputHandler : MonoBehaviour
         var newMoveInput = MoveInput;
         newMoveInput.y = Input.GetAxis("Vertical");
 
+        Vector2 newMoveInputRaw = MoveInputRaw;
+        newMoveInputRaw.y = Input.GetAxisRaw("Vertical");
+
         if (Input.GetAxisRaw("Horizontal") > .99f)
         {
             if(newMoveInput.x < 0f)
                 newMoveInput.x = 0f;
 
             newMoveInput.x += Time.deltaTime * _axisSensitivity;
+            newMoveInputRaw.x = 1f;
         }
         else if (Input.GetAxisRaw("Horizontal") < -.99f)
         {
             if (newMoveInput.x > 0f)
                 newMoveInput.x = 0f;
+
             newMoveInput.x -= Time.deltaTime * _axisSensitivity;
+            newMoveInputRaw.x = -1f;
         }
         else
         {
@@ -61,12 +68,14 @@ public class PlayerInputHandler : MonoBehaviour
                 if (newMoveInput.x > 0f)
                     newMoveInput.x = 0f;
             }
+
+            newMoveInputRaw.x = 0f;
         }
 
         newMoveInput.x = Mathf.Clamp(newMoveInput.x, -1f, 1f);
         MoveInput = newMoveInput;
         // MoveInput = new Vector2(Input.GetAxis("Horizontal"), Input.GetAxis("Vertical"));
-
+        MoveInputRaw = newMoveInputRaw;
 
         JumpPressed = Input.GetButtonDown("Jump");
         IsInteracting = Input.GetButton("Fire1");

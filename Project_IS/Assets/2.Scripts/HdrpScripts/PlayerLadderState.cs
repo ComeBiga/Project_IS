@@ -80,6 +80,7 @@ public class PlayerLadderState : PlayerStateBase
         mRotatedAngles = 0f;
 
         mbActiveIK = true;
+        mController.Animator.SetInputXMagnitude(0f);
 
         mController.Animator.onAnimationIK -= updateAnimatorIK;
         mController.Animator.onAnimationIK += updateAnimatorIK;
@@ -117,6 +118,8 @@ public class PlayerLadderState : PlayerStateBase
         {
             if (mController.InputHandler.MoveInput.x < 0.1f)
             {
+                // mRightHandIKWeight = 0f;
+
                 if(mController.InputHandler.JumpPressed)
                 {
                     mbClimbLoop = false;
@@ -132,11 +135,20 @@ public class PlayerLadderState : PlayerStateBase
         {
             if (mController.InputHandler.MoveInput.x > 0.1f)
             {
+                if (mController.InputHandler.JumpPressed)
+                {
+                    mbClimbLoop = false;
 
+                    mController.Movement.SetDirection(PlayerMovement.EDirection.Right);
+                    mController.StateMachine.SwitchState(PlayerStateMachine.EState.RunJump);
+
+                    mController.InputHandler.ResetJump();
+                }
             }
         }
 
-        mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
+        // mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
+        // mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInputRaw.x));
     }
 
     public bool IsInRange(LadderHandler ladderHandler)
@@ -362,6 +374,42 @@ public class PlayerLadderState : PlayerStateBase
                         mRightHandIKWeight = 0f;
                     }
                 }
+
+                // 사다리 반대 보기
+                if (mLadderDirection == PlayerMovement.EDirection.Right)
+                {
+                    if (mController.InputHandler.MoveInputRaw.x < -.1f)
+                    {
+                        // mRightHandIKWeight = 0f;
+                        mLeftHandIKWeight = 0f;
+                        // mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInputRaw.x));
+                        mController.Animator.SetInputXMagnitude(1f);
+                    }
+                    else
+                    {
+                        mController.Animator.SetInputXMagnitude(0f);
+                    }
+                }
+                else if (mLadderDirection == PlayerMovement.EDirection.Left)
+                {
+                    if (mController.InputHandler.MoveInputRaw.x > .1f)
+                    {
+                        // mRightHandIKWeight = 0f;
+                        mLeftHandIKWeight = 0f;
+                        // mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInputRaw.x));
+                        mController.Animator.SetInputXMagnitude(1f);
+                    }
+                    else
+                    {
+                        mController.Animator.SetInputXMagnitude(0f);
+                    }
+                }
+
+                //if (mController.InputHandler.MoveInput.x < 0.1f)
+                //{
+                //    // mRightHandIKWeight = 0f;
+                //    mLeftHandIKWeight = 0f;
+                //}
             }
 
             // Ladder Bottom
@@ -398,6 +446,7 @@ public class PlayerLadderState : PlayerStateBase
             // 코드 복잡성 때문에 크게 Climb Up, Down 분기로 나눠줘야될 듯
             if (mbClimbing)
             {
+                mController.Animator.SetInputXMagnitude(0f);
                 mController.Animator.SetVertical(mClimbMultiplier);
 
                 // 현재 위치가 다음 Step 위치가 되기 전까지 deltaPosition 처리
