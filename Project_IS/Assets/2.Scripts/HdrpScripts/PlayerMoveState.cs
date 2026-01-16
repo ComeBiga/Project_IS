@@ -18,6 +18,7 @@ public class PlayerMoveState : PlayerStateBase
     [Header("Debug")]
     [SerializeField] private bool _drawInteractableRay = true;
     [SerializeField] private bool _drawFrontWallCheckRay = true;
+    [SerializeField] private bool _drawGroundNormal = true;
 
     [Header("FrontWallCheck")]
     [SerializeField] private LayerMask _frontWallCheckLayer;
@@ -39,6 +40,11 @@ public class PlayerMoveState : PlayerStateBase
     private bool mbDirectionChanged = false;
     private bool mbRotating = false;        // 현재 사용되는 곳은 없지만 회전을 체크하는 변수이기 때문에 유지
     private float mPathZPosition = 0f;    // 캐릭터가 지나가는 길의 z위치를 저장하는 변수
+
+    private Terrain mTerrain;
+    private Collider mGroundCollider;
+    private Vector3 mGroundNormal = Vector3.zero;
+    private float mSlopeAngle = 30f;
 
     public override void EnterState()
     {
@@ -153,7 +159,7 @@ public class PlayerMoveState : PlayerStateBase
         if(fallState.CheckFall())
         // if (mController.Movement.Velocity.y < -1f)
         {
-            mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
+            // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
 
             return;
         }
@@ -211,6 +217,33 @@ public class PlayerMoveState : PlayerStateBase
         int bHitDirection = checkInteractableObject(out RaycastHit interactableHitInfo);
 
         updateInteractable(bHitDirection, interactableHitInfo);
+
+        // Terrain Normal
+        if(Physics.Raycast(transform.position, Vector3.down, out RaycastHit hitInfo, .1f, LayerMask.GetMask("Ground")))
+        {
+            mGroundNormal = hitInfo.normal;
+            float slopeAngle = Vector3.Angle(Vector3.up, hitInfo.normal);
+            Debug.Log(slopeAngle);
+
+            var slopeState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Slope) as PlayerSlopeState;
+
+            if (slopeAngle > slopeState.SlopeAngle)
+            {
+                // Slope State로 전환하는 코드 작성
+                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Slope);
+                return;
+            }
+        }
+        else
+        {
+            mGroundNormal = Vector3.zero;
+        }
+
+        if (mTerrain != null)
+        {
+            //float slopeAngle = Vector3.Angle(Vector3.up, getTerrainNormal());
+            //Debug.Log(slopeAngle);
+        }
     }
 
     public void EnterToIdle()
@@ -536,6 +569,29 @@ public class PlayerMoveState : PlayerStateBase
         }
     }
 
+    private Vector3 getTerrainNormal()
+    {
+        TerrainData terrainData = mTerrain.terrainData;
+
+        Vector3 terrainLocalPos = transform.position - mTerrain.transform.position;
+
+        float normalizedX = Mathf.InverseLerp(0f, terrainData.size.x, terrainLocalPos.x);
+        float normalizedZ = Mathf.InverseLerp(0f, terrainData.size.z, terrainLocalPos.z);
+
+        Vector3 normal = terrainData.GetInterpolatedNormal(normalizedX, normalizedZ);
+
+        return normal;
+    }
+
+    private void OnCollisionStay(Collision collision)
+    {
+        if(((1 << collision.collider.gameObject.layer) & LayerMask.GetMask("Ground")) != 0)
+        {
+            mGroundCollider = collision.collider;
+            mTerrain = collision.collider.GetComponent<Terrain>();
+        }
+    }
+
     private void OnDrawGizmosSelected()
     {
         if(EditorApplication.isPlaying == false)
@@ -580,6 +636,15 @@ public class PlayerMoveState : PlayerStateBase
 
             Gizmos.color = Color.red;
             Gizmos.DrawRay(pathOrigin, dir * _frontWallCheckDistance);
+        }
+
+        if(_drawGroundNormal)
+        {
+            Gizmos.color = Color.green;
+            Gizmos.DrawRay(transform.position, Vector3.down * .1f);
+
+            Gizmos.color = Color.yellow;
+            Gizmos.DrawRay(transform.position, mGroundNormal * 5f);
         }
     }
 }

@@ -7,7 +7,7 @@ using UnityEngine;
 public class PlayerStateMachine : MonoBehaviour
 {
     public enum EState { Move = 0, IdleJump, RunJump, Ladder, PushPull = 4,
-                        ClimbObject = 5, Fall, ClimbLedge, ClimbRope }
+                        ClimbObject = 5, Fall, ClimbLedge, ClimbRope, Slope }
 
     public EState CurrentState => mCurrentState;
     public PlayerStateBase CurrentStateBase => mCurrentStateBase;

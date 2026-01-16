@@ -66,7 +66,22 @@ public class PlayerFallState : PlayerStateBase
             return;
         }
 
-        if(mController.Movement.Velocity.y < mMinVelocityY)
+        // Terrain Normal
+        if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hitInfo, .1f, LayerMask.GetMask("Ground")))
+        {
+            float slopeAngle = Vector3.Angle(Vector3.up, hitInfo.normal);
+            // Debug.Log(slopeAngle);
+
+            var slopeState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Slope) as PlayerSlopeState;
+
+            if (slopeAngle > slopeState.SlopeAngle)
+            {
+                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Slope);
+                return;
+            }
+        }
+
+        if (mController.Movement.Velocity.y < mMinVelocityY)
             mMinVelocityY = mController.Movement.Velocity.y;
 
         if(mController.Movement.IsGrounded)

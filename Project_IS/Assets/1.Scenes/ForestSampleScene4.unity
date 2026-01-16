@@ -51431,6 +51431,11 @@ PrefabInstance:
       propertyPath: m_Constraints
       value: 120
       objectReference: {fileID: 0}
+    - target: {fileID: 1943548313585408972, guid: ceb8b399c04f657409507b2c79c6d8a7,
+        type: 3}
+      propertyPath: mSlopeAngle
+      value: 25
+      objectReference: {fileID: 0}
     - target: {fileID: 2150413833795799531, guid: ceb8b399c04f657409507b2c79c6d8a7,
         type: 3}
       propertyPath: _animator

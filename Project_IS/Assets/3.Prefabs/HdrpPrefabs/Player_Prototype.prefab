@@ -132,6 +132,7 @@ GameObject:
   - component: {fileID: 8686870357759620641}
   - component: {fileID: 5974772966008876441}
   - component: {fileID: 4227745180388004774}
+  - component: {fileID: 1943548313585408972}
   m_Layer: 20
   m_Name: Player_Prototype
   m_TagString: Untagged
@@ -232,9 +233,13 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be6bb273e4ea325438a77d242c313e39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _drawSlideDirectionRay: 1
+  _slideDirection: {x: 1, y: 0}
+  _slideSpeed: 1
   _moveSpeed: 5
   _rotateSpeed: 10
   _jumpForce: 4
+  _minJumpVelocityX: 2
   _trGroundCheck: {fileID: 3395877443170664856}
   _groundCheckRadius: 0.1
   _groundCheckDisableDuration: 0.2
@@ -277,6 +282,7 @@ MonoBehaviour:
   - {fileID: 8686870357759620641}
   - {fileID: 5974772966008876441}
   - {fileID: 4227745180388004774}
+  - {fileID: 1943548313585408972}
 --- !u!114 &2561486926390778882
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -422,7 +428,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   key: 7
-  _lerpYOffset: 0.5
+  _lerpXOffset: 0.2
   _lerpYOffsetOverHead: 1.27
   _lerpYOffsetChest: 0.9
   _lerpYOffsetStomach: 0.5
@@ -454,6 +460,19 @@ MonoBehaviour:
   _trRightHand: {fileID: 3314374348132005034}
   _trLeftHand: {fileID: 2392789529978900517}
   _trRightToe: {fileID: 6573185757273274993}
+--- !u!114 &1943548313585408972
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 712958953486247521}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0603a663d89a54e49bdf3de7709a356f, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  key: 9
 --- !u!1 &7065434943730406711
 GameObject:
   m_ObjectHideFlags: 0

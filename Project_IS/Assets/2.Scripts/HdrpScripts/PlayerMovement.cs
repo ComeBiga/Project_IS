@@ -16,6 +16,11 @@ public class PlayerMovement : MonoBehaviour
 
     public enum EDirection { Left, Right, Forward };
 
+    [Header("Debug")]
+    [SerializeField] private bool _drawSlideDirectionRay = true;
+    [SerializeField] private Vector2 _slideDirection = Vector2.right;
+    [SerializeField] private float _slideSpeed = 1f;
+
     [Header("Move")]
     [SerializeField] private float _moveSpeed = 5f;
     [SerializeField] private float _rotateSpeed = 10f;
@@ -38,6 +43,8 @@ public class PlayerMovement : MonoBehaviour
     private bool mbJumping = false;
     private bool mbIsGrounded = false;
     private float mGroundCheckDisableTimer = 0f;
+
+    private Terrain mTerrain;
 
     public void Initialize()
     {
@@ -257,6 +264,11 @@ public class PlayerMovement : MonoBehaviour
 
         // Check Ground
         checkGround();
+
+        // mRigidbody.AddForce(_slideDirection * _slideSpeed, ForceMode.Acceleration);
+        //Vector3 deltaVel = _slideDirection * _slideSpeed * Time.fixedDeltaTime;
+        //mRigidbody.velocity += deltaVel;
+        // Debug.Log($"deltaVel: {deltaVel}, velocity: {mRigidbody.velocity}");
     }
 
     private void checkGround()
@@ -282,5 +294,46 @@ public class PlayerMovement : MonoBehaviour
         }
 
         _animator.SetIsGrounded(mbIsGrounded);
+    }
+
+    private void OnCollisionStay(Collision collision)
+    {
+        if(collision.collider != null)
+        {
+            if (((1 << collision.collider.gameObject.layer) & _groundLayer) != 0)
+            {
+                mTerrain = collision.collider.GetComponent<Terrain>();
+            }
+        }
+    }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (_drawSlideDirectionRay)
+        {
+            Gizmos.color = Color.yellow;
+            Vector3 origin = transform.position;
+            // origin.y += 1f;
+            Gizmos.DrawRay(origin, new Vector3(_slideDirection.x, _slideDirection.y, 0f).normalized * 2f);
+        }
+
+        if (mTerrain == null)
+            return;
+
+        TerrainData terrainData = mTerrain.terrainData;
+
+        Vector3 terrainLocalPos = transform.position - mTerrain.transform.position;
+
+        float normalizedX = Mathf.InverseLerp(0f, terrainData.size.x, terrainLocalPos.x);
+        float normalizedZ = Mathf.InverseLerp(0f, terrainData.size.z, terrainLocalPos.z);
+        
+        Vector3 normal = terrainData.GetInterpolatedNormal(normalizedX, normalizedZ);
+        float height = terrainData.GetInterpolatedHeight(normalizedX, normalizedZ);
+
+        Vector3 point = transform.position;
+        point.y = height;
+
+        Gizmos.color = Color.red;
+        Gizmos.DrawRay(point, normal * 5f);
     }
 }
