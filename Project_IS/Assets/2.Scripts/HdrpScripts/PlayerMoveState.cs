@@ -159,7 +159,7 @@ public class PlayerMoveState : PlayerStateBase
         if(fallState.CheckFall())
         // if (mController.Movement.Velocity.y < -1f)
         {
-            // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
+            mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
 
             return;
         }
@@ -223,7 +223,7 @@ public class PlayerMoveState : PlayerStateBase
         {
             mGroundNormal = hitInfo.normal;
             float slopeAngle = Vector3.Angle(Vector3.up, hitInfo.normal);
-            Debug.Log(slopeAngle);
+            // Debug.Log(slopeAngle);
 
             var slopeState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Slope) as PlayerSlopeState;
 

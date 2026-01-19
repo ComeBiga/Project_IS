@@ -14,6 +14,7 @@ public class PlayerFallState : PlayerStateBase
     private float _runningLandingSpeed = .8f;
 
     private Animator mAnimator;
+    private Coroutine mRunningLandingRoutine = null;
     private bool mbLanding = false;
     private float mMinVelocityY = 0f;
 
@@ -35,7 +36,8 @@ public class PlayerFallState : PlayerStateBase
         mbLanding = false;
         mMinVelocityY = 0f;
 
-        mController.Animator.ResetLanding();
+        // mController.Animator.ResetLanding();
+        mController.Animator.SetLanding(false);
         // mController.Animator.SetInputXMagnitude(0f);
 
         var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
@@ -49,6 +51,13 @@ public class PlayerFallState : PlayerStateBase
     {
         mbLanding = false;
         // mController.Animator.SetInputXMagnitude(0f);
+        mController.Animator.SetLanding(false);
+
+        if (mRunningLandingRoutine != null)
+        {
+            StopCoroutine(mRunningLandingRoutine);
+            mRunningLandingRoutine = null;
+        }
     }
 
     public override void Tick()
@@ -100,10 +109,21 @@ public class PlayerFallState : PlayerStateBase
                 moveState.EnterToIdle();
             }
             else
-            { 
-                mController.Animator.SetLanding();
+            {
+                if(inputXMagnitude < .1f)
+                {
+                    // mController.Animator.SetLanding();
+                    mController.Animator.SetLanding(true);
+                    mController.Animator.PlayIdleLanding(0f);
+                }
+                else
+                {
+                    // mController.Animator.SetLanding();
+                    mController.Animator.SetLanding(true);
+                    mController.Animator.CrossFadeRunningLanding(.1f);
 
-                StartCoroutine(eRunningLanding());
+                    mRunningLandingRoutine = StartCoroutine(eRunningLanding());
+                }
             }
 
             return;
@@ -129,7 +149,7 @@ public class PlayerFallState : PlayerStateBase
 
     public bool CheckFall()
     {
-        // Debug.Log($"IsGrounded: {mController.Movement.IsGrounded}, velocity Y: {mController.Movement.Velocity.y}");
+        Debug.Log($"IsGrounded: {mController.Movement.IsGrounded}, velocity Y: {mController.Movement.Velocity.y}");
 
         if (!mController.Movement.IsGrounded && mController.Movement.Velocity.y < _fallStartVelocityY)
         {
@@ -147,6 +167,9 @@ public class PlayerFallState : PlayerStateBase
 
             if (animatorStateInfo.IsTag("RunningLanding"))
                 break;
+
+            if (animatorStateInfo.IsTag("IdleLanding"))
+                yield break;
 
             yield return null;
         }

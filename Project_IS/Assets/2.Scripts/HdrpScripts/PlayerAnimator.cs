@@ -11,6 +11,7 @@ public class PlayerAnimator : MonoBehaviour
 
     public event Action onAnimationIK = null;
 
+    // Animator Parameter Hashes
     private readonly int StateHash = Animator.StringToHash("State");
     private readonly int HorizontalHash = Animator.StringToHash("Horizontal");
     private readonly int VerticalHash = Animator.StringToHash("Vertical");
@@ -25,6 +26,10 @@ public class PlayerAnimator : MonoBehaviour
     private readonly int TurnRHash = Animator.StringToHash("TurnR");
     private readonly int LadderTopHash = Animator.StringToHash("LadderTop");
     private readonly int IndexHash = Animator.StringToHash("Index");
+
+    // Animation State Name Hashes
+    private readonly int IdleLandingHash = Animator.StringToHash("IdleLanding");
+    private readonly int RunningLandingHash = Animator.StringToHash("RunningLanding");
 
     private Animator mAnimator;
 
@@ -78,15 +83,20 @@ public class PlayerAnimator : MonoBehaviour
         mAnimator.SetTrigger(JumpHash);
     }
 
-    public void SetLanding()
+    //public void SetLanding()
+    //{
+    //    mAnimator.SetTrigger(LandingHash);
+    //}
+
+    public void SetLanding(bool value)
     {
-        mAnimator.SetTrigger(LandingHash);
+        mAnimator.SetBool(LandingHash, value);
     }
 
-    public void ResetLanding()
-    {
-        mAnimator.ResetTrigger(LandingHash);
-    }
+    //public void ResetLanding()
+    //{
+    //    mAnimator.ResetTrigger(LandingHash);
+    //}
 
     public void SetHeavyLanding()
     {
@@ -101,6 +111,21 @@ public class PlayerAnimator : MonoBehaviour
     public void SetIndex(int value)
     {
         mAnimator.SetInteger(IndexHash, value);
+    }
+
+    public void PlayIdleLanding(float normalizedTime)
+    {
+        mAnimator.Play(IdleLandingHash, 0, normalizedTime);
+    }
+
+    public void PlayRunningLanding(float normalizedTime)
+    {
+        mAnimator.Play(RunningLandingHash, 0, normalizedTime);
+    }
+
+    public void CrossFadeRunningLanding(float normalizedTransitionDuration)
+    {
+        mAnimator.CrossFade(RunningLandingHash, normalizedTransitionDuration, 0);
     }
 
     private void Awake()

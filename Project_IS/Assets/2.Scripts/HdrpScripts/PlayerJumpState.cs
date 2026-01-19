@@ -31,7 +31,7 @@ public class PlayerJumpState : PlayerStateBase
 
     public override void ExitState()
     {
-        mController.Animator.SetLanding();
+        // mController.Animator.SetLanding();
     }
 
     public override void Tick()

@@ -64,7 +64,7 @@ public class PlayerRunJumpState : PlayerStateBase
         if (!mController.Movement.Jumping)
         {
             mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
-            mController.Animator.SetLanding();
+            // mController.Animator.SetLanding();
 
             return;
         }
