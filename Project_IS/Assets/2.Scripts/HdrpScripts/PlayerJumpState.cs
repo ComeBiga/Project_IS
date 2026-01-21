@@ -40,6 +40,15 @@ public class PlayerJumpState : PlayerStateBase
 
         if (!mController.Movement.Jumping)
         {
+            if (mController.Movement.CheckInteractableByOverlap(out Collider[] hitColliders))
+            {
+                var fallingGround = hitColliders[0].GetComponentInParent<FallingGround>();
+
+                // Debug.Log($"Land on {hitColliders[0].name}");
+
+                fallingGround.StepOn();
+            }
+
             mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
             return;
         }

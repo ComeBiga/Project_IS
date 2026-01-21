@@ -63,6 +63,18 @@ public class PlayerRunJumpState : PlayerStateBase
 
         if (!mController.Movement.Jumping)
         {
+            //if(mController.Movement.CheckInteractableToDown(out RaycastHit interactableHit))
+            if(mController.Movement.CheckInteractableByOverlap(out Collider[] hitColliders))
+            {
+                //var interactableObject = interactableHit.collider.GetComponentInParent<InteractableObject>();
+                // Debug.Log($"Land on {interactableHit.collider.name}");
+
+                var fallingGround = hitColliders[0].GetComponentInParent<FallingGround>();
+                // Debug.Log($"Land on {hitColliders[0].name}");
+
+                fallingGround.StepOn();
+            }
+
             mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
             // mController.Animator.SetLanding();
 
@@ -98,6 +110,7 @@ public class PlayerRunJumpState : PlayerStateBase
         mDefaultHeight = height;
     }
 
+    // TODO: Interactable 처리 static 클래스 만들기
     private int checkInteractableObject(out RaycastHit hitInfo)
     {
         // z가 0일 때의 위치
@@ -105,6 +118,13 @@ public class PlayerRunJumpState : PlayerStateBase
         pathOrigin.y += mInteractableOffsetY;
         // pathOrigin.z = 0f;
         pathOrigin.z = mPathZPosition;
+
+        // 현재 캐릭터의 위치
+        //Vector3 characterOrigin = transform.position;
+        //characterOrigin.y += _interactableOffsetY;
+
+        // 현재 캐릭터 발을 기준으로 한 위치
+        Vector3 characterFeetOrigin = transform.position;
 
         bool bFrontCasted = Physics.Raycast(pathOrigin,
                                         mController.Movement.DirectionToVector(),
@@ -114,6 +134,15 @@ public class PlayerRunJumpState : PlayerStateBase
 
         if (bFrontCasted)
             return 1;
+
+        bool bUnderCasted = Physics.Raycast(characterFeetOrigin,
+                                    Vector3.down,
+                                    out hitInfo,
+                                    .1f,
+                                    LayerMask.GetMask("Interactable"));
+
+        if (bUnderCasted)
+            return 3;
 
         return -1;
     }
@@ -144,6 +173,11 @@ public class PlayerRunJumpState : PlayerStateBase
                 if (bSwitched)
                     return;
             }
+        }
+        // under
+        else if (type == 3)
+        {
+            // Debug.Log(hitInfo.collider.name);
         }
         // none
         else

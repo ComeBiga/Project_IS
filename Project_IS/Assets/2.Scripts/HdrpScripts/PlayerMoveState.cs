@@ -475,7 +475,7 @@ public class PlayerMoveState : PlayerStateBase
             velocity.z = 0f;
             mController.Movement.SetVelocity(velocity);
 
-            var interactableObject = hitInfo.collider.GetComponent<InteractableObject>();
+            var interactableObject = hitInfo.collider.GetComponentInParent<InteractableObject>();
 
             // PushPull Object
             if (interactableObject.Pushable && mController.InputHandler.IsInteracting)
@@ -517,6 +517,8 @@ public class PlayerMoveState : PlayerStateBase
                 climbObjectState.SetClimbObject(interactableObject, climbUp: false);
                 mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbObject);
             }
+
+            // Debug.Log(hitInfo.collider.name);
         }
         // back
         else if (type == 0)

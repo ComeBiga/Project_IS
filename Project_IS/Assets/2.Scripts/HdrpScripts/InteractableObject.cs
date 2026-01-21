@@ -9,9 +9,9 @@ public class InteractableObject : MonoBehaviour
     public bool CanClimb => _canClimb;
     public BoxCollider BoxCollider => mBoxCollider;
 
-    [SerializeField] private bool _sidePassable = false;
-    [SerializeField] private bool _pushable = false;
-    [SerializeField] private bool _canClimb = false;
+    [SerializeField] protected bool _sidePassable = false;
+    [SerializeField] protected bool _pushable = false;
+    [SerializeField] protected bool _canClimb = false;
 
     protected BoxCollider mBoxCollider;
 

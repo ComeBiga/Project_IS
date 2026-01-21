@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.InputSystem.XR;
 
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerMovement : MonoBehaviour
@@ -35,6 +36,9 @@ public class PlayerMovement : MonoBehaviour
 
     [Header("Animator")]
     [SerializeField] private PlayerAnimator _animator;
+
+    [Header("Interactable")]
+    [SerializeField] private float _interactableOffsetY;
 
     private Rigidbody mRigidbody;
     private CapsuleCollider mCapsuleCollider;
@@ -257,6 +261,47 @@ public class PlayerMovement : MonoBehaviour
         else
             mCapsuleCollider.material = null;
     }
+
+    #region Interactable Methods
+
+    public bool CheckInteractableToDown(out RaycastHit hitInfo)
+    {
+        // z가 0일 때의 위치
+        //Vector3 pathOrigin = transform.position;
+        //pathOrigin.y += mInteractableOffsetY;
+        //// pathOrigin.z = 0f;
+        //pathOrigin.z = mPathZPosition;
+
+        // 현재 캐릭터의 위치
+        //Vector3 characterOrigin = transform.position;
+        //characterOrigin.y += _interactableOffsetY;
+
+        // 현재 캐릭터 발을 기준으로 한 위치
+        Vector3 characterFeetOrigin = transform.position;
+
+        bool bUnderCasted = Physics.Raycast(characterFeetOrigin,
+                                    Vector3.down,
+                                    out hitInfo,
+                                    .1f,
+                                    LayerMask.GetMask("Interactable"));
+
+        if (bUnderCasted)
+            return true;
+
+        return false;
+    }
+
+    public bool CheckInteractableByOverlap(out Collider[] hitColliders)
+    {
+        hitColliders = Physics.OverlapSphere(transform.position, 0.1f, LayerMask.GetMask("Interactable"));
+
+        if (hitColliders.Length > 0)
+            return true;
+
+        return false;
+    }
+
+    #endregion
 
     public void Tick()
     {

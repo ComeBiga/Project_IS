@@ -110,7 +110,7 @@ public class PlayerFallState : PlayerStateBase
             }
             else
             {
-                if(inputXMagnitude < .1f)
+                if (inputXMagnitude < .1f)
                 {
                     // mController.Animator.SetLanding();
                     mController.Animator.SetLanding(true);
@@ -124,6 +124,14 @@ public class PlayerFallState : PlayerStateBase
 
                     mRunningLandingRoutine = StartCoroutine(eRunningLanding());
                 }
+            }
+
+            if (mController.Movement.CheckInteractableByOverlap(out Collider[] hitColliders))
+            {
+                var fallingGround = hitColliders[0].GetComponentInParent<FallingGround>();
+                // Debug.Log($"Land on {hitColliders[0].name}");
+
+                fallingGround.StepOn();
             }
 
             return;
@@ -149,7 +157,7 @@ public class PlayerFallState : PlayerStateBase
 
     public bool CheckFall()
     {
-        Debug.Log($"IsGrounded: {mController.Movement.IsGrounded}, velocity Y: {mController.Movement.Velocity.y}");
+        // Debug.Log($"IsGrounded: {mController.Movement.IsGrounded}, velocity Y: {mController.Movement.Velocity.y}");
 
         if (!mController.Movement.IsGrounded && mController.Movement.Velocity.y < _fallStartVelocityY)
         {
