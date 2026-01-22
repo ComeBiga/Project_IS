@@ -6,6 +6,7 @@ public class PlayerPushPullState : PlayerStateBase
 {
     private Animator mAnimator;
     private PushPullObject mPushPullObject;
+    private float mDistanceToObject;
     private int mType; // side: 0, front: 1
     private int mAnimType = 0; // idle: 0, push: 1, pull: 2
     private PlayerMovement.EDirection mDirection;
@@ -110,20 +111,26 @@ public class PlayerPushPullState : PlayerStateBase
             // mPushPullObject.SetFriction(true);
         }
 
-        mController.Movement.SetVelocity(pushPullMultiplier * Vector3.right * .8f);
-        mController.Animator.SetHorizontal(pushPullMultiplier);
+        // mController.Movement.SetVelocity(pushPullMultiplier * Vector3.right * .8f);
+        // mController.Animator.SetHorizontal(pushPullMultiplier);
 
         // Debug.Log(mController.Movement.Velocity);
 
         // Debug.Log(animationVelocity);
         // mPushPullObject.PushPull(animationVelocity);
         mbPushPull = mPushPullObject.PushPull(mController, pushPullMultiplier * Vector3.right * .8f);
+        mController.Animator.SetHorizontal(mPushPullObject.GetVelocityXRatio());
 
+        Vector3 newPosition = transform.position;
+        newPosition.x = mPushPullObject.transform.position.x - mDistanceToObject;
+        transform.position = newPosition;
     }
 
     public void SetPushPullObject(PushPullObject pushPullObject)
     {
         mPushPullObject = pushPullObject;
+
+        mDistanceToObject = mPushPullObject.transform.position.x - transform.position.x;
     }
 
     /// <summary>

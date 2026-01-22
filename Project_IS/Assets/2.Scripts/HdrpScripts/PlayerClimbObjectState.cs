@@ -23,6 +23,8 @@ public class PlayerClimbObjectState : PlayerStateBase
     private PlayerMovement.EDirection mClimbDirection;
     private bool mbClimbing = false;                // 오르기/내리기 중인지
     private bool mbClimbUp;                         // 오르기 인지 내리기 인지
+    private Coroutine mClimbUpRoutine = null;
+    private Coroutine mClimbDownRoutine = null;
 
     private bool mbActiveIK = false;
     private Vector3 mTargetIKPos;
@@ -47,11 +49,11 @@ public class PlayerClimbObjectState : PlayerStateBase
 
         if (mbClimbUp)
         {
-            StartCoroutine(eClimbUp());
+            mClimbUpRoutine = StartCoroutine(eClimbUp());
         }
         else
         {
-            StartCoroutine(eClimbDown());
+            mClimbDownRoutine = StartCoroutine(eClimbDown());
         }
     }
 
@@ -66,6 +68,18 @@ public class PlayerClimbObjectState : PlayerStateBase
         mController.Animator.SetVertical(0f);
 
         mController.Animator.onAnimationIK -= updateAnimatorIK;
+
+        if (mClimbUpRoutine != null)
+        {
+            StopCoroutine(mClimbUpRoutine);
+            mClimbUpRoutine = null;
+        }
+
+        if (mClimbDownRoutine != null)
+        {
+            StopCoroutine(mClimbDownRoutine);
+            mClimbDownRoutine = null;
+        }
     }
 
     public override void Tick()
@@ -195,7 +209,11 @@ public class PlayerClimbObjectState : PlayerStateBase
             if(mClimbDirection == PlayerMovement.EDirection.Forward)
             {
                 deltaPosition.x = 0f;
-                deltaPosition.y *= _climbUpYSpeed;
+
+                if(transform.position.y < ppoBounds.max.y)
+                    deltaPosition.y *= _climbUpYSpeed;
+                else
+                    deltaPosition.y = 0f;
 
                 // 캐릭터 z 위치가 0까지만 이동하게 조건을 줌
                 var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
@@ -223,11 +241,23 @@ public class PlayerClimbObjectState : PlayerStateBase
                 {
                     deltaPosition.x = 0f;
                 }
-                deltaPosition.y *= _climbUpYSpeed;
+
+                if(transform.position.y < ppoBounds.max.y)
+                    deltaPosition.y *= _climbUpYSpeed;
+                else
+                    deltaPosition.y = 0f;
+
                 deltaPosition.z = 0f;
             }
 
             transform.position += deltaPosition;
+
+            if(transform.position.y > ppoBounds.max.y)
+            {
+                targetPos = transform.position;
+                targetPos.y = ppoBounds.max.y;
+                transform.position = targetPos;
+            }
 
             yield return null;
         }
@@ -300,6 +330,8 @@ public class PlayerClimbObjectState : PlayerStateBase
 
             yield return null;
         }
+
+        // Debug.Log("Climb Down End");
     }
 
     private void updateAnimatorIK()

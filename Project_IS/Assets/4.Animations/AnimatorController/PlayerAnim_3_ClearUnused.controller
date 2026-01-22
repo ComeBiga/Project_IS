@@ -488,6 +488,34 @@ AnimatorStateTransition:
   m_InterruptionSource: 0
   m_OrderedInterruption: 1
   m_CanTransitionToSelf: 1
+--- !u!1101 &-6561436137398122133
+AnimatorStateTransition:
+  m_ObjectHideFlags: 1
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: 
+  m_Conditions:
+  - m_ConditionMode: 6
+    m_ConditionEvent: State
+    m_EventTreshold: 4
+  - m_ConditionMode: 6
+    m_ConditionEvent: Index
+    m_EventTreshold: 0
+  m_DstStateMachine: {fileID: 2619731372118689409}
+  m_DstState: {fileID: 0}
+  m_Solo: 0
+  m_Mute: 0
+  m_IsExit: 0
+  serializedVersion: 3
+  m_TransitionDuration: 0.15
+  m_TransitionOffset: 0
+  m_ExitTime: 0.67391306
+  m_HasExitTime: 0
+  m_HasFixedDuration: 1
+  m_InterruptionSource: 0
+  m_OrderedInterruption: 1
+  m_CanTransitionToSelf: 1
 --- !u!1101 &-6529126745059941760
 AnimatorStateTransition:
   m_ObjectHideFlags: 1
@@ -1857,6 +1885,7 @@ AnimatorState:
   - {fileID: 4294401724825123636}
   - {fileID: 4012617288132076151}
   - {fileID: -342259184848586132}
+  - {fileID: -6561436137398122133}
   m_StateMachineBehaviours: []
   m_Position: {x: 50, y: 50, z: 0}
   m_IKOnFeet: 0
@@ -2221,13 +2250,13 @@ AnimatorStateMachine:
     m_Position: {x: 400, y: -110, z: 0}
   - serializedVersion: 1
     m_StateMachine: {fileID: 2619731372118689409}
-    m_Position: {x: -380, y: 80, z: 0}
+    m_Position: {x: -250, y: -90, z: 0}
   - serializedVersion: 1
     m_StateMachine: {fileID: -6403751709471773514}
-    m_Position: {x: -380, y: 160, z: 0}
+    m_Position: {x: -380, y: 170, z: 0}
   - serializedVersion: 1
     m_StateMachine: {fileID: -8906677014848926339}
-    m_Position: {x: -370, y: -10, z: 0}
+    m_Position: {x: -380, y: 40, z: 0}
   - serializedVersion: 1
     m_StateMachine: {fileID: 3441597899100213649}
     m_Position: {x: 70, y: -110, z: 0}
@@ -2566,7 +2595,7 @@ AnimatorStateTransition:
   m_Mute: 0
   m_IsExit: 0
   serializedVersion: 3
-  m_TransitionDuration: 0.25
+  m_TransitionDuration: 0.15
   m_TransitionOffset: 0
   m_ExitTime: 0
   m_HasExitTime: 0
@@ -3319,7 +3348,7 @@ AnimatorState:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_Name: PushCubeRight_RM
-  m_Speed: 2
+  m_Speed: 2.8
   m_CycleOffset: 0
   m_Transitions:
   - {fileID: 1643718003052275417}

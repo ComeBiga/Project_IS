@@ -8,6 +8,7 @@ public class PlayerRunJumpState : PlayerStateBase
     public bool jumpUpward = true;
 
     [SerializeField] private PlayerClimbLedgeState _climbLedgeState;
+    [SerializeField] private float _interactableOffsetY = -.5f;
 
     private Vector3 mMoveInput;
     private float mDefaultHeight;
@@ -17,6 +18,7 @@ public class PlayerRunJumpState : PlayerStateBase
     private float mInteractableMaxDistance;
     private float mInteractableOffsetY;
     private float mInteractableDistance;
+    private float mSidePassZDistance;
 
     public override void EnterState()
     {
@@ -29,8 +31,9 @@ public class PlayerRunJumpState : PlayerStateBase
         var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
         mPathZPosition = moveState.PathZPosition;
         mInteractableMaxDistance = moveState.InteractableMaxDistance;
-        mInteractableOffsetY = moveState.InteractableOffsetY;
+        mInteractableOffsetY = moveState.InteractableOffsetY + _interactableOffsetY;
         mInteractableDistance = moveState.InteractableDistance;
+        mSidePassZDistance = moveState.SidePassZDistance;
     }
 
     public override void ExitState()
@@ -144,6 +147,15 @@ public class PlayerRunJumpState : PlayerStateBase
         if (bUnderCasted)
             return 3;
 
+        bool bBackCasted = Physics.Raycast(pathOrigin,
+                                    PlayerMovement.DirectionToVector(mController.Movement.OppositeDirection),
+                                    out hitInfo,
+                                    mInteractableMaxDistance,
+                                    LayerMask.GetMask("Interactable"));
+
+        if (bBackCasted)
+            return 0;
+
         return -1;
     }
 
@@ -162,6 +174,24 @@ public class PlayerRunJumpState : PlayerStateBase
             float distanceToMax = Mathf.Abs(characterPos.x - bounds.max.x);
             float distanceToEdge = Mathf.Min(distanceToMin, distanceToMax);
 
+            // 전방의 오브젝트를 옆으로 비켜지나가는 코드
+            if (interactableObject.SidePassable && characterPos.z > mPathZPosition - mSidePassZDistance)
+            {
+                // 가까운 모서리를 기준으로 zDistance 떨어진 점을 targetPos로 설정
+                Vector3 targetPos = (characterPos.x < bounds.center.x) ? bounds.min : bounds.max;
+                // targetPos.y = 0f;
+                targetPos.y = characterPos.y;
+                targetPos.z = mPathZPosition - mSidePassZDistance;
+
+                // targetPos까지의 방향을 normalize해서 x:z 비율로 velocity.z를 계산 
+                Vector3 direction = targetPos - characterPos;
+                Vector3 normalized = direction.normalized;
+
+                Vector3 velocity = mController.Movement.Velocity;
+                velocity.z = velocity.x * (normalized.z / normalized.x);    // velocity.x : velocity.z = normalized.x : normalized.z
+                mController.Movement.SetVelocity(velocity);
+            }
+
             // Ladder
             if ((interactableObject.CompareTag("Ladder"))
                 && distanceToEdge < mInteractableDistance)
@@ -178,6 +208,35 @@ public class PlayerRunJumpState : PlayerStateBase
         else if (type == 3)
         {
             // Debug.Log(hitInfo.collider.name);
+        }
+        // back
+        else if (type == 0)
+        {
+            var interactableObject = hitInfo.collider.GetComponentInParent<InteractableObject>();
+            Bounds bounds = interactableObject.BoxCollider.bounds;
+            Vector3 characterPos = transform.position;
+
+            // 현재 캐릭터 위치와 오브젝트의 가까운 모서리까지의 거리
+            float distanceToMin = Mathf.Abs(characterPos.x - bounds.min.x);
+            float distanceToMax = Mathf.Abs(characterPos.x - bounds.max.x);
+            float distanceToEdge = Mathf.Min(distanceToMin, distanceToMax);
+
+            // 오브젝트를 비켜지나가고 나서 z위치를 다시 0으로 맞춰주는 코드
+            if (interactableObject.SidePassable && characterPos.z < mPathZPosition)
+            {
+                Vector3 targetPos = (characterPos.x < bounds.center.x) ? bounds.min : bounds.max;
+                // 오브젝트를 감지할 수 있는 최대 거리까지 서서히 맞춰주게 함
+                targetPos.x += (characterPos.x < bounds.center.x) ? -mInteractableMaxDistance : mInteractableMaxDistance;
+                targetPos.y = characterPos.y;
+                targetPos.z = mPathZPosition;
+
+                Vector3 direction = targetPos - characterPos;
+                Vector3 normalized = direction.normalized;
+
+                Vector3 velocity = mController.Movement.Velocity;
+                velocity.z = velocity.x * (normalized.z / normalized.x);    // velocity.x : velocity.z = normalized.x : normalized.z
+                mController.Movement.SetVelocity(velocity);
+            }
         }
         // none
         else

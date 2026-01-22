@@ -2263,7 +2263,7 @@ PrefabInstance:
     - target: {fileID: 3395877443170664856, guid: ceb8b399c04f657409507b2c79c6d8a7,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: 10.4
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 3395877443170664856, guid: ceb8b399c04f657409507b2c79c6d8a7,
         type: 3}
@@ -5638,7 +5638,7 @@ Transform:
   m_GameObject: {fileID: 301401885}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 12, z: -10}
+  m_LocalPosition: {x: 0, y: 1.6, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
@@ -6525,7 +6525,7 @@ Transform:
   m_GameObject: {fileID: 330585543}
   serializedVersion: 2
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 12, z: -10}
+  m_LocalPosition: {x: 0, y: 1.6, z: -10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children: []
@@ -9006,7 +9006,9 @@ MonoBehaviour:
   _sidePassable: 0
   _pushable: 0
   _canClimb: 0
+  _logVelocity: 0
   _pushPullSpeed: 1
+  _pushPullMaxSpeed: 1
   _matNoFriction: {fileID: 0}
   _handlePointL: {fileID: 0}
   _handlePointR: {fileID: 0}
@@ -16189,7 +16191,7 @@ PrefabInstance:
     - target: {fileID: 8929717637861825896, guid: b6e9b02cf08aa42468b4b6eebe09c0cf,
         type: 3}
       propertyPath: m_IsActive
-      value: 0
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 9035105307630693939, guid: b6e9b02cf08aa42468b4b6eebe09c0cf,
         type: 3}
@@ -47263,7 +47265,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &2084298286
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -47279,7 +47281,9 @@ MonoBehaviour:
   _sidePassable: 0
   _pushable: 0
   _canClimb: 0
+  _logVelocity: 0
   _pushPullSpeed: 1
+  _pushPullMaxSpeed: 1
   _matNoFriction: {fileID: 0}
   _handlePointL: {fileID: 0}
   _handlePointR: {fileID: 0}

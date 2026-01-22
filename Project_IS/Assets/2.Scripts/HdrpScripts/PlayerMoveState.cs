@@ -14,6 +14,7 @@ public class PlayerMoveState : PlayerStateBase
     public float InteractableMaxDistance => _interactableMaxDistance;
     public float InteractableOffsetY => _interactableOffsetY;
     public float InteractableDistance => _interactableDistance;
+    public float SidePassZDistance => _sidePassZDistance;
 
     [Header("Debug")]
     [SerializeField] private bool _drawInteractableRay = true;

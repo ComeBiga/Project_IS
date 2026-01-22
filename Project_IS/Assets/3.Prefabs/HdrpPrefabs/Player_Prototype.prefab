@@ -247,6 +247,7 @@ MonoBehaviour:
     serializedVersion: 2
     m_Bits: 64
   _animator: {fileID: 1767484170403361306}
+  _interactableOffsetY: 0
 --- !u!114 &2150413833795799531
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -298,6 +299,7 @@ MonoBehaviour:
   key: 0
   _drawInteractableRay: 0
   _drawFrontWallCheckRay: 0
+  _drawGroundNormal: 1
   _frontWallCheckLayer:
     serializedVersion: 2
     m_Bits: 320
@@ -308,7 +310,7 @@ MonoBehaviour:
   _interactableMaxDistance: 5
   _interactableOffsetY: 1
   _interactableDistance: 0.5
-  _sidePassZDistance: 0.6
+  _sidePassZDistance: 0.75
   _ladderRadius: 0.5
 --- !u!114 &6697929909091780849
 MonoBehaviour:
@@ -473,6 +475,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   key: 9
+  mSlopeAngle: 30
 --- !u!1 &7065434943730406711
 GameObject:
   m_ObjectHideFlags: 0

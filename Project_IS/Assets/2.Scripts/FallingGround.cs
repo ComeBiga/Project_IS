@@ -51,7 +51,7 @@ public class FallingGround : PushPullObject
         _pushable = true;
         _canClimb = true;
 
-        _goTopGround.SetActive(false);
+        // _goTopGround.SetActive(false);
         // gameObject.layer = LayerMask.NameToLayer("Interactable");
     }
 
