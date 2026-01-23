@@ -12,6 +12,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
         public int checkIndex;
     }
 
+    [SerializeField] private float _deltaPositionYSpeed = 1f;
     [SerializeField] private float _lerpXOffset = .2f;
     [SerializeField] private float _lerpYOffsetOverHead = 1f;
     [SerializeField] private float _lerpYOffsetChest = 1f;
@@ -127,18 +128,23 @@ public class PlayerClimbLedgeState : PlayerStateBase
         switch (mClimbLedgeInfo.checkIndex)
         {
             case 0:
+                Debug.Log("OverHead Ledge Climb");
                 targetY -= _lerpYOffsetOverHead;
                 break;
             case 1:
+                Debug.Log("Chest Ledge Climb");
                 targetY -= _lerpYOffsetChest;
                 break;
             case 2:
+                Debug.Log("Stomach Ledge Climb");
                 targetY -= _lerpYOffsetStomach;
                 break;
             case 3:
+                Debug.Log("Knee Ledge Climb");
                 targetY -= _lerpYOffsetKnee;
                 break;
             default:
+                Debug.Log("Default Ledge Climb");
                 targetY -= _lerpYOffsetKnee;
                 break;
         }
@@ -167,11 +173,22 @@ public class PlayerClimbLedgeState : PlayerStateBase
         while(mbClimb)
         {
             Vector3 deltaPosition = mAnimator.deltaPosition;
-            if (transform.position.y > mClimbLedgeInfo.ledgeBounds.max.y)
+
+            if (transform.position.y < mClimbLedgeInfo.ledgeBounds.max.y)
+                deltaPosition.y *= _deltaPositionYSpeed;
+            else
                 deltaPosition.y = 0f;
+
             deltaPosition.z = 0f;
 
             transform.position += deltaPosition;
+
+            if (transform.position.y > mClimbLedgeInfo.ledgeBounds.max.y)
+            {
+                targetPos = transform.position;
+                targetPos.y = mClimbLedgeInfo.ledgeBounds.max.y;
+                transform.position = targetPos;
+            }
 
             yield return null;
         }

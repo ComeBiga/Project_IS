@@ -343,6 +343,7 @@ MonoBehaviour:
   key: 2
   jumpUpward: 1
   _climbLedgeState: {fileID: 5974772966008876441}
+  _interactableOffsetY: -0.5
 --- !u!114 &794937472454055995
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -430,11 +431,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   key: 7
+  _deltaPositionYSpeed: 1
   _lerpXOffset: 0.2
   _lerpYOffsetOverHead: 1.27
   _lerpYOffsetChest: 0.9
   _lerpYOffsetStomach: 0.5
-  _lerpYOffsetKnee: 0.1
+  _lerpYOffsetKnee: 0.05
   _raycastDistance: 0.5
   _raycastCount: 5
   _ledgeRange: 0.3
