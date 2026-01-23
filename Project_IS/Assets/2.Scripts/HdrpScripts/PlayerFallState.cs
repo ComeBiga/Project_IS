@@ -9,12 +9,14 @@ public class PlayerFallState : PlayerStateBase
     [SerializeField]
     private float _fallStartVelocityY = -1f;
     [SerializeField]
+    private float _idleLandingDuration = .25f;
+    [SerializeField]
     private float _heavyLandingVelocityY = -10f;
     [SerializeField]
     private float _runningLandingSpeed = .8f;
 
     private Animator mAnimator;
-    private Coroutine mRunningLandingRoutine = null;
+    private Coroutine mLandingRoutine = null;
     private bool mbLanding = false;
     private float mMinVelocityY = 0f;
 
@@ -53,10 +55,10 @@ public class PlayerFallState : PlayerStateBase
         // mController.Animator.SetInputXMagnitude(0f);
         mController.Animator.SetLanding(false);
 
-        if (mRunningLandingRoutine != null)
+        if (mLandingRoutine != null)
         {
-            StopCoroutine(mRunningLandingRoutine);
-            mRunningLandingRoutine = null;
+            StopCoroutine(mLandingRoutine);
+            mLandingRoutine = null;
         }
     }
 
@@ -112,17 +114,21 @@ public class PlayerFallState : PlayerStateBase
             {
                 if (inputXMagnitude < .1f)
                 {
+                    mController.Movement.SetVelocity(Vector3.zero);
                     // mController.Animator.SetLanding();
                     mController.Animator.SetLanding(true);
                     mController.Animator.PlayIdleLanding(0f);
+
+                    mLandingRoutine = StartCoroutine(eIdleLanding());
                 }
                 else
                 {
+                    // mController.Movement.SetVelocity(Vector3.zero);
                     // mController.Animator.SetLanding();
                     mController.Animator.SetLanding(true);
                     mController.Animator.CrossFadeRunningLanding(.1f);
 
-                    mRunningLandingRoutine = StartCoroutine(eRunningLanding());
+                    mLandingRoutine = StartCoroutine(eRunningLanding());
                 }
             }
 
@@ -165,6 +171,29 @@ public class PlayerFallState : PlayerStateBase
         }
 
         return false;
+    }
+
+    private IEnumerator eIdleLanding()
+    {
+        float timer = 0f;
+
+        while (true)
+        {
+            if(timer < _idleLandingDuration)
+            {
+                timer += Time.deltaTime;
+                yield return null;
+                continue;
+            }
+
+            if (Mathf.Abs(mController.InputHandler.MoveInput.x) > .1f)
+            {
+                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+                yield break;
+            }
+
+            yield return null;
+        }
     }
 
     private IEnumerator eRunningLanding()
@@ -224,6 +253,7 @@ public class PlayerFallState : PlayerStateBase
                     velocity.x = moveSpeed;
             }
 
+            velocity.y = mController.Movement.Velocity.y;
             velocity.z = 0f;
             mController.Movement.SetVelocity(velocity);
             // Debug.Log(velocity);

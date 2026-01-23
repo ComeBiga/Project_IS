@@ -416,8 +416,9 @@ MonoBehaviour:
   key: 6
   _climbLedgeState: {fileID: 5974772966008876441}
   _fallStartVelocityY: -1
+  _idleLandingDuration: 0.12
   _heavyLandingVelocityY: -10
-  _runningLandingSpeed: 0.8
+  _runningLandingSpeed: 0.5
 --- !u!114 &5974772966008876441
 MonoBehaviour:
   m_ObjectHideFlags: 0

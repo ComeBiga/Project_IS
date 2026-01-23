@@ -128,23 +128,23 @@ public class PlayerClimbLedgeState : PlayerStateBase
         switch (mClimbLedgeInfo.checkIndex)
         {
             case 0:
-                Debug.Log("OverHead Ledge Climb");
+                // Debug.Log("OverHead Ledge Climb");
                 targetY -= _lerpYOffsetOverHead;
                 break;
             case 1:
-                Debug.Log("Chest Ledge Climb");
+                // Debug.Log("Chest Ledge Climb");
                 targetY -= _lerpYOffsetChest;
                 break;
             case 2:
-                Debug.Log("Stomach Ledge Climb");
+                // Debug.Log("Stomach Ledge Climb");
                 targetY -= _lerpYOffsetStomach;
                 break;
             case 3:
-                Debug.Log("Knee Ledge Climb");
+                // Debug.Log("Knee Ledge Climb");
                 targetY -= _lerpYOffsetKnee;
                 break;
             default:
-                Debug.Log("Default Ledge Climb");
+                // Debug.Log("Default Ledge Climb");
                 targetY -= _lerpYOffsetKnee;
                 break;
         }
