@@ -108,6 +108,11 @@ public class PlayerRunJumpState : PlayerStateBase
         updateInteractable(bHitDirection, interactableHitInfo);
     }
 
+    public void SetTurningCW(bool value)
+    {
+        mController.Animator.SetIndex(value ? 0 : 1);
+    }
+
     public void SetDefaultHeight(float height)
     {
         mDefaultHeight = height;

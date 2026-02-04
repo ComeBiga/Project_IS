@@ -15,6 +15,8 @@ public class PlayerLadderState : PlayerStateBase
     [SerializeField] private float _startHeight = .2f;
     [SerializeField] private float _distanceToCharacter = .2f;
     [SerializeField] private float _startClimbUpDuration = .2f;
+    [Header("End To Ground")]
+    [SerializeField] private float _endToGroundDuration = .2f;
     [Header("End To Platform")]
     [SerializeField] private float _endToPlatformTopTime = .6f;
     [SerializeField] private float _endToPlatformXSpeed = 2f;
@@ -42,6 +44,7 @@ public class PlayerLadderState : PlayerStateBase
     private PlayerMovement.EDirection mLadderDirection;     // 사다리 방향 사다리 타기 종료 후 캐릭터 방향 처리 용
     private float mRotatedAngles = 0f;
     private bool mbIsSameDirectionStart;
+    private float mStartMoveInputX = 0f;
 
     // IK
     private bool mbActiveIK = false;
@@ -78,8 +81,10 @@ public class PlayerLadderState : PlayerStateBase
         mbLadderTop = false;
         mbIsHandDefault = true;
         mRotatedAngles = 0f;
+        mStartMoveInputX = 0f;
 
         mbActiveIK = true;
+        mController.Animator.SetClimbLadder();
         mController.Animator.SetInputXMagnitude(0f);
 
         mController.Animator.onAnimationIK -= updateAnimatorIK;
@@ -114,6 +119,9 @@ public class PlayerLadderState : PlayerStateBase
 
     public override void Tick()
     {
+        if (mbLadderTop)
+            return;
+
         if(mLadderDirection == PlayerMovement.EDirection.Right)
         {
             if (mController.InputHandler.MoveInput.x < 0.1f)
@@ -297,6 +305,22 @@ public class PlayerLadderState : PlayerStateBase
 
     public void EndToPlatform()
     {
+        if(!mbLadderTop)
+            return;
+
+        mbLadderTop = false;
+
+        PlayerMoveState moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+
+        if (Mathf.Abs(mController.InputHandler.MoveInput.x) > .1f)
+        {
+            moveState.EnterToRun(mStartMoveInputX);
+        }
+        else
+        {
+            // moveState.EnterToIdle();
+        }
+
         mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
     }
 
@@ -415,7 +439,8 @@ public class PlayerLadderState : PlayerStateBase
             // Ladder Bottom
             if (mCurrentStepIndex < 0)
             {
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+                StartCoroutine(eEndToGround());
                 break;
             }
 
@@ -547,6 +572,30 @@ public class PlayerLadderState : PlayerStateBase
         StartCoroutine(eClimb());
     }
 
+    private IEnumerator eEndToGround()
+    {
+        Vector3 startPos = transform.position;
+        Vector3 targetPos = startPos;
+        targetPos.y = 0f;
+
+        float timer = 0f;
+        float duration = _endToGroundDuration;
+
+        while (timer < duration)
+        {
+            Vector3 currentPos = transform.position;
+            currentPos.y = Mathf.Lerp(startPos.y, targetPos.y, timer / duration);
+            transform.position = currentPos;
+
+            timer += Time.deltaTime;
+            yield return null;
+        }
+
+        transform.position = targetPos;
+
+        mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+    }
+
     private IEnumerator eEndToPlatform()
     {
         float topYPos = mStepPositions[mCurrentStepIndex].y;
@@ -626,6 +675,17 @@ public class PlayerLadderState : PlayerStateBase
                 transform.position = newPosition;
             }
 
+            mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
+
+            // mStartMoveInputX = deltaPosition.x / (Time.deltaTime * mController.Movement.MoveSpeed);
+            float decimalTime = animatorStateInfo.normalizedTime - (int)animatorStateInfo.normalizedTime;
+
+            //if (decimalTime > .8f)
+            //{
+            //    EndToPlatform();
+            //    yield break;
+            //}
+
             yield return null;
         }
     }
@@ -678,7 +738,7 @@ public class PlayerLadderState : PlayerStateBase
 
             // z
             deltaPosition.z = 0f;
-            Debug.Log($"origin: {mController.Animator.Animator.deltaPosition}, result: {deltaPosition}");
+            // Debug.Log($"origin: {mController.Animator.Animator.deltaPosition}, result: {deltaPosition}");
             transform.position += deltaPosition;
 
             // deltaRotation

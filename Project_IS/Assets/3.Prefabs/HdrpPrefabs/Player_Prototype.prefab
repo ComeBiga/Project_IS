@@ -221,6 +221,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _axisSensitivity: 3.5
   _axisDeadZone: 0.3
+  _heldThreshold: 0.15
 --- !u!114 &4114197322998774063
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -360,6 +361,7 @@ MonoBehaviour:
   _startHeight: 0.2
   _distanceToCharacter: 0.3
   _startClimbUpDuration: 0.2
+  _endToGroundDuration: 0.2
   _endToPlatformTopTime: 0.6
   _endToPlatformXSpeed: 3
   _startClimbDownXSpeed: 5
@@ -398,9 +400,9 @@ MonoBehaviour:
   _climbUpZDelay: 0.4
   _lerpZPosDuration: 0.2
   _climbDownRotateSpeed: 3
-  _climbDownYSpeed: 1
+  _climbDownYSpeed: 1.4
   _climbDownZSpeed: 1.8
-  _climbDownEndTime: 0.8
+  _climbDownEndTime: 0.88
 --- !u!114 &8686870357759620641
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -415,8 +417,9 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   key: 6
   _climbLedgeState: {fileID: 5974772966008876441}
-  _fallStartVelocityY: -1
+  _fallStartVelocityY: -2
   _idleLandingDuration: 0.12
+  _mediumLandingVelocityY: -7
   _heavyLandingVelocityY: -10
   _runningLandingSpeed: 0.5
 --- !u!114 &5974772966008876441
@@ -434,6 +437,10 @@ MonoBehaviour:
   key: 7
   _deltaPositionYSpeed: 1
   _lerpXOffset: 0.2
+  _lerpXOffsetOverHead: 0.2
+  _lerpXOffsetChest: 0.2
+  _lerpXOffsetStomach: 0.1
+  _lerpXOffsetKnee: -0.1
   _lerpYOffsetOverHead: 1.27
   _lerpYOffsetChest: 0.9
   _lerpYOffsetStomach: 0.5
@@ -441,6 +448,10 @@ MonoBehaviour:
   _raycastDistance: 0.5
   _raycastCount: 5
   _ledgeRange: 0.3
+  _exitNormalizedTimeOverHead: 0.8
+  _exitNormalizedTimeChest: 0.745
+  _exitNormalizedTimeStomach: 0.68
+  _exitNormalizedTimeKnee: 0.53
 --- !u!114 &4227745180388004774
 MonoBehaviour:
   m_ObjectHideFlags: 0

@@ -715,6 +715,8 @@ namespace Synty.AnimationBaseLocomotion.Samples
                 }
 
                 _inputReader._movementInputDuration += Time.deltaTime;
+                //Debug.Log($"Tapped: {_movementInputTapped}");
+                //Debug.Log("Duration: " + _inputReader._movementInputDuration);
             }
             else
             {

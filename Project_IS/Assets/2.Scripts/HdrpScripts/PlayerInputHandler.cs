@@ -9,9 +9,19 @@ public class PlayerInputHandler : MonoBehaviour
     public bool JumpPressed { get; private set; }
     public bool IsInteracting { get; private set; }
     public bool DownPressed { get; private set; }
+    public bool MoveInputXTapped { get; private set; }
+    public bool MoveInputXPressed { get; private set; }
+    public bool MoveInputXHeld { get; private set; }
+    public bool MoveInputYTapped { get; private set; }
+    public bool MoveInputYPressed { get; private set; }
+    public bool MoveInputYHeld { get; private set; }
 
     [SerializeField] private float _axisSensitivity = 0.1f;
     [SerializeField] private float _axisDeadZone = 0.3f;        // Copilot¿Ã √ﬂ√µ«ÿ¡‡º≠ ¿œ¥‹ ≥ˆµ“
+    [SerializeField] private float _heldThreshold = 0.15f;
+
+    private float mInputXDuration = 0f;
+    private float mInputYDuration = 0f;
 
     public void ResetJump()
     {
@@ -27,6 +37,16 @@ public class PlayerInputHandler : MonoBehaviour
     {
         MoveInput = Vector2.zero;
         // Input.ResetInputAxes();
+    }
+
+    public void SetMoveInput(Vector2 value)
+    {
+        MoveInput = value;
+    }
+
+    public Vector2 GetInputMagnitude()
+    {
+        return new Vector2(Mathf.Abs(MoveInput.x), Mathf.Abs(MoveInput.y));
     }
 
     // Update is called once per frame
@@ -83,6 +103,73 @@ public class PlayerInputHandler : MonoBehaviour
         if(Input.GetAxis("Vertical") < -.01f)
         {
             DownPressed = true;
+        }
+
+        calculateInput();
+    }
+
+    private void calculateInput()
+    {
+        // X Axis
+        if ((MoveInput.x > .01f || MoveInput.x < -.01f)
+            && (MoveInputRaw.x > .01f || MoveInputRaw.x < -.01f))
+        {
+            if(mInputXDuration < .001f)
+            {
+                MoveInputXTapped = true;
+            }
+            else if (mInputXDuration > .001f && mInputXDuration < _heldThreshold)
+            {
+                MoveInputXTapped = false;
+                MoveInputXPressed = true;
+                MoveInputXHeld = false;
+            }
+            else
+            {
+                MoveInputXTapped = false;
+                MoveInputXPressed = false;
+                MoveInputXHeld = true;
+            }
+
+            mInputXDuration += Time.deltaTime;
+        }
+        else
+        {
+            mInputXDuration = 0f;
+            MoveInputXTapped = false;
+            MoveInputXPressed = false;
+            MoveInputXHeld = false;
+        }
+
+        // Y Axis
+        if ((MoveInput.y > .01f || MoveInput.y < -.01f)
+            && (MoveInputRaw.y > .01f || MoveInputRaw.y < -.01f))
+        {
+            if(mInputYDuration < .001f)
+            {
+                MoveInputYTapped = true;
+            }
+            else if (mInputYDuration > .001f && mInputYDuration < _heldThreshold)
+            {
+                MoveInputYTapped = false;
+                MoveInputYPressed = true;
+                MoveInputYHeld = false;
+            }
+            else
+            {
+                MoveInputYTapped = false;
+                MoveInputYPressed = false;
+                MoveInputYHeld = true;
+            }
+
+            mInputYDuration += Time.deltaTime;
+        }
+        else
+        {
+            mInputYDuration = 0f;
+            MoveInputYTapped = false;
+            MoveInputYPressed = false;
+            MoveInputYHeld = false;
         }
     }
 }

@@ -19,6 +19,7 @@ public class LadderEndToPlatformAnimBehaviour : StateMachineBehaviour
     // OnStateExit is called when a transition ends and the state machine finishes evaluating this state
     override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
+        Debug.Log("LadderEndToPlatformAnimBehaviour - OnStateExit");
         PlayerController controller = animator.GetComponentInParent<PlayerController>();
         var ladderStateBase = controller.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder);
         (ladderStateBase as PlayerLadderState).EndToPlatform();

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static PlayerMovement;
 
 public class PlayerFallState : PlayerStateBase
 {
@@ -11,6 +12,8 @@ public class PlayerFallState : PlayerStateBase
     [SerializeField]
     private float _idleLandingDuration = .25f;
     [SerializeField]
+    private float _mediumLandingVelocityY = -5f;
+    [SerializeField]
     private float _heavyLandingVelocityY = -10f;
     [SerializeField]
     private float _runningLandingSpeed = .8f;
@@ -19,12 +22,17 @@ public class PlayerFallState : PlayerStateBase
     private Coroutine mLandingRoutine = null;
     private bool mbLanding = false;
     private float mMinVelocityY = 0f;
+    private float mStartMoveInputX = 0f;
 
     // Ladder
     private float mPathZPosition;
     private float mInteractableMaxDistance;
     private float mInteractableOffsetY;
     private float mInteractableDistance;
+
+    // Wall Check
+    private float mFrontWallCheckDistance;
+    private LayerMask mFrontWallCheckLayer;
 
     public override void Initialize(PlayerController controller)
     {
@@ -37,6 +45,7 @@ public class PlayerFallState : PlayerStateBase
     {
         mbLanding = false;
         mMinVelocityY = 0f;
+        mStartMoveInputX = 0f;
 
         // mController.Animator.ResetLanding();
         mController.Animator.SetLanding(false);
@@ -47,6 +56,8 @@ public class PlayerFallState : PlayerStateBase
         mInteractableMaxDistance = moveState.InteractableMaxDistance;
         mInteractableOffsetY = moveState.InteractableOffsetY;
         mInteractableDistance = moveState.InteractableDistance;
+        mFrontWallCheckDistance = moveState.FrontWallCheckDistance;
+        mFrontWallCheckLayer = moveState.FrontWallCheckLayer;
     }
 
     public override void ExitState()
@@ -102,33 +113,70 @@ public class PlayerFallState : PlayerStateBase
             float inputXMagnitude = Mathf.Abs(mController.InputHandler.MoveInput.x);
             mController.Animator.SetInputXMagnitude(inputXMagnitude);
 
+            // Heavy Landing
             if (mMinVelocityY < _heavyLandingVelocityY)
             {
                 mController.Movement.SetVelocity(Vector3.zero);
-                mController.Animator.SetHeavyLanding();
+                // mController.Animator.SetHeavyLanding();
+                mController.Animator.SetLanding(true);
+                mController.Animator.SetIndex(2);
 
                 PlayerMoveState moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
                 moveState.EnterToIdle();
             }
-            else
+            // Medium Landing
+            else if (mMinVelocityY < _mediumLandingVelocityY)
             {
+                mController.Animator.SetIndex(1);
+
+                // Idle Landing
                 if (inputXMagnitude < .1f)
                 {
                     mController.Movement.SetVelocity(Vector3.zero);
                     // mController.Animator.SetLanding();
                     mController.Animator.SetLanding(true);
-                    mController.Animator.PlayIdleLanding(0f);
+                    mController.Animator.PlayIdleLanding(landingType: 1, 0f);
 
                     mLandingRoutine = StartCoroutine(eIdleLanding());
                 }
+                // Running Landing
                 else
                 {
                     // mController.Movement.SetVelocity(Vector3.zero);
                     // mController.Animator.SetLanding();
                     mController.Animator.SetLanding(true);
-                    mController.Animator.CrossFadeRunningLanding(.1f);
+                    mController.Animator.CrossFadeRunningLanding(landingType: 1, .1f);
 
                     mLandingRoutine = StartCoroutine(eRunningLanding());
+                }
+            }
+            // Soft Landing
+            else
+            {
+                mController.Animator.SetIndex(0);
+
+                // Idle Landing
+                if (inputXMagnitude < .1f)
+                {
+                    mController.Movement.SetVelocity(Vector3.zero);
+                    // mController.Animator.SetLanding();
+                    mController.Animator.SetLanding(true);
+                    // mController.Animator.PlayIdleLanding(landingType: 0, 0f);
+                    mController.Animator.CrossFadeIdleLanding(landingType: 0, .05f);
+
+                    // mLandingRoutine = StartCoroutine(eIdleLanding());
+                    EndLanding();
+                }
+                // Running Landing
+                else
+                {
+                    // mController.Movement.SetVelocity(Vector3.zero);
+                    // mController.Animator.SetLanding();
+                    mController.Animator.SetLanding(true);
+                    mController.Animator.CrossFadeRunningLanding(landingType: 0, .1f);
+
+                    // mLandingRoutine = StartCoroutine(eRunningLanding());
+                    EndLanding();
                 }
             }
 
@@ -158,6 +206,23 @@ public class PlayerFallState : PlayerStateBase
 
     public void EndLanding()
     {
+        if (!mbLanding)
+            return;
+
+        mbLanding = false;
+
+        var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+
+        if (Mathf.Abs(mStartMoveInputX) > .1f)
+        {
+            moveState.EnterToRun(mStartMoveInputX);
+        }
+        else
+        {
+            // Soft Running Landing은 EnterToIdle 호출 안 함
+            // moveState.EnterToIdle();
+        }
+
         mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
     }
 
@@ -229,25 +294,32 @@ public class PlayerFallState : PlayerStateBase
 
             Vector3 velocity = mAnimator.velocity;
             velocity.x = velocity.x * _runningLandingSpeed;
-
-            if(direction == PlayerMovement.EDirection.Left)
+            
+            // Wall Check
+            if(checkWallForMove(out Vector2 resultMoveInput))
             {
-                if(mController.InputHandler.MoveInput.x > 0f)
-                {
-                    EndLanding();
-                    yield break;
-                }
+                EndLanding();
+                yield break;
+            }
+
+            if (direction == PlayerMovement.EDirection.Left)
+            {
+                //if (mController.InputHandler.MoveInput.x > 0f)
+                //{
+                //    EndLanding();
+                //    yield break;
+                //}
 
                 if (velocity.x > -moveSpeed)
                     velocity.x = -moveSpeed;
             }
             else
             {
-                if (mController.InputHandler.MoveInput.x < 0f)
-                {
-                    EndLanding();
-                    yield break;
-                }
+                //if (mController.InputHandler.MoveInput.x < 0f)
+                //{
+                //    EndLanding();
+                //    yield break;
+                //}
 
                 if (velocity.x < moveSpeed)
                     velocity.x = moveSpeed;
@@ -259,6 +331,15 @@ public class PlayerFallState : PlayerStateBase
             // Debug.Log(velocity);
 
             distance += deltaPosition.x;
+
+            mStartMoveInputX = deltaPosition.x / (Time.deltaTime * mController.Movement.MoveSpeed);
+            //Debug.Log($"moveInputX: {mStartMoveInputX}, normalizedTime: {animatorStateInfo.normalizedTime}");
+
+            //if(animatorStateInfo.normalizedTime > .8f)
+            //{
+            //    EndLanding();
+            //    yield break;
+            //}
 
             yield return null;
         }
@@ -355,4 +436,43 @@ public class PlayerFallState : PlayerStateBase
         return false;
     }
 
+    private bool checkWallForMove(out Vector2 resultMoveInput)
+    {
+        // z가 0일 때의 위치
+        Vector3 pathOrigin = transform.position;
+        pathOrigin.y += mInteractableOffsetY;
+        pathOrigin.z = 0f;
+
+        // 현재 캐릭터의 위치
+        Vector3 characterOrigin = transform.position;
+        characterOrigin.y += mInteractableOffsetY;
+
+        // 현재 캐릭터 발을 기준으로 한 위치
+        Vector3 characterFeetOrigin = transform.position;
+
+        bool bFrontCasted = Physics.Raycast(pathOrigin,
+                                        mController.Movement.DirectionToVector(),
+                                        out RaycastHit hitInfo,
+                                        mFrontWallCheckDistance,
+                                        mFrontWallCheckLayer);
+
+        Vector2 moveInput = mController.InputHandler.MoveInput;
+
+        if (bFrontCasted)
+        {
+            if (mController.Movement.Direction == EDirection.Right)
+            {
+                if (moveInput.x > 0f)
+                    moveInput.x = 0f;
+            }
+            else
+            {
+                if (moveInput.x < 0f)
+                    moveInput.x = 0f;
+            }
+        }
+
+        resultMoveInput = moveInput;
+        return bFrontCasted;
+    }
 }

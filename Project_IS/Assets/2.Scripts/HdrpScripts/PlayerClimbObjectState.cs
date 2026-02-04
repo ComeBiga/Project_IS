@@ -39,6 +39,8 @@ public class PlayerClimbObjectState : PlayerStateBase
 
     public override void EnterState()
     {
+        mController.Animator.SetClimbObject();
+
         mController.Movement.SetVelocity(Vector3.zero);
         mController.Movement.SetUseGravity(false);
         mController.Movement.SetColliderActive(false);
@@ -120,6 +122,10 @@ public class PlayerClimbObjectState : PlayerStateBase
     public void EndClimbObject()
     {
         mbClimbing = false;
+
+        var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+        moveState.EnterToIdle();
+
         mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
     }
 
@@ -296,6 +302,9 @@ public class PlayerClimbObjectState : PlayerStateBase
             deltaPosition.y *= (deltaPosition.y < 0f) ? _climbDownYSpeed : 1f;
             deltaPosition.z *= (deltaPosition.z < 0f) ? _climbDownZSpeed : 1f;
 
+            if (transform.position.y < 0f)
+                deltaPosition.y = 0f;
+
             if (transform.position.z < -.6f)
                 deltaPosition.z = 0f;
 
@@ -309,10 +318,12 @@ public class PlayerClimbObjectState : PlayerStateBase
             deltaEulerAngles.y *= _climbDownRotateSpeed;
             rotatedAngles += deltaEulerAngles.y;
 
+            // 내려가기 시작할 때
             if (Mathf.Abs(rotatedAngles) < Number.DEG_90)
             {
                 transform.rotation *= Quaternion.Euler(deltaEulerAngles);
             }
+            // 내려가기 끝날 때
             else
             {
                 if(animatorStateInfo.normalizedTime > _climbDownEndTime)
@@ -326,7 +337,6 @@ public class PlayerClimbObjectState : PlayerStateBase
                     transform.rotation = Quaternion.Euler(Vector3.zero);
                 }
             }
-
 
             yield return null;
         }

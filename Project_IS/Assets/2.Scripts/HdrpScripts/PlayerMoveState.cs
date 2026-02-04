@@ -1,10 +1,7 @@
 using PropMaker;
 using System.Collections;
 using System.Collections.Generic;
-using Unity.VisualScripting;
 using UnityEditor;
-using UnityEditor.PackageManager;
-using UnityEditor.ShaderGraph.Internal;
 using UnityEngine;
 using static PlayerMovement;
 
@@ -14,6 +11,8 @@ public class PlayerMoveState : PlayerStateBase
     public float InteractableMaxDistance => _interactableMaxDistance;
     public float InteractableOffsetY => _interactableOffsetY;
     public float InteractableDistance => _interactableDistance;
+    public LayerMask FrontWallCheckLayer => _frontWallCheckLayer;
+    public float FrontWallCheckDistance => _frontWallCheckDistance;
     public float SidePassZDistance => _sidePassZDistance;
 
     [Header("Debug")]
@@ -40,6 +39,7 @@ public class PlayerMoveState : PlayerStateBase
     private Vector3 mPreviousForward;       // 회전을 시작하면 어느 방향으로 도는지 체크해야되기 때문에 이전 방향을 저장
     private bool mbDirectionChanged = false;
     private bool mbRotating = false;        // 현재 사용되는 곳은 없지만 회전을 체크하는 변수이기 때문에 유지
+    private bool mbRotatingCW = false;      // 시계방향 회전 체크 변수
     private float mPathZPosition = 0f;    // 캐릭터가 지나가는 길의 z위치를 저장하는 변수
 
     private Terrain mTerrain;
@@ -72,8 +72,33 @@ public class PlayerMoveState : PlayerStateBase
         checkWallForMove(out Vector2 resultMoveInput);
         mController.Movement.Move(resultMoveInput);
         mController.Animator.SetInputXMagnitude(Mathf.Abs(resultMoveInput.x));
+        mController.Animator.SetInputXRaw(mController.InputHandler.MoveInputRaw.x);
         // mController.Movement.Move(mController.InputHandler.MoveInput);
         //mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
+        // Debug.Log($"moveInput: {resultMoveInput}");
+
+        AnimatorStateInfo stateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
+
+        if(stateInfo.IsTag("Run"))
+        {
+            float decimalTime = stateInfo.normalizedTime - (int)stateInfo.normalizedTime;
+
+            if (decimalTime > .35f && decimalTime < .9f)
+            {
+                mController.Animator.SetIsLeftFoot(true);
+            }
+            else
+            {
+                mController.Animator.SetIsLeftFoot(false);
+            }
+        }
+
+        mController.Animator.SetMoveInputXTapped(mController.InputHandler.MoveInputXTapped);
+        mController.Animator.SetMoveInputXPressed(mController.InputHandler.MoveInputXPressed);
+        mController.Animator.SetMoveInputXHeld(mController.InputHandler.MoveInputXHeld);
+        mController.Animator.SetMoveInputYTapped(mController.InputHandler.MoveInputYTapped);
+        mController.Animator.SetMoveInputYPressed(mController.InputHandler.MoveInputYPressed);
+        mController.Animator.SetMoveInputYHeld(mController.InputHandler.MoveInputYHeld);
 
         // Set Direction
         // 키입력이 들어오고 방향이 바뀌는 찰나 시점에 대한 코드
@@ -106,6 +131,7 @@ public class PlayerMoveState : PlayerStateBase
                 // 회전 각도가 있으면 회전이라고 의도를 갖게 되는데
                 // 지금은 사용되는 곳이 없지만 혹시 사용되면 신경을 써야할 것 같다
                 mbRotating = true;
+                mbRotatingCW = false;
             }
             // 시계방향 회전 트리거
             else if (deltaRotatedAngle > 5f)
@@ -114,6 +140,7 @@ public class PlayerMoveState : PlayerStateBase
                 mController.Animator.TurnR(true);
                 mbDirectionChanged = false;
                 mbRotating = true;
+                mbRotatingCW = true;
             }
         }
         // 회전 방향 체크 중이 아니면 
@@ -142,6 +169,7 @@ public class PlayerMoveState : PlayerStateBase
                 {
                     PlayerRunJumpState runJumpState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.RunJump) as PlayerRunJumpState;
                     runJumpState.SetDefaultHeight(mDefaultHeight);
+                    // runJumpState.SetTurningCW(mbRotatingCW);
 
                     mController.StateMachine.SwitchState(PlayerStateMachine.EState.RunJump);
                     mController.InputHandler.ResetJump();
@@ -250,6 +278,15 @@ public class PlayerMoveState : PlayerStateBase
     public void EnterToIdle()
     {
         mbEnterToIdle = true;
+    }
+
+    public void EnterToRun(float startMoveInputX)
+    {
+        // Debug.Log($"currentMoveInput: {mController.InputHandler.MoveInput}, startMoveInputX: {startMoveInputX}");
+        Vector3 moveInput = mController.InputHandler.MoveInput;
+        // moveInput.x = mController.Movement.Direction == EDirection.Right ? startMoveInputX : -startMoveInputX;
+        moveInput.x = startMoveInputX;
+        mController.InputHandler.SetMoveInput(moveInput);
     }
 
     private void Start()
