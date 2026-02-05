@@ -379,6 +379,6 @@ public class PlayerMovement : MonoBehaviour
         point.y = height;
 
         Gizmos.color = Color.red;
-        Gizmos.DrawRay(point, normal * 5f);
+        // Gizmos.DrawRay(point, normal * 5f);
     }
 }

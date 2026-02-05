@@ -10952,7 +10952,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!4 &413388551
 Transform:
   m_ObjectHideFlags: 0
@@ -15024,7 +15024,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 0
+  m_IsActive: 1
 --- !u!65 &579341653
 BoxCollider:
   m_ObjectHideFlags: 0
@@ -20952,7 +20952,7 @@ PrefabInstance:
     - target: {fileID: 8929717637861825896, guid: b6e9b02cf08aa42468b4b6eebe09c0cf,
         type: 3}
       propertyPath: m_IsActive
-      value: 1
+      value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 9035105307630693939, guid: b6e9b02cf08aa42468b4b6eebe09c0cf,
         type: 3}
@@ -23726,6 +23726,8 @@ MonoBehaviour:
   _targetFrameRate: 60
   _updateTimeScale: 0
   _timeScale: 1
+  _trPlayerCharacter: {fileID: 0}
+  _checkPoint: {x: 0, y: 0, z: 0}
 --- !u!4 &886382715
 Transform:
   m_ObjectHideFlags: 0

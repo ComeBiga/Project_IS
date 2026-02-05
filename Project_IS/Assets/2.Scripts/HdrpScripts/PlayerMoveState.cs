@@ -299,7 +299,8 @@ public class PlayerMoveState : PlayerStateBase
         // z가 0일 때의 위치
         Vector3 pathOrigin = transform.position;
         pathOrigin.y += _interactableOffsetY;
-        pathOrigin.z = 0f;
+        // pathOrigin.z = 0f;
+        pathOrigin.z = mPathZPosition;
 
         // 현재 캐릭터의 위치
         Vector3 characterOrigin = transform.position;
@@ -672,7 +673,7 @@ public class PlayerMoveState : PlayerStateBase
 
             Vector3 dir = mController.Movement.DirectionToVector();
 
-            Debug.Log($"{pathOrigin}, {dir}");
+            // Debug.Log($"{pathOrigin}, {dir}");
 
             Gizmos.color = Color.red;
             Gizmos.DrawRay(pathOrigin, dir * _frontWallCheckDistance);

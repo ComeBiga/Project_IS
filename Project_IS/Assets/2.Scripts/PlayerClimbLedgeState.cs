@@ -332,6 +332,31 @@ public class PlayerClimbLedgeState : PlayerStateBase
             Gizmos.DrawRay(getOrigin(), getDirection() * _raycastDistance);
         }
 
+        Bounds ledgeBounds = mClimbLedgeInfo.ledgeBounds;
+
+        Vector3 ledgeMaxPos = ledgeBounds.max;
+        ledgeMaxPos.z = getOrigin().z;
+
+        Gizmos.color = Color.blue;
+        Vector3 ledgeMaxPosRange = ledgeMaxPos;
+        ledgeMaxPosRange.y += _ledgeRange;
+        Gizmos.DrawSphere(ledgeMaxPosRange, .1f);
+        ledgeMaxPosRange.y -= _ledgeRange;
+        ledgeMaxPosRange.y -= _ledgeRange;
+        Gizmos.DrawSphere(ledgeMaxPosRange, .1f);
+
+        Vector3 ledgeMinPos = ledgeBounds.max;
+        ledgeMinPos.x = ledgeBounds.min.x;
+        ledgeMinPos.z = getOrigin().z;
+
+        Gizmos.color = Color.blue;
+        Vector3 ledgeMinPosRange = ledgeMinPos;
+        ledgeMinPosRange.y += _ledgeRange;
+        Gizmos.DrawSphere(ledgeMinPosRange, .1f);
+        ledgeMinPosRange.y -= _ledgeRange;
+        ledgeMinPosRange.y -= _ledgeRange;
+        Gizmos.DrawSphere(ledgeMinPosRange, .1f);
+
         //if(mBoundMax != null)
         //{
         //    Gizmos.DrawSphere(mBoundMax.Value, 1f);

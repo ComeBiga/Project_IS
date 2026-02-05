@@ -576,7 +576,7 @@ public class PlayerLadderState : PlayerStateBase
     {
         Vector3 startPos = transform.position;
         Vector3 targetPos = startPos;
-        targetPos.y = 0f;
+        targetPos.y = mLadderHandler.Bottom.y;
 
         float timer = 0f;
         float duration = _endToGroundDuration;
