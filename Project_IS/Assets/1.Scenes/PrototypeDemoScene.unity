@@ -22903,7 +22903,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &844054203
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -41462,7 +41462,7 @@ MonoBehaviour:
   _updateTimeScale: 0
   _timeScale: 1
   _trPlayerCharacter: {fileID: 1843053454}
-  _checkPoint: {x: 300, y: 20, z: 0}
+  _checkPoint: {x: 270, y: 15, z: 0}
 --- !u!1001 &1479325371
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -52175,21 +52175,6 @@ PrefabInstance:
       propertyPath: m_Name
       value: Player_Prototype (2)
       objectReference: {fileID: 0}
-    - target: {fileID: 796945476761185928, guid: ceb8b399c04f657409507b2c79c6d8a7,
-        type: 3}
-      propertyPath: m_Constraints
-      value: 112
-      objectReference: {fileID: 0}
-    - target: {fileID: 1943548313585408972, guid: ceb8b399c04f657409507b2c79c6d8a7,
-        type: 3}
-      propertyPath: mSlopeAngle
-      value: 25
-      objectReference: {fileID: 0}
-    - target: {fileID: 2150413833795799531, guid: ceb8b399c04f657409507b2c79c6d8a7,
-        type: 3}
-      propertyPath: _animator
-      value: 
-      objectReference: {fileID: 844054203}
     - target: {fileID: 2561486926390778882, guid: ceb8b399c04f657409507b2c79c6d8a7,
         type: 3}
       propertyPath: _drawGroundNormal
@@ -52248,16 +52233,6 @@ PrefabInstance:
     - target: {fileID: 3395877443170664856, guid: ceb8b399c04f657409507b2c79c6d8a7,
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
-      value: 0
-      objectReference: {fileID: 0}
-    - target: {fileID: 4114197322998774063, guid: ceb8b399c04f657409507b2c79c6d8a7,
-        type: 3}
-      propertyPath: _animator
-      value: 
-      objectReference: {fileID: 844054203}
-    - target: {fileID: 4114197322998774063, guid: ceb8b399c04f657409507b2c79c6d8a7,
-        type: 3}
-      propertyPath: _drawSlideDirectionRay
       value: 0
       objectReference: {fileID: 0}
     - target: {fileID: 5974772966008876441, guid: ceb8b399c04f657409507b2c79c6d8a7,

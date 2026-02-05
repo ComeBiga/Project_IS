@@ -106,7 +106,23 @@ public class PlayerFallState : PlayerStateBase
         if (mController.Movement.Velocity.y < mMinVelocityY)
             mMinVelocityY = mController.Movement.Velocity.y;
 
-        if(mController.Movement.IsGrounded)
+        //// Die
+        ////Debug.Log($"Fall Velocity: {mController.Movement.Velocity}");
+        if (mMinVelocityY < _heavyLandingVelocityY)
+        {
+            bool bGroundForDie = checkGroundForDie();
+
+            if (bGroundForDie)
+            {
+                // Die
+                mbLanding = false;
+                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Die);
+
+                return;
+            }
+        }
+
+        if (mController.Movement.IsGrounded)
         {
             mbLanding = true;
             // mController.Animator.SetInputXMagnitude(0f);
@@ -474,5 +490,28 @@ public class PlayerFallState : PlayerStateBase
 
         resultMoveInput = moveInput;
         return bFrontCasted;
+    }
+
+    private bool checkGroundForDie()
+    {
+        //// z가 0일 때의 위치
+        //Vector3 pathOrigin = transform.position;
+        //pathOrigin.y += mInteractableOffsetY;
+        //pathOrigin.z = 0f;
+
+        //// 현재 캐릭터의 위치
+        //Vector3 characterOrigin = transform.position;
+        //characterOrigin.y += mInteractableOffsetY;
+
+        // 현재 캐릭터 발을 기준으로 한 위치
+        Vector3 characterFeetOrigin = transform.position;
+
+        bool bUnderCasted = Physics.Raycast(characterFeetOrigin,
+                                        Vector3.down,
+                                        out RaycastHit hitInfo,
+                                        .5f,
+                                        LayerMask.GetMask("Ground"));
+
+        return bUnderCasted;
     }
 }
