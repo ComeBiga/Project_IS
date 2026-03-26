@@ -9,21 +9,18 @@ MonoBehaviour:
   m_GameObject: {fileID: 0}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 2d1a523e43c25be4797b9b6e423a1986, type: 3}
-  m_Name: TestLightRay 3
+  m_Script: {fileID: 11500000, guid: 3a7f6b0fa95d90d4ca158ba1ade569e7, type: 3}
+  m_Name: TestFlare 1
   m_EditorClassIdentifier: 
-  rayLayers:
-  - rayShape: 4
-    rayMesh: {fileID: 0}
-    brightness: 1
+  flare:
+  - flareShape: 0
+    flareMesh: {fileID: 0}
+    scale: 13.55
+    brightness: 0.009
     colorMultiplier: {r: 0.9490196, g: 1, b: 0.972549, a: 1}
-    position: {x: 0, y: 0, z: 0}
-    rotation: {x: 90, y: 0, z: 0}
-    scale: {x: 1, y: 1, z: 1}
     open: 1
+  flareMaterial: {fileID: 2100000, guid: 7724528df85009d4dadb42eb105e754e, type: 2}
   globalScale: 1
-  rayMaterial: {fileID: 2100000, guid: e349799befeba9948a28f3e1a260fa29, type: 2}
-  globalRotation: {x: 0, y: 0, z: 0}
   globalBrightness: 1
   variationSpeed: 1
   variationScale: 10
@@ -32,18 +29,14 @@ MonoBehaviour:
   showMainSettings: 0
   showVariationSettings: 0
   showFadingSettings: 0
-  needsToBeUpdated: 0
-  useCameraDepthFade: 1
   cameraDepthFadeStart: 0
   cameraDepthFadeEnd: 0
-  useCameraDistanceFade: 1
   cameraDistanceFadeStart: 0
   cameraDistanceFadeEnd: 0
-  useSceneDepthFade: 1
   sceneDepthFadeStart: -2
-  sceneDepthFadeEnd: 2
-  useAngleFade: 0
-  angleFadeStart: 0
-  angleFadeEnd: 0
+  sceneDepthFadeEnd: 5.68
+  useCameraDepthFade: 1
+  useCameraDistanceFade: 1
+  useSceneDepthFade: 1
   useVariation: 0
-  useLightColor: 0
+  needsToBeUpdated: 0

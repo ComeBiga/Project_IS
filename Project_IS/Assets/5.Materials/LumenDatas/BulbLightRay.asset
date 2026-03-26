@@ -10,38 +10,46 @@ MonoBehaviour:
   m_Enabled: 1
   m_EditorHideFlags: 0
   m_Script: {fileID: 11500000, guid: 2d1a523e43c25be4797b9b6e423a1986, type: 3}
-  m_Name: TestLightRay 3
+  m_Name: BulbLightRay
   m_EditorClassIdentifier: 
   rayLayers:
-  - rayShape: 4
+  - rayShape: 42
     rayMesh: {fileID: 0}
-    brightness: 1
-    colorMultiplier: {r: 0.9490196, g: 1, b: 0.972549, a: 1}
+    brightness: 0.9
+    colorMultiplier: {r: 1, g: 1, b: 1, a: 1}
     position: {x: 0, y: 0, z: 0}
-    rotation: {x: 90, y: 0, z: 0}
-    scale: {x: 1, y: 1, z: 1}
+    rotation: {x: 0, y: 0, z: 0}
+    scale: {x: 3, y: 3, z: 5}
     open: 1
-  globalScale: 1
+  - rayShape: 42
+    rayMesh: {fileID: 0}
+    brightness: 0.2
+    colorMultiplier: {r: 1, g: 1, b: 1, a: 1}
+    position: {x: 0, y: 0, z: 0}
+    rotation: {x: 0, y: 0, z: 0}
+    scale: {x: 6, y: 6, z: 6}
+    open: 1
+  globalScale: 0.8
   rayMaterial: {fileID: 2100000, guid: e349799befeba9948a28f3e1a260fa29, type: 2}
   globalRotation: {x: 0, y: 0, z: 0}
-  globalBrightness: 1
+  globalBrightness: 0.368
   variationSpeed: 1
   variationScale: 10
   variationColor: {r: 1, g: 1, b: 1, a: 1}
   showLayerSettings: 0
-  showMainSettings: 0
+  showMainSettings: 1
   showVariationSettings: 0
   showFadingSettings: 0
   needsToBeUpdated: 0
   useCameraDepthFade: 1
-  cameraDepthFadeStart: 0
-  cameraDepthFadeEnd: 0
+  cameraDepthFadeStart: 1
+  cameraDepthFadeEnd: 3
   useCameraDistanceFade: 1
-  cameraDistanceFadeStart: 0
-  cameraDistanceFadeEnd: 0
+  cameraDistanceFadeStart: 40
+  cameraDistanceFadeEnd: 60
   useSceneDepthFade: 1
-  sceneDepthFadeStart: -2
-  sceneDepthFadeEnd: 2
+  sceneDepthFadeStart: 0
+  sceneDepthFadeEnd: 3
   useAngleFade: 0
   angleFadeStart: 0
   angleFadeEnd: 0
