@@ -53,6 +53,24 @@ public class PlayerPushPullState : PlayerStateBase
 
     public override void Tick()
     {
+        if (mType == 2)
+        {
+            mController.Movement.Move(mController.InputHandler.MoveInput * .2f);
+
+            if (mController.InputHandler.MoveInputRaw.x < .01f)
+            {
+                mbPushPull = false;
+                var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+                moveState.EnterToIdle();
+
+                mAnimType = 0;
+                mController.Animator.SetIndex(mAnimType);
+                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+            }
+
+            return;
+        }
+
         if (!mController.InputHandler.IsInteracting || !mbPushPull)
         {
             mAnimType = 0;

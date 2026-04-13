@@ -486,6 +486,16 @@ public class PlayerMoveState : PlayerStateBase
                 mController.StateMachine.SwitchState(PlayerStateMachine.EState.PushPull);
             }
 
+            if (interactableObject.Pushable && distanceToEdge < _interactableDistance && mController.InputHandler.MoveInputRaw.x > .1f)
+            {
+                // mController.Animator.SetPush();
+                PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
+                pushPullState.SetPushPullObject(interactableObject as PushPullObject);
+                pushPullState.SetType(2);
+                mController.StateMachine.SwitchState(PlayerStateMachine.EState.PushPull);
+
+            }
+
             // Climb Object Up
             if (interactableObject.CanClimb && distanceToEdge < _interactableDistance && mController.InputHandler.MoveInput.y > .1f)
             {

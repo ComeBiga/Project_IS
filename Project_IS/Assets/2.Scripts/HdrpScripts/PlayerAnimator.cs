@@ -37,6 +37,7 @@ public class PlayerAnimator : MonoBehaviour
     private readonly int ClimbObjectHash = Animator.StringToHash("ClimbObject");
     private readonly int ClimbLedgeHash = Animator.StringToHash("ClimbLedge");
     private readonly int ClimbLadderHash = Animator.StringToHash("ClimbLadder");
+    private readonly int PushHash = Animator.StringToHash("Push");
 
     // Animation State Name Hashes
     private readonly int IdleLandingHash = Animator.StringToHash("IdleLanding");
@@ -257,6 +258,11 @@ public class PlayerAnimator : MonoBehaviour
                 return;
         }
 
+    }
+
+    public void SetPush()
+    {
+        mAnimator.SetTrigger(PushHash);
     }
 
     private void Awake()
