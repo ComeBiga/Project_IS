@@ -1065,6 +1065,7 @@ GameObject:
   - component: {fileID: 4227745180388004774}
   - component: {fileID: 1943548313585408972}
   - component: {fileID: 7723905881510803021}
+  - component: {fileID: 3374715698061688976}
   m_Layer: 20
   m_Name: Player_Prototype
   m_TagString: Untagged
@@ -1179,7 +1180,7 @@ MonoBehaviour:
   _groundCheckDisableDuration: 0.2
   _groundLayer:
     serializedVersion: 2
-    m_Bits: 64
+    m_Bits: 1088
   _animator: {fileID: 2591019983875019122}
   _interactableOffsetY: 0
 --- !u!114 &2150413833795799531
@@ -1219,6 +1220,7 @@ MonoBehaviour:
   - {fileID: 4227745180388004774}
   - {fileID: 1943548313585408972}
   - {fileID: 7723905881510803021}
+  - {fileID: 3374715698061688976}
 --- !u!114 &2561486926390778882
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1235,6 +1237,7 @@ MonoBehaviour:
   _drawInteractableRay: 0
   _drawFrontWallCheckRay: 0
   _drawGroundNormal: 1
+  _runFootstepClip: {fileID: 0}
   _frontWallCheckLayer:
     serializedVersion: 2
     m_Bits: 320
@@ -1314,6 +1317,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   key: 4
+  mFrontPushPullDistance: 0.5
+  mFrontPushPullRadius: 0.45
 --- !u!114 &4025819839599777680
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1356,6 +1361,7 @@ MonoBehaviour:
   _mediumLandingVelocityY: -7
   _heavyLandingVelocityY: -10
   _runningLandingSpeed: 0.5
+  _useDie: 1
 --- !u!114 &5974772966008876441
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1383,6 +1389,9 @@ MonoBehaviour:
   _raycastDistance: 0.5
   _raycastCount: 5
   _ledgeRange: 0.3
+  _raycastLayer:
+    serializedVersion: 2
+    m_Bits: 1088
   _exitNormalizedTimeOverHead: 0.8
   _exitNormalizedTimeChest: 0.745
   _exitNormalizedTimeStomach: 0.68
@@ -1440,6 +1449,19 @@ MonoBehaviour:
   key: 10
   _ragDollHandler: {fileID: 555088677100136482}
   _fallForce: 5
+--- !u!114 &3374715698061688976
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 712958953486247521}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: e8f87652357fa4a4fb37b8c9c8186113, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  key: 100
 --- !u!1 &750287387196593756
 GameObject:
   m_ObjectHideFlags: 0
@@ -9494,6 +9516,7 @@ GameObject:
   - component: {fileID: 2591019983875019122}
   - component: {fileID: 555088677100136482}
   - component: {fileID: 8335392470892386508}
+  - component: {fileID: 6668529320500789710}
   m_Layer: 0
   m_Name: CustomizedCharacter
   m_TagString: Untagged
@@ -10000,6 +10023,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49cb26e02c5e51a4a8ff523cfc26e66f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _animationEventReceiver: {fileID: 6668529320500789710}
 --- !u!114 &555088677100136482
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -10120,6 +10144,18 @@ LODGroup:
     - renderer: {fileID: 624881648732238614}
     - renderer: {fileID: 6452563113290487757}
   m_Enabled: 1
+--- !u!114 &6668529320500789710
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5680935445143621815}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 408a84db9c2d42943ba3c3925a8cdf47, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &5749952909065236904
 GameObject:
   m_ObjectHideFlags: 0
@@ -15450,6 +15486,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 49cb26e02c5e51a4a8ff523cfc26e66f, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _animationEventReceiver: {fileID: 0}
 --- !u!4 &9010641254976468607 stripped
 Transform:
   m_CorrespondingSourceObject: {fileID: 4718905049056022502, guid: a2946f7bb3734fb45837bffca017fc9a,

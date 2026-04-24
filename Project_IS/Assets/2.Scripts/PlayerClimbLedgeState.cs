@@ -37,6 +37,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
     [Range(2, 10)]
     [SerializeField] private int _raycastCount = 2;
     [SerializeField] private float _ledgeRange = .3f;
+    [SerializeField] private LayerMask _raycastLayer;
 
     [Header("Normalized Time Settings")]
     [SerializeField] private float _exitNormalizedTimeOverHead = .8f;
@@ -47,6 +48,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
     private Animator mAnimator;
     private ClimbLedgeInfo mClimbLedgeInfo;
     private Bounds mLedgeBounds;
+    private Ground mGround;
 
     private bool mbClimb = false;
     private float mStartMoveInputX;
@@ -72,6 +74,9 @@ public class PlayerClimbLedgeState : PlayerStateBase
         mController.Animator.SetIndex(mClimbLedgeInfo.checkIndex);
         mController.Animator.SetInputXMagnitude(0f);
 
+        mController.Animator.AnimationEventReceiver.onTouchHand -= onFootStepFromFall;
+        mController.Animator.AnimationEventReceiver.onTouchHand += onFootStepFromFall;
+
         mbClimb = true;
 
         StartCoroutine(eClimbLedge());
@@ -81,7 +86,10 @@ public class PlayerClimbLedgeState : PlayerStateBase
     {
         mController.Movement.SetKinematic(false);
         mController.Movement.SetUseGravity(true);
-        mController.Movement.SetColliderActive(true);        
+        mController.Movement.SetColliderActive(true);
+
+        mGround = null;
+        mController.Animator.AnimationEventReceiver.onTouchHand -= onFootStepFromFall;
     }
 
     public override void Tick()
@@ -94,15 +102,21 @@ public class PlayerClimbLedgeState : PlayerStateBase
         mClimbLedgeInfo = climbLedgeInfo;
     }
 
+    public void EnterFromFall(Ground ground)
+    {
+        mGround = ground;
+    }
+
     [Obsolete]
     public void SetLedge(Bounds ledgeBounds)
     {
         mLedgeBounds = ledgeBounds;
     }
 
-    public bool CheckLedge(out ClimbLedgeInfo climbLedgeInfo)
+    public bool CheckLedge(out ClimbLedgeInfo climbLedgeInfo, out RaycastHit hitInfo)
     {
         climbLedgeInfo = new ClimbLedgeInfo();
+        hitInfo = new RaycastHit();
 
         Vector3 origin = getOrigin();
         Vector3 direction = getDirection();
@@ -113,12 +127,14 @@ public class PlayerClimbLedgeState : PlayerStateBase
             Vector3 pos = origin;
             pos.y -= getSpacing() * i;
 
-            bool bCheck = Physics.Raycast(pos, direction, out RaycastHit hitInfo, _raycastDistance, LayerMask.GetMask("Ground"));
+            // bool bCheck = Physics.Raycast(pos, direction, out RaycastHit hitInfo, _raycastDistance, LayerMask.GetMask("Ground"));
+            bool bCheck = Physics.Raycast(pos, direction, out hitInfo, _raycastDistance, _raycastLayer, QueryTriggerInteraction.Ignore);
 
             if (bCheck)
             {
                 Bounds bounds = hitInfo.collider.bounds;
                 Vector3 ledgePoint = bounds.max;
+                ledgePoint.x = hitInfo.point.x;
                 float ledgeY = bounds.max.y;
                 float range = _ledgeRange;
                 mBoundMax = bounds.max;
@@ -176,6 +192,15 @@ public class PlayerClimbLedgeState : PlayerStateBase
         mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
     }
 
+    private void onFootStepFromFall()
+    {
+        if (mGround != null)
+        {
+            Debug.Log("LedgeFootStepSoune");
+            mGround.PlayFootStepBigSound(volume: .5f);
+        }
+    }
+
     private IEnumerator eClimbLedge()
     {
         // float originY = transform.position.y + mController.Movement.Height;
@@ -224,12 +249,14 @@ public class PlayerClimbLedgeState : PlayerStateBase
                 break;
         }
 
-        float targetX = (mController.Movement.Direction == PlayerMovement.EDirection.Left) ?
-                        mClimbLedgeInfo.ledgeBounds.max.x + lerpXOffset : mClimbLedgeInfo.ledgeBounds.min.x - lerpXOffset;
+        //float targetX = (mController.Movement.Direction == PlayerMovement.EDirection.Left) ?
+        //                mClimbLedgeInfo.ledgeBounds.max.x + lerpXOffset : mClimbLedgeInfo.ledgeBounds.min.x - lerpXOffset;
 
-        if(mClimbLedgeInfo.ledgeHandler != null)
-            targetX = (mController.Movement.Direction == PlayerMovement.EDirection.Left) ?
-                        mClimbLedgeInfo.nearestLedgePoint.x + lerpXOffset : mClimbLedgeInfo.nearestLedgePoint.x - lerpXOffset;
+        //if(mClimbLedgeInfo.ledgeHandler != null)
+        //    targetX = (mController.Movement.Direction == PlayerMovement.EDirection.Left) ?
+        //                mClimbLedgeInfo.nearestLedgePoint.x + lerpXOffset : mClimbLedgeInfo.nearestLedgePoint.x - lerpXOffset;
+        float targetX = (mController.Movement.Direction == PlayerMovement.EDirection.Left) ?
+                    mClimbLedgeInfo.nearestLedgePoint.x + lerpXOffset : mClimbLedgeInfo.nearestLedgePoint.x - lerpXOffset;
 
 
         float timer = 0f;

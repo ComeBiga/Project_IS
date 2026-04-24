@@ -43,6 +43,7 @@ public class PlayerMoveState : PlayerStateBase
     private float mPathZPosition = 0f;    // 캐릭터가 지나가는 길의 z위치를 저장하는 변수
 
     private Terrain mTerrain;
+    private Ground mGround;
     private Collider mGroundCollider;
     private Vector3 mGroundNormal = Vector3.zero;
     private float mSlopeAngle = 30f;
@@ -76,6 +77,11 @@ public class PlayerMoveState : PlayerStateBase
         // mController.Movement.Move(mController.InputHandler.MoveInput);
         //mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
         // Debug.Log($"moveInput: {resultMoveInput}");
+
+        //if(checkGround(out Ground ground))
+        //{
+        //    mGround = ground;
+        //}
 
         AnimatorStateInfo stateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
 
@@ -121,6 +127,10 @@ public class PlayerMoveState : PlayerStateBase
         // 회전 시작하면 어느 방향 회전인지 체크 후 Turn 애니메이션 전환
         if (mbDirectionChanged)
         {
+            //mController.Animator.TurnL(true);
+            //mController.Animator.TurnR(false);
+            //mbDirectionChanged = false;
+
             // 반시계방향 회전 트리거
             if (deltaRotatedAngle < -5f)
             {
@@ -158,6 +168,7 @@ public class PlayerMoveState : PlayerStateBase
 
         // Rotate
         mController.Movement.UpdateRotation();
+        // transform.rotation *= mController.Animator.Animator.deltaRotation;
 
         // Jump
         if (mController.InputHandler.JumpPressed)
@@ -292,6 +303,63 @@ public class PlayerMoveState : PlayerStateBase
     private void Start()
     {
         mPathZPosition = transform.position.z;
+    }
+
+    private void onFootStep()
+    {
+        if(mController.Movement.Ground == null)
+        {
+            AudioManager.instance.PlayOneShot("FootStepConcrete");
+            return;
+        }
+
+        mGround.PlayFootStepSound();
+
+        //switch (mGround.Type)
+        //{
+        //    case Ground.EGroundType.Concrete:
+        //        AudioManager.instance.PlayOneShot("FootStepConcrete");
+        //        break;
+        //    case Ground.EGroundType.Wood:
+        //        AudioManager.instance.PlayOneShot("FootStepWood");
+        //        break;
+        //    default:
+        //        AudioManager.instance.PlayOneShot("FootStepConcrete");
+        //        break;
+        //}
+    }
+
+    private bool checkGround(out Ground ground)
+    {
+        // z가 0일 때의 위치
+        Vector3 pathOrigin = transform.position;
+        // pathOrigin.y += _interactableOffsetY;
+        // pathOrigin.z = 0f;
+        pathOrigin.z = mPathZPosition;
+
+        // 현재 캐릭터의 위치
+        Vector3 characterOrigin = transform.position;
+        characterOrigin.y += _interactableOffsetY;
+
+        // 현재 캐릭터 발을 기준으로 한 위치
+        Vector3 characterFeetOrigin = transform.position;
+
+        bool bCasted = Physics.Raycast(pathOrigin,
+                                        Vector3.down,
+                                        out RaycastHit hitInfo,
+                                        mController.Movement.GroundCheckRadius,
+                                        mController.Movement.GroundLayer);
+
+        if(bCasted)
+        {
+            ground = hitInfo.collider.GetComponent<Ground>();
+        }
+        else
+        {
+            ground = null;
+        }
+
+        return bCasted;
     }
 
     private bool checkWallForMove(out Vector2 resultMoveInput)
@@ -457,7 +525,8 @@ public class PlayerMoveState : PlayerStateBase
             // 현재 캐릭터 위치와 오브젝트의 가까운 모서리까지의 거리
             float distanceToMin = Mathf.Abs(characterPos.x - bounds.min.x);
             float distanceToMax = Mathf.Abs(characterPos.x - bounds.max.x);
-            float distanceToEdge = Mathf.Min(distanceToMin, distanceToMax);
+            // float distanceToEdge = Mathf.Min(distanceToMin, distanceToMax);
+            float distanceToEdge = Mathf.Abs(characterPos.x - hitInfo.point.x);
 
             // 전방의 오브젝트를 옆으로 비켜지나가는 코드
             if (interactableObject.SidePassable && characterPos.z > mPathZPosition - _sidePassZDistance)
@@ -477,21 +546,26 @@ public class PlayerMoveState : PlayerStateBase
                 mController.Movement.SetVelocity(velocity);
             }
 
+            PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
+
             // PushPull Front
             if (interactableObject.Pushable && distanceToEdge < _interactableDistance && mController.InputHandler.IsInteracting)
             {
-                PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
+                // PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
                 pushPullState.SetPushPullObject(interactableObject as PushPullObject);
                 pushPullState.SetType(1);
+                pushPullState.SetPushPoint(hitInfo.point);
                 mController.StateMachine.SwitchState(PlayerStateMachine.EState.PushPull);
             }
 
-            if (interactableObject.Pushable && distanceToEdge < _interactableDistance && mController.InputHandler.MoveInputRaw.x > .1f)
+            // PushPull Front (Auto Push)
+            if (interactableObject.Pushable && distanceToEdge < pushPullState.FrontPushPullDistance && Mathf.Abs(mController.InputHandler.MoveInput.x)> .1f)
             {
                 // mController.Animator.SetPush();
-                PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
+                // PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
                 pushPullState.SetPushPullObject(interactableObject as PushPullObject);
                 pushPullState.SetType(2);
+                pushPullState.SetPushPoint(hitInfo.point);
                 mController.StateMachine.SwitchState(PlayerStateMachine.EState.PushPull);
 
             }
@@ -501,6 +575,7 @@ public class PlayerMoveState : PlayerStateBase
             {
                 PlayerClimbObjectState climbObjectState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbObject) as PlayerClimbObjectState;
                 climbObjectState.SetClimbObject(interactableObject, climbUp: true);
+                climbObjectState.SetHitPoint(hitInfo.point);
                 mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbObject);
             }
 
@@ -515,6 +590,16 @@ public class PlayerMoveState : PlayerStateBase
                 if (bSwitched)
                     return;
             }
+
+            // Interact
+            if (distanceToEdge < interactableObject.InteractionDistance && mController.InputHandler.IsInteracting)
+            {
+                PlayerInteractState interactState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Interact) as PlayerInteractState;
+
+                interactState.SetInteractableObject(interactableObject);
+                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Interact);
+            }
+
         }
         // side
         else if (type == 2)

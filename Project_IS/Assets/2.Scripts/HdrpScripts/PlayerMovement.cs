@@ -14,10 +14,14 @@ public class PlayerMovement : MonoBehaviour
     public EDirection Direction => mDirection;
     public EDirection OppositeDirection => (mDirection == EDirection.Left) ? EDirection.Right : EDirection.Left;
     public float Height => mCapsuleCollider.height;
+    public LayerMask GroundLayer => _groundLayer;
+    public float GroundCheckRadius => _groundCheckRadius;
+    public Ground Ground => mGround;
 
     public enum EDirection { Left, Right, Forward };
 
     [Header("Debug")]
+    [SerializeField] private bool _drawStepRay = false;
     [SerializeField] private bool _drawSlideDirectionRay = true;
     [SerializeField] private Vector2 _slideDirection = Vector2.right;
     [SerializeField] private float _slideSpeed = 1f;
@@ -25,6 +29,8 @@ public class PlayerMovement : MonoBehaviour
     [Header("Move")]
     [SerializeField] private float _moveSpeed = 5f;
     [SerializeField] private float _rotateSpeed = 10f;
+    [SerializeField] private float _stepOffset = .1f;
+    [SerializeField] private float _stepCheckDistance = .3f;
 
     [Header("Jump")]
     [SerializeField] private float _jumpForce = 5f;
@@ -47,6 +53,7 @@ public class PlayerMovement : MonoBehaviour
     private bool mbJumping = false;
     private bool mbIsGrounded = false;
     private float mGroundCheckDisableTimer = 0f;
+    private Ground mGround;
 
     private Terrain mTerrain;
 
@@ -64,6 +71,8 @@ public class PlayerMovement : MonoBehaviour
         Vector3 velocity = mRigidbody.velocity;
         velocity.x = moveInput.x * _moveSpeed;
         mRigidbody.velocity = velocity;
+
+        checkStep();
     }
     
     public void Move(Vector2 moveInput, float speed)
@@ -254,12 +263,26 @@ public class PlayerMovement : MonoBehaviour
         mCapsuleCollider.enabled = value;
     }
 
+    public void SetColliderTrigger(bool value)
+    {
+        mCapsuleCollider.isTrigger = value;
+    }
+
     public void SetFriction(bool value)
     {
         if (value)
             mCapsuleCollider.material = mPhysicsMaterial;
         else
             mCapsuleCollider.material = null;
+    }
+
+    public void SetRadius(float radius = .2f)
+    {
+        mCapsuleCollider.radius = radius;
+    }
+    public void SetGround(Ground ground)
+    {
+        mGround = ground;
     }
 
     #region Interactable Methods
@@ -329,6 +352,11 @@ public class PlayerMovement : MonoBehaviour
         {
             // 바닥을 Sphere로 체크하고 있는데 다른 기능들을 생각해서 Laycast로 바꿔야 될 것 같음
             mbIsGrounded = Physics.CheckSphere(_trGroundCheck.position, _groundCheckRadius, _groundLayer);
+            Collider[] groundColliders = Physics.OverlapSphere(_trGroundCheck.position, _groundCheckRadius, _groundLayer, QueryTriggerInteraction.Ignore);
+            if(groundColliders.Length > 0)
+            {
+                mGround = groundColliders[0].GetComponent<Ground>();
+            }
 
             if (mbIsGrounded)
             {
@@ -339,6 +367,31 @@ public class PlayerMovement : MonoBehaviour
         }
 
         _animator.SetIsGrounded(mbIsGrounded);
+    }
+
+    private void checkStep()
+    {
+        Vector3 origin = transform.position;
+        // origin.y += _stepOffset;
+
+        bool bCheck = Physics.Raycast(origin,
+                                        DirectionToVector(),
+                                        out RaycastHit hit,
+                                        _stepCheckDistance,
+                                        _groundLayer);
+
+        if (!bCheck)
+            return;
+
+        Vector3 hitPoint = hit.point;
+        Bounds bounds = hit.collider.bounds;
+
+        if (bounds.max.y < transform.position.y + _stepOffset)
+        {
+            Vector3 newPosition = transform.position;
+            newPosition.y = bounds.max.y;
+            transform.position = newPosition;
+        }
     }
 
     private void OnCollisionStay(Collision collision)
@@ -354,6 +407,15 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
+        if(_drawStepRay)
+        {
+            Vector3 origin = transform.position;
+            origin.y += _stepOffset;
+
+            Gizmos.color = Color.red;
+            Gizmos.DrawRay(origin, DirectionToVector() * _stepCheckDistance);
+        }
+
         if (_drawSlideDirectionRay)
         {
             Gizmos.color = Color.yellow;

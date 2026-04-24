@@ -4,12 +4,20 @@ using UnityEngine;
 
 public class PlayerPushPullState : PlayerStateBase
 {
+    public float FrontPushPullDistance => mFrontPushPullDistance;
+
+    [SerializeField]
+    private float mFrontPushPullDistance = .5f;
+    [SerializeField]
+    private float mFrontPushPullRadius = .5f;
+
     private Animator mAnimator;
     private PushPullObject mPushPullObject;
     private float mDistanceToObject;
     private int mType; // side: 0, front: 1
     private int mAnimType = 0; // idle: 0, push: 1, pull: 2
     private PlayerMovement.EDirection mDirection;
+    private Vector3 mPushPoint;
 
     private bool mbPushPull = true;
 
@@ -37,6 +45,24 @@ public class PlayerPushPullState : PlayerStateBase
         // mPushPullObject.SetFriction(false);
         mController.Movement.SetFriction(false);
 
+        if(mType == 1 || mType == 2)
+        {
+            mController.Movement.SetRadius(mFrontPushPullRadius);
+
+            if (mController.Movement.Direction == PlayerMovement.EDirection.Right)
+            {
+                Vector3 newPosition = transform.position;
+                newPosition.x = mPushPoint.x - mFrontPushPullDistance;
+                transform.position = newPosition;
+            }
+            else if(mController.Movement.Direction == PlayerMovement.EDirection.Left)
+            {
+                Vector3 newPosition = transform.position;
+                newPosition.x = mPushPoint.x + mFrontPushPullDistance;
+                transform.position = newPosition;
+            }
+        }
+
         //mController.Animator.onAnimationIK -= updateAnimationIK;
         //mController.Animator.onAnimationIK += updateAnimationIK;
 
@@ -48,6 +74,11 @@ public class PlayerPushPullState : PlayerStateBase
         // mPushPullObject.SetFriction(true);
         mController.Movement.SetFriction(true);
 
+        if (mType == 1 || mType == 2)
+        {
+            mController.Movement.SetRadius();
+        }
+
         // mController.Animator.onAnimationIK -= updateAnimationIK;
     }
 
@@ -56,10 +87,17 @@ public class PlayerPushPullState : PlayerStateBase
         if (mType == 2)
         {
             mController.Movement.Move(mController.InputHandler.MoveInput * .2f);
+            mPushPullObject.StayPushPull();
 
-            if (mController.InputHandler.MoveInputRaw.x < .01f)
+            int hitIndex = checkInteractableObject(out RaycastHit hitInfo);
+            // float pushPullDistance = Mathf.Abs(mPushPoint.x - transform.position.x);
+
+            if (Mathf.Abs(mController.InputHandler.MoveInputRaw.x) < .01f
+                || hitIndex == -1)
             {
                 mbPushPull = false;
+                mPushPullObject.StopPushPull();
+
                 var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
                 moveState.EnterToIdle();
 
@@ -158,6 +196,31 @@ public class PlayerPushPullState : PlayerStateBase
     public void SetType(int type)
     {
         mType = type;
+    }
+
+    public void SetPushPoint(Vector3 point)
+    {
+        mPushPoint = point;
+    }
+
+    private int checkInteractableObject(out RaycastHit hitInfo)
+    {
+        // z가 0일 때의 위치
+        Vector3 pathOrigin = transform.position;
+        pathOrigin.y += 1f;
+        // pathOrigin.z = 0f;
+        pathOrigin.z = 0f;
+
+        bool bFrontCasted = Physics.Raycast(pathOrigin,
+                                        mController.Movement.DirectionToVector(),
+                                        out hitInfo,
+                                        mFrontPushPullDistance + .1f,
+                                        LayerMask.GetMask("Interactable"));
+
+        if (bFrontCasted)
+            return 1;
+
+        return -1;
     }
 
     private IEnumerator eHandIKPos()

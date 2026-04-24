@@ -6,6 +6,7 @@ TagManager:
   tags:
   - LadderTop
   - Ladder
+  - Safe
   layers:
   - Default
   - TransparentFX

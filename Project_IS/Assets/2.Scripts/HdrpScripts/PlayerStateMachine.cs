@@ -8,7 +8,8 @@ public class PlayerStateMachine : MonoBehaviour
 {
     public enum EState { Move = 0, IdleJump, RunJump, Ladder, PushPull = 4,
                         ClimbObject = 5, Fall, ClimbLedge, ClimbRope, Slope,
-                        Die = 10, }
+                        Die = 10, 
+                        Interact = 100, }
 
     public EState CurrentState => mCurrentState;
     public PlayerStateBase CurrentStateBase => mCurrentStateBase;

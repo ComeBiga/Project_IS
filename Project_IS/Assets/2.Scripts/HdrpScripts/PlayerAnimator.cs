@@ -8,8 +8,11 @@ using static PlayerMovement;
 public class PlayerAnimator : MonoBehaviour
 {
     public Animator Animator => mAnimator;
+    public AnimationEventReceiver AnimationEventReceiver => _animationEventReceiver;
 
     public event Action onAnimationIK = null;
+
+    [SerializeField] private AnimationEventReceiver _animationEventReceiver;
 
     // Animator Parameter Hashes
     private readonly int StateHash = Animator.StringToHash("State");
@@ -282,4 +285,14 @@ public class PlayerAnimator : MonoBehaviour
     {
         onAnimationIK?.Invoke();
     }
+
+    //private void FootStepR()
+    //{
+    //    // Debug.Log("Right Foot Step");
+    //}
+
+    //private void FootStepL()
+    //{
+    //    // Debug.Log("Left Foot Step");
+    //}
 }

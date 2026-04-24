@@ -17,6 +17,8 @@ public class PlayerFallState : PlayerStateBase
     private float _heavyLandingVelocityY = -10f;
     [SerializeField]
     private float _runningLandingSpeed = .8f;
+    [SerializeField]
+    private bool _useDie = true;
 
     private Animator mAnimator;
     private Coroutine mLandingRoutine = null;
@@ -107,18 +109,21 @@ public class PlayerFallState : PlayerStateBase
             mMinVelocityY = mController.Movement.Velocity.y;
 
         //// Die
-        ////Debug.Log($"Fall Velocity: {mController.Movement.Velocity}");
-        if (mMinVelocityY < _heavyLandingVelocityY)
+        if (_useDie)
         {
-            bool bGroundForDie = checkGroundForDie();
-
-            if (bGroundForDie)
+            ////Debug.Log($"Fall Velocity: {mController.Movement.Velocity}");
+            if (mMinVelocityY < _heavyLandingVelocityY)
             {
-                // Die
-                mbLanding = false;
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Die);
+                bool bGroundForDie = checkGroundForDie();
 
-                return;
+                if (bGroundForDie)
+                {
+                    // Die
+                    mbLanding = false;
+                    mController.StateMachine.SwitchState(PlayerStateMachine.EState.Die);
+
+                    return;
+                }
             }
         }
 
@@ -201,14 +206,30 @@ public class PlayerFallState : PlayerStateBase
                 var fallingGround = hitColliders[0].GetComponentInParent<FallingGround>();
                 // Debug.Log($"Land on {hitColliders[0].name}");
 
-                fallingGround.StepOn();
+                fallingGround?.StepOn();
             }
 
             return;
         }
 
-        if (_climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo))
+        if (_climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out RaycastHit ledgeHitInfo))
         {
+            Ground ground = ledgeHitInfo.collider.GetComponent<Ground>();
+
+            if (ground != null)
+            {
+                // ground.PlayFootStepBigSound(volume:.5f);
+            }
+
+            Debug.Log($"LandingVelocityY:{mMinVelocityY}");
+
+            // if (mMinVelocityY < _mediumLandingVelocityY)
+            if (mMinVelocityY < -5f)
+            {
+                Debug.Log($"EnterFromFall, ground({ground != null})");
+                _climbLedgeState.EnterFromFall(ground);
+            }
+
             _climbLedgeState.SetInfo(climbLedgeInfo);
             mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbLedge);
             return;

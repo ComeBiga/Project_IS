@@ -27,6 +27,8 @@ public class PlayerJumpState : PlayerStateBase
         mController.Movement.JumpUp();
 
         mController.Animator.SetJump();
+
+        mController.CharacterSound.PlayRandomClothSound();
     }
 
     public override void ExitState()
@@ -46,7 +48,10 @@ public class PlayerJumpState : PlayerStateBase
 
                 // Debug.Log($"Land on {hitColliders[0].name}");
 
-                fallingGround.StepOn();
+                if (fallingGround != null)
+                {
+                    fallingGround.StepOn();
+                }
             }
 
             mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
@@ -54,7 +59,7 @@ public class PlayerJumpState : PlayerStateBase
         }
 
         // if(checkLedge(out RaycastHit hitInfo))
-        if(_climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo))
+        if(_climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out RaycastHit hitInfo))
         {
             // var climbLedgeState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbLedge) as PlayerClimbLedgeState;
             // _climbLedgeState.SetLedge(hitInfo.collider.bounds);

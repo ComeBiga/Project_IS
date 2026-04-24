@@ -10,6 +10,7 @@ public class PushPullObject : InteractableObject
     public float VelocityX => mRigidbody.velocity.x;
     public Transform HandlePointL => _handlePointL;
     public Transform HandlePointR => _handlePointR;
+    public Rigidbody Rigidbody => mRigidbody;
 
     [Header("PushPullObject")]
     [SerializeField] private bool _logVelocity = false;
@@ -28,6 +29,21 @@ public class PushPullObject : InteractableObject
             mBoxCollider.material = null;
         else
             mBoxCollider.material = _matNoFriction;
+    }
+
+    public virtual void StartPushPull()
+    {
+
+    }
+
+    public virtual void StayPushPull()
+    {
+
+    }
+
+    public virtual void StopPushPull()
+    {
+
     }
 
     public bool PushPull(PlayerController playerController, Vector3 velocity)

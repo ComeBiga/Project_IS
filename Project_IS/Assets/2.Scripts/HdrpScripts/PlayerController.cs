@@ -9,12 +9,14 @@ public class PlayerController : MonoBehaviour
     public PlayerInputHandler InputHandler => mInputHandler;
     public PlayerStateMachine StateMachine => mStateMachine;
     public PlayerAnimator Animator => _animator;
+    public PlayerCharacterSound CharacterSound => mCharacterSound;
 
     [SerializeField] private PlayerAnimator _animator;
 
     private PlayerInputHandler mInputHandler;
     private PlayerMovement mMovement;
     private PlayerStateMachine mStateMachine;
+    private PlayerCharacterSound mCharacterSound;
 
     private void Awake()
     {
@@ -22,12 +24,14 @@ public class PlayerController : MonoBehaviour
         mMovement = GetComponent<PlayerMovement>();
 
         mStateMachine = GetComponent<PlayerStateMachine>();
+        mCharacterSound = GetComponent<PlayerCharacterSound>();
     }
 
     private void Start()
     {
         mMovement.Initialize();
         mStateMachine.Initialize();
+        mCharacterSound.Initialize(this);
     }
 
     // Update is called once per frame

@@ -34,6 +34,8 @@ public class PlayerRunJumpState : PlayerStateBase
         mInteractableOffsetY = moveState.InteractableOffsetY + _interactableOffsetY;
         mInteractableDistance = moveState.InteractableDistance;
         mSidePassZDistance = moveState.SidePassZDistance;
+
+        mController.CharacterSound.PlayRandomClothSound();
     }
 
     public override void ExitState()
@@ -75,7 +77,7 @@ public class PlayerRunJumpState : PlayerStateBase
                 var fallingGround = hitColliders[0].GetComponentInParent<FallingGround>();
                 // Debug.Log($"Land on {hitColliders[0].name}");
 
-                fallingGround.StepOn();
+                fallingGround?.StepOn();
             }
 
             mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
@@ -84,7 +86,7 @@ public class PlayerRunJumpState : PlayerStateBase
             return;
         }
 
-        if (_climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo))
+        if (_climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out RaycastHit hitInfo))
         {
             // _climbLedgeState.SetLedge(hitInfo.collider.bounds);
             _climbLedgeState.SetInfo(climbLedgeInfo);

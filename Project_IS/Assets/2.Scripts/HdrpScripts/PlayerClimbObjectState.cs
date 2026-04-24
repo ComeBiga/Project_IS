@@ -25,6 +25,7 @@ public class PlayerClimbObjectState : PlayerStateBase
     private bool mbClimbUp;                         // 오르기 인지 내리기 인지
     private Coroutine mClimbUpRoutine = null;
     private Coroutine mClimbDownRoutine = null;
+    private Vector3 mHitPoint;
 
     private bool mbActiveIK = false;
     private Vector3 mTargetIKPos;
@@ -116,6 +117,11 @@ public class PlayerClimbObjectState : PlayerStateBase
         {
             mController.Animator.SetHorizontal(-1f);
         }
+    }
+
+    public void SetHitPoint(Vector3 hitPoint)
+    {
+        mHitPoint = hitPoint;
     }
 
     // 오브젝트 오르내리기 상태를 애니메이션이 끝날 때 벗어나도록 호출해주고 있다.
@@ -240,7 +246,8 @@ public class PlayerClimbObjectState : PlayerStateBase
                 // 캐릭터 x 위치가 0까지만 이동하게 조건을 줌
                 if (animatorStateInfo.normalizedTime > _climbUpZDelay)
                 {
-                    deltaPosition.x *= (transform.position.x < ppoBounds.min.x + .35f) ? _climbUpZSpeed : 0f;
+                    // deltaPosition.x *= (transform.position.x < ppoBounds.min.x + .35f) ? _climbUpZSpeed : 0f;
+                    deltaPosition.x *= (transform.position.x < mHitPoint.x + .35f) ? _climbUpZSpeed : 0f;
                     mController.Movement.UpdateRotation();
                 }
                 else

@@ -70,7 +70,8 @@ public class PlayerLadderState : PlayerStateBase
     {
         mController.Movement.SetVelocity(Vector3.zero);
         mController.Movement.SetUseGravity(false);
-        mController.Movement.SetColliderActive(false);
+        // mController.Movement.SetColliderActive(false);
+        mController.Movement.SetColliderTrigger(true);      // 사다리 타는 중 카메라 Bounds 체크를 위해
         // mController.Animator.SetLadderTop(false);        // 맨 위에서 시작 시 LadderTop과 함께 시작함
 
         mbClimbLoop = true;
@@ -90,8 +91,15 @@ public class PlayerLadderState : PlayerStateBase
         mController.Animator.onAnimationIK -= updateAnimatorIK;
         mController.Animator.onAnimationIK += updateAnimatorIK;
 
-        if(mbStartFromBottom)
+        mController.CharacterSound.enableFootStep = false;
+        mController.CharacterSound.enableHandTouch = false;
+        mController.CharacterSound.AddFootStepMediumEvent(playFootStepSound);
+        mController.CharacterSound.AddHandTouchEvent(playHandTouchSound);
+
+        if (mbStartFromBottom)
         {
+            playFootStepSound();
+
             // StartCoroutine(eClimb());
             StartCoroutine(eStartClimbUp());
         }
@@ -104,7 +112,8 @@ public class PlayerLadderState : PlayerStateBase
     public override void ExitState()
     {
         mController.Movement.SetUseGravity(true);
-        mController.Movement.SetColliderActive(true);
+        // mController.Movement.SetColliderActive(true);
+        mController.Movement.SetColliderTrigger(false);
         mController.Animator.SetLadderTop(false);
 
         PlayerMoveState moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
@@ -115,6 +124,11 @@ public class PlayerLadderState : PlayerStateBase
         mbActiveIK = false;
         mController.Animator.onAnimationIK -= updateAnimatorIK;
         mController.Animator.SetVertical(0f);
+
+        mController.CharacterSound.enableFootStep = true;
+        mController.CharacterSound.enableHandTouch = true;
+        mController.CharacterSound.RemoveFootStepMediumEvent(playFootStepSound);
+        mController.CharacterSound.RemoveHandTouchEvent(playHandTouchSound);
     }
 
     public override void Tick()
@@ -324,6 +338,21 @@ public class PlayerLadderState : PlayerStateBase
         mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
     }
 
+    private void playFootStepSound(float volume)
+    {
+        AudioManager.instance.PlayOneShot("LadderFootStep", volume);
+    }
+
+    private void playFootStepSound()
+    {
+        AudioManager.instance.PlayOneShot("LadderFootStep");
+    }
+
+    private void playHandTouchSound()
+    {
+        AudioManager.instance.PlayOneShot("HandTouchWood", .1f);
+    }
+
     private IEnumerator eClimb()
     {
         // Climb Up 애니메이션이 아니면 아래를 계산하지 않음
@@ -461,6 +490,7 @@ public class PlayerLadderState : PlayerStateBase
                 // mbActiveIK = false;
                 // mController.Animator.SetLadderTop(true);
 
+                mController.Movement.SetGround(mLadderHandler.TopGround);
                 StartCoroutine(eEndToPlatform());
 
                 break;
