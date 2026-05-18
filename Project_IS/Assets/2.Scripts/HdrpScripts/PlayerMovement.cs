@@ -18,7 +18,7 @@ public class PlayerMovement : MonoBehaviour
     public float GroundCheckRadius => _groundCheckRadius;
     public Ground Ground => mGround;
 
-    public enum EDirection { Left, Right, Forward };
+    public enum EDirection { Left, Right, Forward, Neutral = 100 };
 
     [Header("Debug")]
     [SerializeField] private bool _drawStepRay = false;
@@ -99,6 +99,37 @@ public class PlayerMovement : MonoBehaviour
     public void SetDirection(EDirection direction)
     {
         mDirection = direction;
+    }
+
+    public void ChangeDirectionRotation()
+    {
+        ChangeDirection();
+
+        Quaternion targetRotation = DirectionToRotation(mDirection);
+
+        transform.rotation = targetRotation;
+    }
+
+    public void SetRotationToCurrentDirection()
+    {
+        Quaternion targetRotation = DirectionToRotation(mDirection);
+
+        transform.rotation = targetRotation;
+    }
+
+    public bool IsMoveInputToCharacterDirection(Vector2 moveInput)
+    {
+        if(moveInput.x < 0 && mDirection == EDirection.Left)
+        {
+            return true;
+        }
+
+        if (moveInput.x > 0 && mDirection == EDirection.Right)
+        {
+            return true;
+        }
+
+        return false;
     }
 
     // 캐릭터의 회전을 Update하는 함수
@@ -183,6 +214,31 @@ public class PlayerMovement : MonoBehaviour
             return 2;
         else
             return 0;
+    }
+
+    public static Vector3 DirectionToEulerAngles(EDirection direction)
+    {
+        if (direction == EDirection.Right)
+            return new Vector3(0f, 90f, 0f);
+        else if (direction == EDirection.Left)
+            return new Vector3(0f, -90f, 0f);
+        else
+            return Vector3.zero;
+    }
+
+    // 1 : right(90), -1 : left(-90, 270), 0 : 그 외
+    public static EDirection MoveInputXToDirection(float moveInputX)
+    {
+        if (moveInputX < -.001f)
+        {
+            return EDirection.Left;
+        }
+        else if (moveInputX > .001f)
+        {
+            return EDirection.Right;
+        }
+
+        return EDirection.Neutral;
     }
 
     public void JumpUp()

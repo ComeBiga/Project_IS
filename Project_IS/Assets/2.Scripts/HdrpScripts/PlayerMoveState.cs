@@ -3,6 +3,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
 using UnityEngine;
+using UnityEngine.Animations.Rigging;
 using static PlayerMovement;
 
 public class PlayerMoveState : PlayerStateBase
@@ -19,6 +20,23 @@ public class PlayerMoveState : PlayerStateBase
     [SerializeField] private bool _drawInteractableRay = true;
     [SerializeField] private bool _drawFrontWallCheckRay = true;
     [SerializeField] private bool _drawGroundNormal = true;
+
+    [Header("Locomotion")]
+    [SerializeField] private bool _moveRootMotion = false;
+    [SerializeField] private bool _turnRootMotion = false;
+    [SerializeField] private bool _turn180 = false;
+    [SerializeField] private float _turnInterval = .1f;
+    [SerializeField] private float _rootMotionRotationSpeed = 1.0f;
+    [Range(0f, 180f)]
+    [SerializeField] private float _rootMotionRotationSnapAngle = 180f;
+    // [SerializeField] private Transform _leftLegIKTarget;
+    [SerializeField] private TwoBoneIKConstraint _leftLegIKConstraint;
+    // [SerializeField] private Transform _rightLegIKTarget;
+    [SerializeField] private TwoBoneIKConstraint _rightLegIKConstraint;
+    [SerializeField] private float _footIKMaxDistance = 1f;
+    [SerializeField] private AnimationCurve _runTurnRotationCurve;
+    [SerializeField] private AnimationCurve _runTurnPositionCurve;
+    [SerializeField] private float _runTurnMoveSpeed = 1f;
 
     [Header("FrontWallCheck")]
     [SerializeField] private LayerMask _frontWallCheckLayer;
@@ -41,6 +59,15 @@ public class PlayerMoveState : PlayerStateBase
     private bool mbRotating = false;        // 현재 사용되는 곳은 없지만 회전을 체크하는 변수이기 때문에 유지
     private bool mbRotatingCW = false;      // 시계방향 회전 체크 변수
     private float mPathZPosition = 0f;    // 캐릭터가 지나가는 길의 z위치를 저장하는 변수
+    private bool mbFrontWall = false;
+    private Bounds mFrontWallBounds;
+    private RaycastHit mFrontWallHitInfo;
+    private float mTurnTimer = 0f;
+    private float mDeltaRotatedAngle = 0f;
+    private float mRootMotionVelocity = 0f;
+    private Vector3 mRotationPivotPosition;
+    private float mRotationMoveDistance = 0f;
+    private float mRemainAngles = 0f;
 
     private Terrain mTerrain;
     private Ground mGround;
@@ -55,6 +82,13 @@ public class PlayerMoveState : PlayerStateBase
         mPreviousForward = mController.Movement.Direction == PlayerMovement.EDirection.Left ?
                            Vector3.left : Vector3.right;
 
+        mController.Animator.onAnimationIK -= updateAnimatorIK;
+        mController.Animator.onAnimationIK += updateAnimatorIK;
+
+        mController.Animator.AnimationEventReceiver.onFrontFoot += updateFrontFoot;
+
+        Debug.Log("Enter MoveState");
+
         if(mbEnterToIdle)
         {
             mController.InputHandler.ResetMoveInput();
@@ -64,40 +98,94 @@ public class PlayerMoveState : PlayerStateBase
 
     public override void ExitState()
     {
-
+        mController.Animator.onAnimationIK -= updateAnimatorIK;
+        _leftLegIKConstraint.weight = 0f;
+        _rightLegIKConstraint.weight = 0f;
     }
 
     public override void Tick()
     {
         // Move
-        checkWallForMove(out Vector2 resultMoveInput);
-        mController.Movement.Move(resultMoveInput);
+        bool bFrontWall = checkWallForMove(out Vector2 resultMoveInput);
+
+        if (bFrontWall)
+        {
+            if (mController.Movement.IsMoveInputToCharacterDirection(mController.InputHandler.MoveInputRaw))
+            {
+                mController.Animator.SetFrontWall(true);
+            }
+            else
+            {
+                mController.Animator.SetFrontWall(false);
+            }
+        }
+        else
+        {
+            mController.Animator.SetFrontWall(false);
+        }
+
+        if (mTurnTimer > 0f)
+        {
+            if (_moveRootMotion)
+            {
+                var deltaPosition = mController.Animator.Animator.deltaPosition;
+                deltaPosition.z = 0f;
+                transform.position += deltaPosition;
+                // Debug.Log(deltaPosition);
+            }
+            else
+            {
+                Vector2 finalMoveInput = resultMoveInput;
+                finalMoveInput.x = 0f;
+                // mController.Movement.Move(finalMoveInput);
+            }
+        }
+        else
+        {
+            if (_moveRootMotion)
+            {
+                var deltaPosition = mController.Animator.Animator.deltaPosition;
+                // deltaPosition.x *= 2f;
+                deltaPosition.z = 0f;
+                transform.position += deltaPosition;
+                // Debug.Log($"deltaPosition: {deltaPosition}, resultPosition: {transform.position}");
+            }
+            else
+            {
+                Vector2 finalMoveInput = resultMoveInput;
+
+                if (mbRotating)
+                    finalMoveInput.x = 0f;
+
+                mController.Movement.Move(finalMoveInput);
+                // Debug.Log("MoveInputX: " + resultMoveInput.x); 
+
+                // Debug.Log($"velocity: {mController.Movement.Velocity}, moveInput: {resultMoveInput}");
+            }
+        }
+
         mController.Animator.SetInputXMagnitude(Mathf.Abs(resultMoveInput.x));
         mController.Animator.SetInputXRaw(mController.InputHandler.MoveInputRaw.x);
+        mController.Animator.SetInputX(Mathf.Abs(mController.InputHandler.MoveInputRaw.x) > .1f);
         // mController.Movement.Move(mController.InputHandler.MoveInput);
         //mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
         // Debug.Log($"moveInput: {resultMoveInput}");
 
-        //if(checkGround(out Ground ground))
+        //AnimatorStateInfo stateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
+
+        //if(stateInfo.IsTag("Run"))
         //{
-        //    mGround = ground;
+        //    float decimalTime = stateInfo.normalizedTime - (int)stateInfo.normalizedTime;
+
+        //    if (decimalTime > .35f && decimalTime < .9f)
+        //    {
+        //        mController.Animator.SetIsLeftFoot(true);
+        //    }
+        //    else
+        //    {
+        //        mController.Animator.SetIsLeftFoot(false);
+        //    }
         //}
-
-        AnimatorStateInfo stateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
-
-        if(stateInfo.IsTag("Run"))
-        {
-            float decimalTime = stateInfo.normalizedTime - (int)stateInfo.normalizedTime;
-
-            if (decimalTime > .35f && decimalTime < .9f)
-            {
-                mController.Animator.SetIsLeftFoot(true);
-            }
-            else
-            {
-                mController.Animator.SetIsLeftFoot(false);
-            }
-        }
 
         mController.Animator.SetMoveInputXTapped(mController.InputHandler.MoveInputXTapped);
         mController.Animator.SetMoveInputXPressed(mController.InputHandler.MoveInputXPressed);
@@ -108,73 +196,367 @@ public class PlayerMoveState : PlayerStateBase
 
         // Set Direction
         // 키입력이 들어오고 방향이 바뀌는 찰나 시점에 대한 코드
-        if (mController.InputHandler.MoveInput.x > .001f || mController.InputHandler.MoveInput.x < -.001f)
-        {
-            EDirection targetDirection = mController.InputHandler.MoveInput.x > 0f ? EDirection.Right : EDirection.Left;
+        //if (mController.InputHandler.MoveInput.x > .001f || mController.InputHandler.MoveInput.x < -.001f)
+        //{
+        //    EDirection targetDirection = mController.InputHandler.MoveInput.x > 0f ? EDirection.Right : EDirection.Left;
 
-            // 키 입력 방향과 현재 방향이 다르면 방향 전환
-            if (targetDirection != mController.Movement.Direction)
-            {
-                mbDirectionChanged = true;
-                mController.Movement.SetDirection(targetDirection);
-            }
-        }
+        //    // 키 입력 방향과 현재 방향이 다르면 방향 전환
+        //    if (targetDirection != mController.Movement.Direction)
+        //    {
+        //        mbDirectionChanged = true;
+        //        mController.Movement.SetDirection(targetDirection);
+        //    }
+        //}
 
         // Turn CW/CCW
         Vector3 currentForward = transform.forward;
+        // 한 프레임 돌아간 각도
         float deltaRotatedAngle = Vector3.SignedAngle(mPreviousForward, currentForward, Vector3.up);
 
-        // 회전 시작하면 어느 방향 회전인지 체크 후 Turn 애니메이션 전환
-        if (mbDirectionChanged)
+        if (_turn180)
         {
-            //mController.Animator.TurnL(true);
-            //mController.Animator.TurnR(false);
-            //mbDirectionChanged = false;
-
-            // 반시계방향 회전 트리거
-            if (deltaRotatedAngle < -5f)
+            if (checkOppositeInputX() && mTurnTimer <= 0f)
             {
+                // mController.InputHandler.ResetMoveInputXOppositePressed();
+                mbDirectionChanged = true;
+                mController.Movement.SetDirection(mController.Movement.OppositeDirection);
+                mTurnTimer = _turnInterval;
+            }
+
+            // 회전 시작하면 어느 방향 회전인지 체크 후 Turn 애니메이션 전환
+            if (mbDirectionChanged)
+            {
+                mController.Movement.SetRotationToCurrentDirection();
+
                 mController.Animator.TurnL(true);
                 mController.Animator.TurnR(false);
                 mbDirectionChanged = false;
 
-                // 회전 각도가 있으면 회전이라고 의도를 갖게 되는데
-                // 지금은 사용되는 곳이 없지만 혹시 사용되면 신경을 써야할 것 같다
-                mbRotating = true;
-                mbRotatingCW = false;
+                // Debug.Log($"TurnL: True, InputXMagnitude: {Mathf.Abs(resultMoveInput.x)}");
             }
-            // 시계방향 회전 트리거
-            else if (deltaRotatedAngle > 5f)
+            // 회전 방향 체크 중이 아니면 
+            else
             {
-                mController.Animator.TurnL(false);
-                mController.Animator.TurnR(true);
+                if (deltaRotatedAngle > -1f && deltaRotatedAngle < 1f)
+                {
+                    mController.Animator.TurnL(false);
+                    mController.Animator.TurnR(false);
+                    mbRotating = false;
+                }
+            }
+
+            if (mTurnTimer > 0f)
+            {
+                mTurnTimer -= Time.deltaTime;
+                // Debug.Log(mTurnTimer);
+            }
+
+            mPreviousForward = currentForward;
+
+            var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
+
+            if (currentStateInfo.IsTag("Run"))
+            {
+                Debug.Log(mController.Animator.Animator.deltaRotation);
+            }
+
+            updateFootIK();
+        }
+        else if (_turnRootMotion)
+        {
+            var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
+
+            // 키입력이 들어오고 방향이 바뀌는 찰나 시점에 대한 코드
+            //if (mController.InputHandler.MoveInput.x > .001f || mController.InputHandler.MoveInput.x < -.001f)
+            //{
+            //    EDirection targetDirection = mController.InputHandler.MoveInput.x > 0f ? EDirection.Right : EDirection.Left;
+
+            //    // 키 입력 방향과 현재 방향이 다르면 방향 전환
+            //    if (targetDirection != mController.Movement.Direction)
+            //    {
+            //        mbDirectionChanged = true;
+            //        mController.Movement.SetDirection(targetDirection);
+            //    }
+            //}
+            if (checkOppositeInputX() && mTurnTimer <= 0f)
+            {
+                // mController.InputHandler.ResetMoveInputXOppositePressed();
+                mbDirectionChanged = true;
+                // mController.Movement.SetRotationToCurrentDirection();
+                mController.Movement.SetDirection(mController.Movement.OppositeDirection);
+                mTurnTimer = _turnInterval;
+
+                // Debug.Log($"Direction Changed: {mController.Movement.Direction}");
+            }
+
+            // 회전 시작하면 어느 방향 회전인지 체크 후 Turn 애니메이션 전환
+            if (mbDirectionChanged)
+            {
+                mController.Animator.TurnL(true);
+                mController.Animator.TurnR(false);
                 mbDirectionChanged = false;
                 mbRotating = true;
-                mbRotatingCW = true;
+                mDeltaRotatedAngle = Number.DEG_0;
+                mRootMotionVelocity = 0f;
+
+                // Debug.Log($"Start Direction Change");
             }
+            // 회전 방향 체크 중이 아니면 
+            else
+            {
+
+
+                // Debug.Log($"Rotating: {mbRotating}, IsTurn: {currentStateInfo.IsTag("Turn")}, IsInTransition: {mController.Animator.Animator.IsInTransition(0)}, TurnTimer: {mTurnTimer}");
+
+                mController.Animator.TurnL(false);
+                mController.Animator.TurnR(false);
+
+                ////if (deltaRotatedAngle > -1f && deltaRotatedAngle < 1f)
+                if (Mathf.Abs(mDeltaRotatedAngle) > _rootMotionRotationSnapAngle)
+                {
+                    // Debug.Log(mDeltaRotatedAngle);
+                    // mDeltaRotatedAngle = Number.DEG_0;
+                    //mController.Animator.TurnL(false);
+                    //mController.Animator.TurnR(false);
+                    // mbRotating = false;
+                    // mController.Movement.SetRotationToCurrentDirection();
+                    mController.Movement.UpdateRotation();
+                    // Debug.Log("Rotation Snapped!");
+                }
+            }
+
+            if (mTurnTimer > 0f)
+            {
+                mTurnTimer -= Time.deltaTime;
+                // Debug.Log(mTurnTimer);
+            }
+
+            mPreviousForward = currentForward;
+
+
+
+            // Rotate
+            if (mbRotating)
+            {
+                var deltaPosition = mController.Animator.Animator.deltaPosition;
+                deltaPosition.z = 0f;
+                // transform.position += deltaPosition;
+                float rootMotionVelocity = deltaPosition.x / Time.deltaTime;
+                rootMotionVelocity = Mathf.Clamp(rootMotionVelocity, -mController.Movement.MoveSpeed, mController.Movement.MoveSpeed);
+
+                if (!(currentStateInfo.IsTag("Turn") && mController.Animator.Animator.IsInTransition(0)))
+                    mController.Movement.SetVelocity(Vector3.right * rootMotionVelocity);
+                if (Mathf.Abs(rootMotionVelocity) > Mathf.Abs(mRootMotionVelocity))
+                    mRootMotionVelocity = rootMotionVelocity;
+
+                var deltaRotation = mController.Animator.Animator.deltaRotation;
+                var normalizedX = (deltaRotation.eulerAngles.x < 180f) ? deltaRotation.eulerAngles.x : deltaRotation.eulerAngles.x - 360f;
+                var normalizedY = (deltaRotation.eulerAngles.y < 180f) ? deltaRotation.eulerAngles.y : deltaRotation.eulerAngles.y - 360f;
+                var normalizedZ = (deltaRotation.eulerAngles.z < 180f) ? deltaRotation.eulerAngles.z : deltaRotation.eulerAngles.z - 360f;
+                var normalizedDeltaRotationEuler = new Vector3(normalizedX, normalizedY, normalizedZ);
+                var finalDeltaRotationEuler = normalizedDeltaRotationEuler * _rootMotionRotationSpeed;
+                var finalDeltaRotation = Quaternion.Euler(finalDeltaRotationEuler);
+                transform.rotation *= finalDeltaRotation;
+
+                mDeltaRotatedAngle += normalizedY;
+                Debug.Log(mDeltaRotatedAngle);
+
+
+
+                if (mTurnTimer > 0f)
+                {
+                    mTurnTimer -= Time.deltaTime;
+                    // Debug.Log(mTurnTimer);
+                }
+
+                if (mTurnTimer < 0f && (!currentStateInfo.IsTag("Turn"))) //  || Mathf.Abs(mRootMotionVelocity) > mController.Movement.MoveSpeed))
+                {
+                    mbRotating = false;
+
+                    var vel = Vector3.right * mRootMotionVelocity;
+                    // mController.Movement.SetVelocity(vel);
+                    Debug.Log($"Tag is not Turn anymore, stop rotating. Velocity: {vel}, normalizedTime: {currentStateInfo.normalizedTime}");
+                }
+            }
+
+            // Debug.Log($"velocity: {mController.Movement.Velocity}, rotating: {mbRotating}, IsTurn: {currentStateInfo.IsTag("Turn")},transition: {mController.Animator.Animator.IsInTransition(0)}");
+
+            updateFootIK();
         }
-        // 회전 방향 체크 중이 아니면 
+        #region UpdateRotation
         else
         {
-            if (deltaRotatedAngle > -1f && deltaRotatedAngle < 1f)
+            // 키입력이 들어오고 방향이 바뀌는 찰나 시점에 대한 코드
+            if (mController.InputHandler.MoveInput.x > .001f || mController.InputHandler.MoveInput.x < -.001f)
+            {
+                EDirection targetDirection = mController.InputHandler.MoveInput.x > 0f ? EDirection.Right : EDirection.Left;
+
+                // 키 입력 방향과 현재 방향이 다르면 방향 전환
+                if (targetDirection != mController.Movement.Direction)
+                {
+                    mbDirectionChanged = true;
+                    mController.Movement.SetDirection(targetDirection);
+                }
+            }
+
+            // 회전 시작하면 어느 방향 회전인지 체크 후 Turn 애니메이션 전환
+            if (mbDirectionChanged)
+            {
+                mController.Animator.TurnL(true);
+                mController.Animator.TurnR(false);
+                mbDirectionChanged = false;
+                mbRotating = true;
+                mRotationPivotPosition = transform.position;
+                mRotationMoveDistance = 0f;
+                mRemainAngles = Vector3.SignedAngle(transform.forward, mController.Movement.DirectionToVector(), Vector3.up);
+                // mRemainAngles = (mRemainAngles + Number.DEG_360) % Number.DEG_360;
+                mRemainAngles = Mathf.Abs(mRemainAngles);
+                Debug.Log($"remainAngles: {mRemainAngles}");
+
+                //// 반시계방향 회전 트리거
+                //if (deltaRotatedAngle < -5f)
+                //{
+                //    mController.Animator.TurnL(true);
+                //    mController.Animator.TurnR(false);
+                //    mbDirectionChanged = false;
+
+                //    // 회전 각도가 있으면 회전이라고 의도를 갖게 되는데
+                //    // 지금은 사용되는 곳이 없지만 혹시 사용되면 신경을 써야할 것 같다
+                //    mbRotating = true;
+                //    mbRotatingCW = false;
+                //}
+                //// 시계방향 회전 트리거
+                //else if (deltaRotatedAngle > 5f)
+                //{
+                //    mController.Animator.TurnL(false);
+                //    mController.Animator.TurnR(true);
+                //    mbDirectionChanged = false;
+                //    mbRotating = true;
+                //    mbRotatingCW = true;
+                //}
+
+                Debug.Log($"Start DirectionChanged, deltaRotatedAngle: {deltaRotatedAngle}");
+            }
+            // 회전 방향 체크 중이 아니면 
+            else
             {
                 mController.Animator.TurnL(false);
                 mController.Animator.TurnR(false);
-                mbRotating = false;
+
+                //if (deltaRotatedAngle > -1f && deltaRotatedAngle < 1f)
+                //{
+                //    mController.Animator.TurnL(false);
+                //    mController.Animator.TurnR(false);
+                //    mbRotating = false;
+
+                //    Debug.Log($"mbRotating: {mbRotating}");
+                //}
+                //else
+                //{
+                //    Debug.Log($"deltaRotatedAngle: {deltaRotatedAngle}");
+                //}
             }
+
+            mPreviousForward = currentForward;
+
+            var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
+
+
+            // Rotate
+            //if (mbRotating)
+            //{
+            //    if (currentStateInfo.IsTag("Turn"))
+            //    {
+            //        float positionValue = _runTurnPositionCurve.Evaluate(currentStateInfo.normalizedTime);
+            //        float currentPosition = positionValue * _runTurnMoveSpeed;
+
+            //        float lastPositionValue = _runTurnPositionCurve.Evaluate(currentStateInfo.normalizedTime - Time.deltaTime);
+            //        float deltaPosition = positionValue - lastPositionValue;
+            //        // float velocity = deltaPosition / Time.deltaTime;
+            //        float velocity = positionValue * mController.Movement.MoveSpeed * _runTurnMoveSpeed;
+
+            //        Vector3 moveDirection = mController.Movement.DirectionToVector();
+            //        transform.position = mRotationPivotPosition + moveDirection * currentPosition;
+            //        //Vector3 newPosition = transform.position;
+            //        //newPosition.x = mRotationPivotPosition.x + moveDirection.x * currentPosition;
+            //        //transform.position = newPosition;
+            //        // mController.Movement.SetVelocity(moveDirection * velocity * _runTurnMoveSpeed);
+            //        // mController.Movement.SetVelocity(moveDirection * velocity);
+
+            //        //if (positionValue < 0.01f)
+            //        //{
+            //        //    transform.position = mRotationPivotPosition + moveDirection * currentPosition;
+            //        //}
+            //        //else
+            //        //{
+            //        //    mController.Movement.SetVelocity(moveDirection * velocity);
+            //        //}
+            //        if (mController.Animator.Animator.IsInTransition(0))
+            //        {
+            //            mbRotating = false;
+            //        }
+
+            //        mRotationMoveDistance += velocity * Time.deltaTime;
+
+            //        Debug.Log($"normalizedTime: {currentStateInfo.normalizedTime}, positionValue: {positionValue}, velocity: {velocity}, rigidbody velocity: {mController.Movement.Velocity}, moveDirection: {moveDirection}, deltaPosition: {velocity * Time.deltaTime}, moveDistance: {mRotationMoveDistance}");
+            //    }
+
+            //    float rotationValue = _runTurnRotationCurve.Evaluate(currentStateInfo.normalizedTime);
+
+            //    if (currentStateInfo.IsTag("Turn") && rotationValue < .99f)
+            //    {
+            //        //float positionValue = _runTurnPositionCurve.Evaluate(currentStateInfo.normalizedTime);
+            //        //float currentPosition = positionValue * _runTurnMoveSpeed;
+
+            //        //float lastPositionValue = _runTurnPositionCurve.Evaluate(currentStateInfo.normalizedTime - Time.deltaTime);
+            //        //float deltaPosition = positionValue - lastPositionValue;
+            //        //// float velocity = deltaPosition / Time.deltaTime;
+            //        //float velocity = positionValue * mController.Movement.MoveSpeed;
+
+            //        //Vector3 moveDirection = mController.Movement.DirectionToVector();
+            //        //// transform.position = mRotationPivotPosition + moveDirection * currentPosition;
+            //        //// mController.Movement.SetVelocity(moveDirection * velocity * _runTurnMoveSpeed);
+            //        //mController.Movement.SetVelocity(moveDirection * velocity);
+
+            //        // float rotationValue = _runTurnRotationCurve.Evaluate(currentStateInfo.normalizedTime);
+            //        float currentAngles = rotationValue * Number.DEG_180;
+
+            //        PlayerMovement.EDirection previousDirection = mController.Movement.OppositeDirection;
+            //        Vector3 newEulerAngles = PlayerMovement.DirectionToEulerAngles(previousDirection);
+            //        newEulerAngles.y -= currentAngles;
+
+            //        Quaternion targetRotation = Quaternion.Euler(newEulerAngles);
+            //        transform.rotation = targetRotation;
+
+            //        Debug.Log($"normalizedTime: {currentStateInfo.normalizedTime}, velocity: {mController.Movement.Velocity},  currentAngles: {currentAngles}, targetAngles: {newEulerAngles.y}");
+
+            //        if (rotationValue > .99f)
+            //        {
+            //            // mbRotating = false;
+            //            //mController.Movement.SetRotationToCurrentDirection();
+            //            //Debug.Log("Rotation Snapped!");
+            //        }
+            //    }
+            //}
+            //else
+            //{
+            //    mController.Movement.UpdateRotation();
+            //}
+            // transform.rotation *= mController.Animator.Animator.deltaRotation;
+
+            updateFootIK();
         }
+        #endregion
 
-        mPreviousForward = currentForward;
-
-        // Rotate
-        mController.Movement.UpdateRotation();
-        // transform.rotation *= mController.Animator.Animator.deltaRotation;
+        //mController.Animator.SetInputXMagnitude(Mathf.Abs(resultMoveInput.x));
+        //mController.Animator.SetInputXRaw(mController.InputHandler.MoveInputRaw.x);
+        //mController.Animator.SetInputX(Mathf.Abs(mController.InputHandler.MoveInputRaw.x) > .1f);
 
         // Jump
         if (mController.InputHandler.JumpPressed)
         {
-            if(mController.Movement.IsGrounded)
-            { 
+            if (mController.Movement.IsGrounded)
+            {
                 // 점프 입력이 됐을 때 이동 입력이 있으면 무조건 RunJump
                 if (mController.InputHandler.MoveInput.x > .01f || mController.InputHandler.MoveInput.x < -.01f)
                 {
@@ -196,7 +578,7 @@ public class PlayerMoveState : PlayerStateBase
         // Fall
         PlayerFallState fallState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Fall) as PlayerFallState;
 
-        if(fallState.CheckFall())
+        if (fallState.CheckFall())
         // if (mController.Movement.Velocity.y < -1f)
         {
             mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
@@ -259,7 +641,7 @@ public class PlayerMoveState : PlayerStateBase
         updateInteractable(bHitDirection, interactableHitInfo);
 
         // Terrain Normal
-        if(Physics.Raycast(transform.position, Vector3.down, out RaycastHit hitInfo, .1f, LayerMask.GetMask("Ground")))
+        if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hitInfo, .1f, LayerMask.GetMask("Ground")))
         {
             mGroundNormal = hitInfo.normal;
             float slopeAngle = Vector3.Angle(Vector3.up, hitInfo.normal);
@@ -286,6 +668,98 @@ public class PlayerMoveState : PlayerStateBase
         }
     }
 
+    private void FixedUpdate()
+    {
+        var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
+
+
+        // Rotate
+        if (mbRotating)
+        {
+            Animator animator = mController.Animator.Animator;
+            // var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
+
+            if (currentStateInfo.IsTag("Turn"))
+            {
+                //float positionValue = _runTurnPositionCurve.Evaluate(currentStateInfo.normalizedTime);
+                float positionValue = animator.GetFloat("PositionCurve");
+                float currentPosition = positionValue * _runTurnMoveSpeed;
+
+                //float lastPositionValue = _runTurnPositionCurve.Evaluate(currentStateInfo.normalizedTime - Time.deltaTime);
+                //float deltaPosition = positionValue - lastPositionValue;
+                // float velocity = deltaPosition / Time.deltaTime;
+                float velocity = positionValue * mController.Movement.MoveSpeed * _runTurnMoveSpeed;
+
+                Vector3 moveDirection = mController.Movement.DirectionToVector();
+                transform.position = mRotationPivotPosition + moveDirection * currentPosition;
+                // transform.position += deltaPosition * moveDirection;
+                // mController.Movement.SetVelocity(moveDirection * velocity * _runTurnMoveSpeed);
+                // mController.Movement.SetVelocity(moveDirection * velocity);
+
+                //if (positionValue < 0.01f)
+                //{
+                //    transform.position = mRotationPivotPosition + moveDirection * currentPosition;
+                //}
+                //else
+                //{
+                //    mController.Movement.SetVelocity(moveDirection * velocity);
+                //}
+
+                if (mController.Animator.Animator.IsInTransition(0))
+                {
+                    mbRotating = false;
+                }
+
+                mRotationMoveDistance += velocity * Time.deltaTime;
+
+                // Debug.Log($"normalizedTime: {currentStateInfo.normalizedTime}, positionValue: {positionValue}, velocity: {velocity}, rigidbody velocity: {mController.Movement.Velocity}, moveDirection: {moveDirection}, deltaPosition: {velocity * Time.deltaTime}, moveDistance: {mRotationMoveDistance}");
+            }
+
+            // float rotationValue = _runTurnRotationCurve.Evaluate(currentStateInfo.normalizedTime);
+            float rotationValue = animator.GetFloat("RotationCurve");
+
+            if (currentStateInfo.IsTag("Turn") && rotationValue < .99f)
+            {
+                //float positionValue = _runTurnPositionCurve.Evaluate(currentStateInfo.normalizedTime);
+                //float currentPosition = positionValue * _runTurnMoveSpeed;
+
+                //float lastPositionValue = _runTurnPositionCurve.Evaluate(currentStateInfo.normalizedTime - Time.deltaTime);
+                //float deltaPosition = positionValue - lastPositionValue;
+                //// float velocity = deltaPosition / Time.deltaTime;
+                //float velocity = positionValue * mController.Movement.MoveSpeed;
+
+                //Vector3 moveDirection = mController.Movement.DirectionToVector();
+                //// transform.position = mRotationPivotPosition + moveDirection * currentPosition;
+                //// mController.Movement.SetVelocity(moveDirection * velocity * _runTurnMoveSpeed);
+                //mController.Movement.SetVelocity(moveDirection * velocity);
+
+                // float rotationValue = _runTurnRotationCurve.Evaluate(currentStateInfo.normalizedTime);
+                // float currentAngles = rotationValue * Number.DEG_180;
+                float currentAngles = rotationValue * mRemainAngles;
+
+                PlayerMovement.EDirection previousDirection = mController.Movement.OppositeDirection;
+                Vector3 newEulerAngles = PlayerMovement.DirectionToEulerAngles(previousDirection);
+                newEulerAngles.y -= currentAngles;
+
+                Quaternion targetRotation = Quaternion.Euler(newEulerAngles);
+                transform.rotation = targetRotation;
+
+                // Debug.Log($"normalizedTime: {currentStateInfo.normalizedTime}, velocity: {mController.Movement.Velocity},  currentAngles: {currentAngles}, targetAngles: {newEulerAngles.y}");
+
+                if (rotationValue > .99f)
+                {
+                    mbRotating = false;
+                    // mController.Movement.SetRotationToCurrentDirection();
+                    //Debug.Log("Rotation Snapped!");
+                }
+            }
+        }
+        else
+        {
+            mController.Movement.UpdateRotation();
+        }
+    }
+
     public void EnterToIdle()
     {
         mbEnterToIdle = true;
@@ -298,6 +772,16 @@ public class PlayerMoveState : PlayerStateBase
         // moveInput.x = mController.Movement.Direction == EDirection.Right ? startMoveInputX : -startMoveInputX;
         moveInput.x = startMoveInputX;
         mController.InputHandler.SetMoveInput(moveInput);
+    }
+
+    public void EndTurn()
+    {
+        mDeltaRotatedAngle = Number.DEG_0;
+        mController.Animator.TurnL(false);
+        mController.Animator.TurnR(false);
+        mbRotating = false;
+        mController.Movement.SetRotationToCurrentDirection();
+        Debug.Log("Rotation Snapped!");
     }
 
     private void Start()
@@ -327,6 +811,41 @@ public class PlayerMoveState : PlayerStateBase
         //        AudioManager.instance.PlayOneShot("FootStepConcrete");
         //        break;
         //}
+    }
+
+    private void updateFrontFoot(int footIndex)
+    {
+        mController.Animator.SetFootPosition(footIndex);
+
+        // Debug.Log($"{footIndex}");
+        switch (footIndex)
+        {
+            case 0:
+            case 3:
+                mController.Animator.SetIsLeftFoot(true);
+                break;
+            case 1:
+            case 2:
+                mController.Animator.SetIsLeftFoot(false);
+                break;
+        }
+    }
+
+    private bool checkOppositeInputX()
+    {
+        bool bOppositePressed = mController.InputHandler.MoveInputXOppositePressed;
+        mController.InputHandler.ResetMoveInputXOppositePressed();
+
+        if (bOppositePressed)
+            return true;
+
+        EDirection InputXDirection = PlayerMovement.MoveInputXToDirection(mController.InputHandler.MoveInput.x);
+
+        // if(mController.InputHandler.MoveInputXTapped && InputXDirection == mController.Movement.OppositeDirection)
+        if(Mathf.Abs(mController.InputHandler.MoveInput.x) > .001f && InputXDirection == mController.Movement.OppositeDirection)
+            return true;
+
+        return false;
     }
 
     private bool checkGround(out Ground ground)
@@ -397,9 +916,13 @@ public class PlayerMoveState : PlayerStateBase
                 if (moveInput.x < 0f)
                     moveInput.x = 0f;
             }
+
+            // mController.Animator.SetPush();
+            mFrontWallHitInfo = hitInfo;
         }
 
         resultMoveInput = moveInput;
+        mbFrontWall = bFrontCasted;
         return bFrontCasted;
     }
 
@@ -705,6 +1228,327 @@ public class PlayerMoveState : PlayerStateBase
         }
     }
 
+    private void Update()
+    {
+        
+    }
+
+    private void updateFootIK()
+    {
+        Animator animator = mController.Animator.Animator;
+
+        float valueLeftFoot = animator.GetFloat("LeftFootCurve");
+
+        float weightLeftFoot = valueLeftFoot;
+        // float weightLeftFoot = Mathf.Clamp01(valueLeftFoot / .5f);
+        //_LeftLegIKConstraint.weight = (value > 0.01f)? 1f: 0f;
+        // _leftLegIKConstraint.weight = weightLeftFoot;
+        // _LeftLegIKConstraint.data.targetPositionWeight = weight;
+        // Debug.Log($"Left Foot IK Weight: {valueLeftFoot}, multiplied weight: {weightLeftFoot}");
+
+        if(animator.IsInTransition(0))
+        {
+            if (mbLeftTransition == false)
+            {
+                mbLeftTransition = true;
+                mbLeftFootIK = false;
+                mbLeftFootIKFullWeight = false;
+            }
+        }
+        else
+        {
+            if (mbLeftTransition == true)
+                mbLeftTransition = false;
+        }
+
+        // if(valueLeftFoot > .01f)
+        if (weightLeftFoot > .99f)
+        {
+            if (mbLeftFootIKFullWeight == false)
+            {
+                mbLeftFootIKFullWeight = true;
+                Vector3 leftFootPos = animator.GetBoneTransform(HumanBodyBones.LeftFoot).position;
+
+                // if (Physics.Raycast(animator.GetIKPosition(AvatarIKGoal.LeftFoot), Vector3.down, out RaycastHit hitInfo, .5f, mController.Movement.GroundLayer))
+                if (Physics.Raycast(leftFootPos, Vector3.down, out RaycastHit hitInfo, .5f, mController.Movement.GroundLayer))
+                {
+                    Vector3 footPosition = leftFootPos;
+                    //Vector3 footPosition = hitInfo.point;
+                    footPosition.y = hitInfo.point.y + .08f;
+
+                    mLeftFootPosition = footPosition;
+
+                    // mLeftFootRotation = Quaternion.LookRotation(mController.Movement.DirectionToVector(), Vector3.up);
+                    // Debug.Log($"Left Foot IK Updated. Foot Position: {footPosition}");
+                }
+                else
+                {
+                    weightLeftFoot = 0f;
+                }
+
+                // Debug.Log($"Left Foot IK Full Weight. value: {valueLeftFoot}, weight: {weightLeftFoot}");
+            }
+            else
+            {
+                Vector3 leftFootPos = animator.GetBoneTransform(HumanBodyBones.LeftFoot).position;
+
+                if (Physics.Raycast(leftFootPos, Vector3.down, out RaycastHit hitInfo, .5f, mController.Movement.GroundLayer))
+                {
+
+                }
+                else
+                {
+                    weightLeftFoot = 0f;
+                }
+            }
+        }
+        else if (weightLeftFoot > .01f)
+        {
+            if (mbLeftFootIK == false)
+            {
+                mbLeftFootIK = true;
+
+                // Debug.Log($"Start Left Foot IK.");
+            }
+            else
+            {
+                Vector3 leftFootPos = animator.GetBoneTransform(HumanBodyBones.LeftFoot).position;
+                Vector3 handlePos = mLeftFootPosition;
+
+                var distance = Vector3.Distance(handlePos, leftFootPos);
+
+                // weight에 거리에 비례한 보정 값을 곱해줌
+                float multiplier = 1f - Mathf.Clamp01(distance / _footIKMaxDistance);
+
+                // weightLeftFoot *= multiplier;
+                // Debug.Log($"distance: {distance}, multiplier: {multiplier}, weight: {weightLeftFoot}");
+                // Debug.Log($"Left Foot IK Weight: {valueLeftFoot}, multiplied weight: {weightLeftFoot}");
+            }
+
+            if (mbLeftFootIKFullWeight == false)
+            {
+                Vector3 leftFootPos = animator.GetBoneTransform(HumanBodyBones.LeftFoot).position;
+
+                // if (Physics.Raycast(animator.GetIKPosition(AvatarIKGoal.LeftFoot), Vector3.down, out RaycastHit hitInfo, .5f, mController.Movement.GroundLayer))
+                if (Physics.Raycast(leftFootPos, Vector3.down, out RaycastHit hitInfo, .5f, mController.Movement.GroundLayer))
+                {
+                    Vector3 footPosition = leftFootPos;
+                    //Vector3 footPosition = hitInfo.point;
+                    footPosition.y = hitInfo.point.y + .08f;
+
+                    mLeftFootPosition = footPosition;
+
+                    // mLeftFootRotation = Quaternion.LookRotation(mController.Movement.DirectionToVector(), Vector3.up);
+                    // Debug.Log($"Left Foot IK Updated. Foot Position: {footPosition}");
+
+                    if (Vector3.Distance(leftFootPos, hitInfo.point) < .09f)
+                    {
+                        mbLeftFootIKFullWeight = true;
+                        // Debug.Log($"Left Foot touched ground before Full Weight.");
+                    }
+                }
+                else
+                {
+                    weightLeftFoot = 0f;
+                }
+            }
+            else
+            {
+                Vector3 leftFootPos = animator.GetBoneTransform(HumanBodyBones.LeftFoot).position;
+
+                if (Physics.Raycast(leftFootPos, Vector3.down, out RaycastHit hitInfo, .5f, mController.Movement.GroundLayer))
+                {
+                    
+                }
+                else
+                {
+                    weightLeftFoot = 0f;
+                }
+            }
+        }
+        else
+        {
+            if (mbLeftFootIK == true)
+            {
+                mbLeftFootIK = false;
+                mbLeftFootIKFullWeight = false;
+
+                // Debug.Log($"End Left Foot IK.");
+            }
+        }
+
+        _leftLegIKConstraint.weight = weightLeftFoot;
+        _leftLegIKConstraint.data.target.position = mLeftFootPosition;
+        // _leftLegIKTarget.transform.position = mLeftFootPosition;
+
+        float valueRightFoot = animator.GetFloat("RightFootCurve");
+
+        float weightRightFoot = valueRightFoot;
+        // float weightRightFoot = Mathf.Clamp01(valueRightFoot / .5f);
+        //_rightLegIKConstraint.weight = (value > 0.01f)? 1f: 0f;
+        // _rightLegIKConstraint.weight = weightRightFoot;
+        // _rightLegIKConstraint.data.targetPositionWeight = weight;
+
+        if(animator.IsInTransition(0))
+        {
+            if(mbRightTransition == false)
+            {
+                mbRightTransition = true;
+                mbRightFootIK = false;
+                mbRightFootIKFullWeight = false;
+            }
+        }
+        else
+        {
+            if (mbRightTransition == true)
+                mbRightTransition = false;
+        }
+
+        // if(valueRightFoot > .01f)
+        if (weightRightFoot > .99f)
+        {
+            if (mbRightFootIKFullWeight == false)
+            {
+                mbRightFootIKFullWeight = true;
+
+                Vector3 rightFootPos = animator.GetBoneTransform(HumanBodyBones.RightFoot).position;
+
+                if (Physics.Raycast(rightFootPos, Vector3.down, out RaycastHit hitInfo, .5f, mController.Movement.GroundLayer))
+                {
+                    Vector3 footPosition = rightFootPos;
+                    // Vector3 footPosition = hitInfo.point;
+                    footPosition.y = hitInfo.point.y + .08f;
+
+                    mRightFootPosition = footPosition;
+                    // mRightFootRotation = Quaternion.LookRotation(mController.Movement.DirectionToVector(), Vector3.up);
+                }
+                else
+                {
+                    weightRightFoot = 0f;
+                }
+            }
+            else
+            {
+                Vector3 rightFootPos = animator.GetBoneTransform(HumanBodyBones.RightFoot).position;
+
+                if (Physics.Raycast(rightFootPos, Vector3.down, out RaycastHit hitInfo, .5f, mController.Movement.GroundLayer))
+                {
+
+                }
+                else
+                {
+                    weightRightFoot = 0f;
+                }
+            }
+        }
+        if(weightRightFoot > .01f)
+        {
+            if (mbRightFootIK == false)
+            {
+                mbRightFootIK = true;
+
+
+            }
+            else
+            {
+                Vector3 rightFootPos = animator.GetBoneTransform(HumanBodyBones.RightFoot).position;
+                Vector3 handlePos = mRightFootPosition;
+
+                
+
+                var distance = Vector3.Distance(handlePos, rightFootPos);
+
+                // weight에 거리에 비례한 보정 값을 곱해줌
+                float multiplier = 1f - Mathf.Clamp01(distance / _footIKMaxDistance);
+
+                // weightRightFoot *= multiplier;
+                // Debug.Log($"distance: {distance}, multiplier: {multiplier}, weight: {weightLeftFoot}");
+            }
+
+            if(mbRightFootIKFullWeight == false)
+            {
+                Vector3 rightFootPos = animator.GetBoneTransform(HumanBodyBones.RightFoot).position;
+
+                if (Physics.Raycast(rightFootPos, Vector3.down, out RaycastHit hitInfo, .5f, mController.Movement.GroundLayer))
+                {
+                    Vector3 footPosition = rightFootPos;
+                    // Vector3 footPosition = hitInfo.point;
+                    footPosition.y = hitInfo.point.y + .08f;
+
+                    mRightFootPosition = footPosition;
+                    // mRightFootRotation = Quaternion.LookRotation(mController.Movement.DirectionToVector(), Vector3.up);
+
+                    if (Vector3.Distance(rightFootPos, hitInfo.point) < .09f)
+                        mbRightFootIKFullWeight = true;
+                }
+                else
+                {
+                    weightRightFoot = 0f;
+                }
+            }
+            else
+            {
+                Vector3 rightFootPos = animator.GetBoneTransform(HumanBodyBones.RightFoot).position;
+
+                if (Physics.Raycast(rightFootPos, Vector3.down, out RaycastHit hitInfo, .5f, mController.Movement.GroundLayer))
+                {
+                    
+                }
+                else
+                {
+                    weightRightFoot = 0f;
+                }
+            }
+        }
+        else
+        {
+            if(mbRightFootIK == true)
+            {
+                mbRightFootIK = false;
+                mbRightFootIKFullWeight = false;
+            }
+        }
+
+        _rightLegIKConstraint.weight = weightRightFoot;
+        _rightLegIKConstraint.data.target.position = mRightFootPosition;
+        // _rightLegIKTarget.transform.position = mRightFootPosition;
+    }
+
+    private Vector3 mLeftFootPosition;
+    private Quaternion mLeftFootRotation;
+    private bool mbLeftFootIK = false;
+    private Vector3 mRightFootPosition;
+    private bool mbRightFootIK = false;
+    private bool mbLeftFootIKFullWeight = false;
+    private bool mbRightFootIKFullWeight = false;
+    private bool mbLeftTransition = false;
+    private bool mbRightTransition = false;
+
+    private void updateAnimatorIK()
+    {
+        //if (mbFrontWall)
+        //{
+        //    Vector3 leftHandPosition = mController.Animator.Animator.GetIKPosition(AvatarIKGoal.LeftHand);
+        //    leftHandPosition.x = mFrontWallHitInfo.point.x;
+        //    leftHandPosition.y = mFrontWallHitInfo.collider.bounds.max.y;
+        //    mController.Animator.Animator.SetIKPosition(AvatarIKGoal.LeftHand, leftHandPosition);
+        //    mController.Animator.Animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1f);
+
+        //    //Vector3 rightHandPosition = mAnimator.GetIKPosition(AvatarIKGoal.RightHand);
+        //    //rightHandPosition.y = mStepPositions[mRightHandStepNum].y;
+        //    //mAnimator.SetIKPosition(AvatarIKGoal.RightHand, rightHandPosition);
+        //    //mAnimator.SetIKPositionWeight(AvatarIKGoal.RightHand, mRightHandIKWeight);
+        //}
+        //else
+        //{
+        //    //Vector3 leftHandPosition = mController.Animator.Animator.GetIKPosition(AvatarIKGoal.LeftHand);
+        //    //leftHandPosition.x = mFrontWallHitInfo.point.x;
+        //    //mController.Animator.Animator.SetIKPosition(AvatarIKGoal.LeftHand, leftHandPosition);
+        //    mController.Animator.Animator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 0f);
+
+        //}
+    }
+
     private Vector3 getTerrainNormal()
     {
         TerrainData terrainData = mTerrain.terrainData;
@@ -728,12 +1572,25 @@ public class PlayerMoveState : PlayerStateBase
         }
     }
 
+    private void OnDrawGizmos()
+    {
+        if (EditorApplication.isPlaying == false)
+            return;
+
+        Gizmos.color = Color.yellow;
+        Gizmos.DrawRay(mController.Animator.Animator.GetBoneTransform(HumanBodyBones.LeftFoot).position, Vector3.down * .5f);
+        //Gizmos.DrawWireSphere(mController.Animator.Animator.GetIKPosition(AvatarIKGoal.LeftFoot), .02f);
+        //Gizmos.color = Color.cyan;
+        //Gizmos.DrawWireSphere(mController.Animator.Animator.GetBoneTransform(HumanBodyBones.LeftFoot).position, .02f);
+
+    }
+
     private void OnDrawGizmosSelected()
     {
         if(EditorApplication.isPlaying == false)
             return;
 
-        if(_drawInteractableRay)
+        if (_drawInteractableRay)
         {
             Vector3 pathOrigin = transform.position;
             pathOrigin.y += _interactableOffsetY;

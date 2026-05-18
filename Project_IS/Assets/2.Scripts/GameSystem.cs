@@ -1,6 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using Cinemachine;
+
 
 #if UNITY_EDITOR
 using UnityEditor;
@@ -27,13 +29,9 @@ public class GameSystem : MonoBehaviour
     [SerializeField]
     private GameObject _goPlayerCharacter;
     [SerializeField]
-    private Transform _trCameraFollowTarget;
+    private CinemachineVirtualCamera _virtualCamera;
     [SerializeField]
-    private Vector3 _cameraFollowOffset = Vector3.zero;
-    [SerializeField]
-    private Transform _trCameraAimTarget;
-    [SerializeField]
-    private Vector3 _cameraAimOffset = Vector3.zero;
+    private bool _cameraAutoFollow = false;
 
     // Start is called before the first frame update
     void Start()
@@ -42,6 +40,11 @@ public class GameSystem : MonoBehaviour
             Application.targetFrameRate = _targetFrameRate;
 
         Time.timeScale = _timeScale;
+
+        _goPlayerCharacter = FindActivePlayerCharacterObject();
+
+        if(_cameraAutoFollow)
+            _virtualCamera.Follow = _goPlayerCharacter.transform;
     }
 
     private void Update()
@@ -58,22 +61,28 @@ public class GameSystem : MonoBehaviour
         }
     }
 
-    private void FixedUpdate()
-    {
-        if (_trCameraAimTarget != null)
-        {
-            _trCameraAimTarget.position = _goPlayerCharacter.transform.position + _cameraAimOffset;
-        }
-
-        if (_trCameraFollowTarget != null)
-        {
-            _trCameraFollowTarget.position = _goPlayerCharacter.transform.position + _cameraFollowOffset;
-        }
-    }
+    // private float mLastXPos = 0f;
 
     private void LateUpdate()
     {
-        
+        //float deltaXPos = _virtualCamera.transform.position.x - mLastXPos;
+
+        //Debug.Log($"cameraPosition: {_virtualCamera.transform.position}, deltaXPos: {deltaXPos}");
+
+        //mLastXPos = _virtualCamera.transform.position.x;
+    }
+
+    private GameObject FindActivePlayerCharacterObject()
+    {
+        GameObject[] playerCharacterObjects = GameObject.FindGameObjectsWithTag("Player");
+
+        for(int i = 0;  i < playerCharacterObjects.Length; i++)
+        {
+            if (playerCharacterObjects[i].activeSelf)
+                return playerCharacterObjects[i];
+        }
+
+        return null;
     }
 
 #if UNITY_EDITOR

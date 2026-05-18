@@ -49,6 +49,7 @@ public class PlayerFallState : PlayerStateBase
         mMinVelocityY = 0f;
         mStartMoveInputX = 0f;
 
+        mController.Animator.SetFall();
         // mController.Animator.ResetLanding();
         mController.Animator.SetLanding(false);
         // mController.Animator.SetInputXMagnitude(0f);
@@ -158,7 +159,7 @@ public class PlayerFallState : PlayerStateBase
                     mController.Animator.SetLanding(true);
                     mController.Animator.PlayIdleLanding(landingType: 1, 0f);
 
-                    mLandingRoutine = StartCoroutine(eIdleLanding());
+                    // mLandingRoutine = StartCoroutine(eIdleLanding());
                 }
                 // Running Landing
                 else
@@ -183,7 +184,8 @@ public class PlayerFallState : PlayerStateBase
                     // mController.Animator.SetLanding();
                     mController.Animator.SetLanding(true);
                     // mController.Animator.PlayIdleLanding(landingType: 0, 0f);
-                    mController.Animator.CrossFadeIdleLanding(landingType: 0, .05f);
+                    // mController.Animator.CrossFadeIdleLanding(landingType: 0, .05f);
+                    mController.Animator.CrossFadeIdleLanding(landingType: 0, 0f);
 
                     // mLandingRoutine = StartCoroutine(eIdleLanding());
                     EndLanding();
@@ -194,7 +196,7 @@ public class PlayerFallState : PlayerStateBase
                     // mController.Movement.SetVelocity(Vector3.zero);
                     // mController.Animator.SetLanding();
                     mController.Animator.SetLanding(true);
-                    mController.Animator.CrossFadeRunningLanding(landingType: 0, .1f);
+                    mController.Animator.CrossFadeRunningLanding(landingType: 0, 0f);
 
                     // mLandingRoutine = StartCoroutine(eRunningLanding());
                     EndLanding();
@@ -253,6 +255,7 @@ public class PlayerFallState : PlayerStateBase
         if (Mathf.Abs(mStartMoveInputX) > .1f)
         {
             moveState.EnterToRun(mStartMoveInputX);
+            Debug.Log(mStartMoveInputX);
         }
         else
         {
@@ -370,7 +373,7 @@ public class PlayerFallState : PlayerStateBase
             distance += deltaPosition.x;
 
             mStartMoveInputX = deltaPosition.x / (Time.deltaTime * mController.Movement.MoveSpeed);
-            //Debug.Log($"moveInputX: {mStartMoveInputX}, normalizedTime: {animatorStateInfo.normalizedTime}");
+            // Debug.Log($"moveInputX: {mStartMoveInputX}, normalizedTime: {animatorStateInfo.normalizedTime}");
 
             //if(animatorStateInfo.normalizedTime > .8f)
             //{

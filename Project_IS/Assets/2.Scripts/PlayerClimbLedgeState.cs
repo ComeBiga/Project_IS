@@ -12,12 +12,18 @@ public class PlayerClimbLedgeState : PlayerStateBase
         public int checkIndex;
         public LedgeHandler ledgeHandler;
         public Vector3 nearestLedgePoint;
+        public Vector3 raycastOrigin;
     }
+
+    public enum EAnimationType { RootMotion, PositionFixedOnLedge }
 
     [Header("Debug")]
     [SerializeField] private bool _drawRay = true;
 
     [SerializeField] private float _deltaPositionYSpeed = 1f;
+
+    [Header("Animation Setting")]
+    [SerializeField] private EAnimationType _animationType = EAnimationType.RootMotion;
 
     [Header("Lerp X Offset Settings")]
     [SerializeField] private float _lerpXOffset = .2f;
@@ -70,8 +76,16 @@ public class PlayerClimbLedgeState : PlayerStateBase
         mController.Movement.SetUseGravity(false);
         mController.Movement.SetColliderActive(false);
 
-        mController.Animator.SetClimbLedge();
-        mController.Animator.SetIndex(mClimbLedgeInfo.checkIndex);
+        if (_animationType == EAnimationType.PositionFixedOnLedge)
+        {
+            mController.Animator.PlayClimbLedge(mClimbLedgeInfo.checkIndex);
+        }
+        else
+        {
+            mController.Animator.SetClimbLedge();
+            mController.Animator.SetIndex(mClimbLedgeInfo.checkIndex);
+        }
+
         mController.Animator.SetInputXMagnitude(0f);
 
         mController.Animator.AnimationEventReceiver.onTouchHand -= onFootStepFromFall;
@@ -160,6 +174,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
                     climbLedgeInfo.checkIndex = i;
                     climbLedgeInfo.ledgeHandler = ledgeHandler;
                     climbLedgeInfo.nearestLedgePoint = ledgePoint;
+                    climbLedgeInfo.raycastOrigin = pos;
 
                     return true;
                 }
@@ -249,6 +264,40 @@ public class PlayerClimbLedgeState : PlayerStateBase
                 break;
         }
 
+        //if (mClimbLedgeInfo.checkIndex >= 3)
+        //{
+        //    float posX = (mController.Movement.Direction == PlayerMovement.EDirection.Left) ?
+        //    mClimbLedgeInfo.nearestLedgePoint.x + lerpXOffset : mClimbLedgeInfo.nearestLedgePoint.x - lerpXOffset;
+
+        //    float posY = mClimbLedgeInfo.ledgeBounds.max.y;
+
+        //    Vector3 newPos = transform.position;
+        //    newPos.x = posX;
+        //    newPos.y = posY;
+        //    transform.position = newPos;
+
+        //    yield break;
+        //}
+        if (_animationType == EAnimationType.PositionFixedOnLedge) // && mClimbLedgeInfo.checkIndex >= 1)
+        {
+            float posX = (mController.Movement.Direction == PlayerMovement.EDirection.Left) ?
+            mClimbLedgeInfo.nearestLedgePoint.x + lerpXOffset : mClimbLedgeInfo.nearestLedgePoint.x - lerpXOffset;
+
+            int indexFromKnee = (_raycastCount - 1 - mClimbLedgeInfo.checkIndex);
+
+            if (indexFromKnee < 1)
+                indexFromKnee = 1;
+
+            float startPosY = _raycastDistance * indexFromKnee + (mClimbLedgeInfo.raycastOrigin.y - mClimbLedgeInfo.nearestLedgePoint.y); ;
+
+            Vector3 newPos = transform.position;
+            newPos.x = posX;
+            newPos.y += startPosY;
+            transform.position = newPos;
+
+            targetY = mClimbLedgeInfo.ledgeBounds.max.y;
+        }
+
         //float targetX = (mController.Movement.Direction == PlayerMovement.EDirection.Left) ?
         //                mClimbLedgeInfo.ledgeBounds.max.x + lerpXOffset : mClimbLedgeInfo.ledgeBounds.min.x - lerpXOffset;
 
@@ -258,11 +307,10 @@ public class PlayerClimbLedgeState : PlayerStateBase
         float targetX = (mController.Movement.Direction == PlayerMovement.EDirection.Left) ?
                     mClimbLedgeInfo.nearestLedgePoint.x + lerpXOffset : mClimbLedgeInfo.nearestLedgePoint.x - lerpXOffset;
 
-
         float timer = 0f;
         float duration = .2f;
 
-        while(timer < duration)
+        while (timer < duration)
         {
             float t = timer / duration;
 
@@ -280,29 +328,33 @@ public class PlayerClimbLedgeState : PlayerStateBase
         targetPos.y = targetY;
         transform.position = targetPos;
 
-        while(mbClimb)
+        if (_animationType == EAnimationType.PositionFixedOnLedge) // && mClimbLedgeInfo.checkIndex >= 1)
+        {
+            yield break;
+        }
+
+        while (mbClimb)
         {
             // normalizedTime이 일정 비율이 넘으면 상태 전환
             AnimatorStateInfo stateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
 
             Vector3 deltaPosition = mAnimator.deltaPosition;
 
-
-            if (transform.position.y < mClimbLedgeInfo.ledgeBounds.max.y)
-                deltaPosition.y *= _deltaPositionYSpeed;
-            else
-                deltaPosition.y = 0f;
+            //if (transform.position.y < mClimbLedgeInfo.ledgeBounds.max.y)
+            //    deltaPosition.y *= _deltaPositionYSpeed;
+            //else
+            //    deltaPosition.y = 0f;
 
             deltaPosition.z = 0f;
 
             transform.position += deltaPosition;
 
-            if (transform.position.y > mClimbLedgeInfo.ledgeBounds.max.y)
-            {
-                targetPos = transform.position;
-                targetPos.y = mClimbLedgeInfo.ledgeBounds.max.y;
-                transform.position = targetPos;
-            }
+            //if (transform.position.y > mClimbLedgeInfo.ledgeBounds.max.y)
+            //{
+            //    targetPos = transform.position;
+            //    targetPos.y = mClimbLedgeInfo.ledgeBounds.max.y;
+            //    transform.position = targetPos;
+            //}
 
             // mStartMoveInputX = deltaPosition.x / (Time.deltaTime * mController.Movement.MoveSpeed);
 

@@ -15,6 +15,7 @@ public class PlayerInputHandler : MonoBehaviour
     public bool MoveInputYTapped { get; private set; }
     public bool MoveInputYPressed { get; private set; }
     public bool MoveInputYHeld { get; private set; }
+    public bool MoveInputXOppositePressed { get; private set; }
 
     [SerializeField] private float _axisSensitivity = 0.1f;
     [SerializeField] private float _axisDeadZone = 0.3f;        // CopilotÀÌ ÃßÃµÇØÁà¼­ ÀÏ´Ü ³öµÒ
@@ -39,6 +40,12 @@ public class PlayerInputHandler : MonoBehaviour
         // Input.ResetInputAxes();
     }
 
+    public void ResetMoveInputXOppositePressed()
+    {
+        MoveInputXOppositePressed = false;
+        // Debug.Log("OppositePressed False");
+    }
+
     public void SetMoveInput(Vector2 value)
     {
         MoveInput = value;
@@ -60,8 +67,13 @@ public class PlayerInputHandler : MonoBehaviour
 
         if (Input.GetAxisRaw("Horizontal") > .99f)
         {
-            if(newMoveInput.x < 0f)
+            if (newMoveInput.x < 0f)
+            {
                 newMoveInput.x = 0f;
+                MoveInputXOppositePressed = true;
+
+                Debug.Log("OppositePressed True");
+            }
 
             newMoveInput.x += Time.deltaTime * _axisSensitivity;
             newMoveInputRaw.x = 1f;
@@ -69,7 +81,12 @@ public class PlayerInputHandler : MonoBehaviour
         else if (Input.GetAxisRaw("Horizontal") < -.99f)
         {
             if (newMoveInput.x > 0f)
+            {
                 newMoveInput.x = 0f;
+                MoveInputXOppositePressed = true;
+
+                Debug.Log("OppositePressed True");
+            }
 
             newMoveInput.x -= Time.deltaTime * _axisSensitivity;
             newMoveInputRaw.x = -1f;
@@ -123,6 +140,9 @@ public class PlayerInputHandler : MonoBehaviour
                 MoveInputXTapped = false;
                 MoveInputXPressed = true;
                 MoveInputXHeld = false;
+
+                //MoveInputXOppositePressed = false;
+                //Debug.Log("OppositePressed False");
             }
             else
             {

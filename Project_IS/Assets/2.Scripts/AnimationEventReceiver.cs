@@ -1,6 +1,7 @@
 using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor;
 using UnityEngine;
 
 public class AnimationEventReceiver : MonoBehaviour
@@ -10,6 +11,7 @@ public class AnimationEventReceiver : MonoBehaviour
     public event Action onFootStepMedium = null;
     public event Action onFootStepBig = null;
     public event Action onTouchHand = null;
+    public event Action<int> onFrontFoot = null;
 
     private void FootStep()
     {
@@ -40,4 +42,18 @@ public class AnimationEventReceiver : MonoBehaviour
         // Debug.Log("Hand Touch");
     }
 
+    private void FootPosition(int index)
+    {
+        switch (index)
+        {
+            case 0:
+                // Left
+                break;
+            case 1:
+                // Right
+                break;
+        }
+
+        onFrontFoot?.Invoke(index);
+    }
 }

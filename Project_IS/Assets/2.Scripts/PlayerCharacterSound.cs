@@ -78,7 +78,7 @@ public class PlayerCharacterSound : MonoBehaviour
 
         if (mController.Movement.Ground == null)
         {
-            Debug.LogError("Ground is null. Cannot play footstep sound.");
+            // Debug.LogError("Ground is null. Cannot play footstep sound.");
             return;
         }
 
@@ -93,7 +93,7 @@ public class PlayerCharacterSound : MonoBehaviour
 
         if (mController.Movement.Ground == null)
         {
-            Debug.LogError("Ground is null. Cannot play footstep sound.");
+            // Debug.LogError("Ground is null. Cannot play footstep sound.");
             return;
         }
 
@@ -108,7 +108,7 @@ public class PlayerCharacterSound : MonoBehaviour
 
         if (mController.Movement.Ground == null)
         {
-            Debug.LogError("Ground is null. Cannot play footstep sound.");
+            // Debug.LogError("Ground is null. Cannot play footstep sound.");
             return;
         }
 

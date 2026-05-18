@@ -1051,6 +1051,7 @@ GameObject:
   - component: {fileID: 8231082251675239930}
   - component: {fileID: 796945476761185928}
   - component: {fileID: 7513145408322521814}
+  - component: {fileID: 3431823327095438584}
   - component: {fileID: 4114197322998774063}
   - component: {fileID: 2150413833795799531}
   - component: {fileID: 8510771878671398659}
@@ -1139,7 +1140,7 @@ Rigidbody:
   m_UseGravity: 1
   m_IsKinematic: 0
   m_Interpolate: 0
-  m_Constraints: 112
+  m_Constraints: 120
   m_CollisionDetection: 0
 --- !u!114 &7513145408322521814
 MonoBehaviour:
@@ -1156,6 +1157,20 @@ MonoBehaviour:
   _axisSensitivity: 3.5
   _axisDeadZone: 0.3
   _heldThreshold: 0.15
+--- !u!114 &3431823327095438584
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 712958953486247521}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a37af69700aea984e821739370340bd4, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  enableFootStep: 1
+  enableHandTouch: 1
 --- !u!114 &4114197322998774063
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1168,11 +1183,14 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: be6bb273e4ea325438a77d242c313e39, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  _drawStepRay: 0
   _drawSlideDirectionRay: 0
   _slideDirection: {x: 0.77, y: -0.67}
   _slideSpeed: 1
-  _moveSpeed: 5
+  _moveSpeed: 4
   _rotateSpeed: 10
+  _stepOffset: 0.2
+  _stepCheckDistance: 0.4
   _jumpForce: 4
   _minJumpVelocityX: 2
   _trGroundCheck: {fileID: 3395877443170664856}
@@ -1237,7 +1255,9 @@ MonoBehaviour:
   _drawInteractableRay: 0
   _drawFrontWallCheckRay: 0
   _drawGroundNormal: 1
-  _runFootstepClip: {fileID: 0}
+  _turnRootMotion: 0
+  _turn180: 0
+  _turnInterval: 0.2
   _frontWallCheckLayer:
     serializedVersion: 2
     m_Bits: 320
@@ -1377,6 +1397,7 @@ MonoBehaviour:
   key: 7
   _drawRay: 1
   _deltaPositionYSpeed: 1
+  _animationType: 0
   _lerpXOffset: 0.2
   _lerpXOffsetOverHead: 0.2
   _lerpXOffsetChest: 0.2

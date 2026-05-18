@@ -13,6 +13,7 @@ public class PlayerAnimator : MonoBehaviour
     public event Action onAnimationIK = null;
 
     [SerializeField] private AnimationEventReceiver _animationEventReceiver;
+    [SerializeField] private bool _trasitionLog = false;
 
     // Animator Parameter Hashes
     private readonly int StateHash = Animator.StringToHash("State");
@@ -29,6 +30,7 @@ public class PlayerAnimator : MonoBehaviour
     private readonly int InputXMagnitudeHash = Animator.StringToHash("InputXMagnitude");
     private readonly int InputYMagnitudeHash = Animator.StringToHash("InputYMagnitude");
     private readonly int JumpHash = Animator.StringToHash("Jump");
+    private readonly int FallHash = Animator.StringToHash("Fall");
     private readonly int IsGroundedHash = Animator.StringToHash("IsGrounded");
     private readonly int VelocityYHash = Animator.StringToHash("VelocityY");
     private readonly int LandingHash = Animator.StringToHash("Landing");
@@ -41,6 +43,9 @@ public class PlayerAnimator : MonoBehaviour
     private readonly int ClimbLedgeHash = Animator.StringToHash("ClimbLedge");
     private readonly int ClimbLadderHash = Animator.StringToHash("ClimbLadder");
     private readonly int PushHash = Animator.StringToHash("Push");
+    private readonly int FootPositionHash = Animator.StringToHash("FootPosition");
+    private readonly int InputXHash = Animator.StringToHash("InputX");
+    private readonly int FrontWallHash = Animator.StringToHash("FrontWall");
 
     // Animation State Name Hashes
     private readonly int IdleLandingHash = Animator.StringToHash("IdleLanding");
@@ -50,6 +55,10 @@ public class PlayerAnimator : MonoBehaviour
     private readonly int RunningLandingHash = Animator.StringToHash("RunningLanding");
     private readonly int RunningSoftLandingHash = Animator.StringToHash("RunningSoftLanding");
     private readonly int RunningMediumLandingHash = Animator.StringToHash("RunningMediumLanding");
+    private readonly int ClimbLedgeKneeHash = Animator.StringToHash("ClimbLedge_Knee Critical");
+    private readonly int ClimbLedgeStomachHash = Animator.StringToHash("ClimbLedge_Stomach Critical");
+    private readonly int ClimbLedgeChestHash = Animator.StringToHash("ClimbLedge_Chest Critical");
+    private readonly int ClimbLedgeOverHeadHash = Animator.StringToHash("ClimbLedge_OverHead Critical");
 
     private Animator mAnimator;
 
@@ -108,6 +117,11 @@ public class PlayerAnimator : MonoBehaviour
         mAnimator.SetFloat(InputXMagnitudeHash, value);
     }
 
+    public void SetInputX(bool value)
+    {
+        mAnimator.SetBool(InputXHash, value);
+    }
+
     public void SetInputXRaw(float value)
     {
         mAnimator.SetFloat(InputXRawHash, value);
@@ -141,6 +155,11 @@ public class PlayerAnimator : MonoBehaviour
     public void SetJump()
     {
         mAnimator.SetTrigger(JumpHash);
+    }
+
+    public void SetFall()
+    {
+        mAnimator.SetTrigger(FallHash);
     }
 
     //public void SetLanding()
@@ -186,6 +205,38 @@ public class PlayerAnimator : MonoBehaviour
     public void SetClimbLadder()
     {
         mAnimator.SetTrigger(ClimbLadderHash);
+    }
+
+    public void SetFootPosition(int value)
+    {
+        mAnimator.SetInteger(FootPositionHash, value);
+    }
+
+    public void SetFrontWall(bool value)
+    {
+        mAnimator.SetBool(FrontWallHash, value);
+    }
+
+    public void PlayClimbLedge(int climbLedgeType)
+    {
+        switch (climbLedgeType)
+        {
+            case 0:
+                mAnimator.Play(ClimbLedgeOverHeadHash, 0);
+                break;
+            case 1:
+                mAnimator.Play(ClimbLedgeChestHash, 0);
+                break;
+            case 2:
+                mAnimator.Play(ClimbLedgeStomachHash, 0);
+                break;
+            case 3:
+                mAnimator.Play(ClimbLedgeKneeHash, 0);
+                break;
+            default:
+                mAnimator.Play(ClimbLedgeKneeHash, 0);
+                break;
+        }
     }
 
     /// <summary>
@@ -271,6 +322,18 @@ public class PlayerAnimator : MonoBehaviour
     private void Awake()
     {
         mAnimator = GetComponent<Animator>();
+    }
+
+    private void Update()
+    {
+        if(_trasitionLog)
+        {
+            if(mAnimator.IsInTransition(0))
+            {
+                AnimatorTransitionInfo transitionInfo = mAnimator.GetAnimatorTransitionInfo(0);
+                Debug.Log($"Enter transition: {transitionInfo.fullPathHash}, AnyState:{transitionInfo.anyState}");
+            }
+        }
     }
 
     // 이 함수의 유무에 따라 Animator가 어떻게 달라지는 지 확인 필요
