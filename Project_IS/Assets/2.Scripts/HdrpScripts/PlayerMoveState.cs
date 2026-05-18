@@ -23,20 +23,12 @@ public class PlayerMoveState : PlayerStateBase
 
     [Header("Locomotion")]
     [SerializeField] private bool _moveRootMotion = false;
-    [SerializeField] private bool _turnRootMotion = false;
-    [SerializeField] private bool _turn180 = false;
-    [SerializeField] private float _turnInterval = .1f;
-    [SerializeField] private float _rootMotionRotationSpeed = 1.0f;
-    [Range(0f, 180f)]
-    [SerializeField] private float _rootMotionRotationSnapAngle = 180f;
-    // [SerializeField] private Transform _leftLegIKTarget;
+    [SerializeField] private RotationHandler.EType _rotationType = RotationHandler.EType.AnimationCurve;
     [SerializeField] private TwoBoneIKConstraint _leftLegIKConstraint;
-    // [SerializeField] private Transform _rightLegIKTarget;
     [SerializeField] private TwoBoneIKConstraint _rightLegIKConstraint;
     [SerializeField] private float _footIKMaxDistance = 1f;
     [SerializeField] private AnimationCurve _runTurnRotationCurve;
     [SerializeField] private AnimationCurve _runTurnPositionCurve;
-    [SerializeField] private float _runTurnMoveSpeed = 1f;
 
     [Header("FrontWallCheck")]
     [SerializeField] private LayerMask _frontWallCheckLayer;
@@ -52,22 +44,14 @@ public class PlayerMoveState : PlayerStateBase
     [Header("Ladder")]
     [SerializeField] private float _ladderRadius = .5f;   // 사다리 탐지 반경
 
+    private RotationHandler mRotationHandler = new RotationHandler();
+
     private bool mbEnterToIdle = false;     // MoveState로 전환될 때 키입력 초기화
     private float mDefaultHeight;           // 낙하 상태로 전환할 때 기준이 되는 높이
-    private Vector3 mPreviousForward;       // 회전을 시작하면 어느 방향으로 도는지 체크해야되기 때문에 이전 방향을 저장
-    private bool mbDirectionChanged = false;
-    private bool mbRotating = false;        // 현재 사용되는 곳은 없지만 회전을 체크하는 변수이기 때문에 유지
-    private bool mbRotatingCW = false;      // 시계방향 회전 체크 변수
     private float mPathZPosition = 0f;    // 캐릭터가 지나가는 길의 z위치를 저장하는 변수
     private bool mbFrontWall = false;
     private Bounds mFrontWallBounds;
     private RaycastHit mFrontWallHitInfo;
-    private float mTurnTimer = 0f;
-    private float mDeltaRotatedAngle = 0f;
-    private float mRootMotionVelocity = 0f;
-    private Vector3 mRotationPivotPosition;
-    private float mRotationMoveDistance = 0f;
-    private float mRemainAngles = 0f;
 
     private Terrain mTerrain;
     private Ground mGround;
@@ -75,12 +59,17 @@ public class PlayerMoveState : PlayerStateBase
     private Vector3 mGroundNormal = Vector3.zero;
     private float mSlopeAngle = 30f;
 
+    public override void Initialize(PlayerController controller)
+    {
+        base.Initialize(controller);
+
+        mRotationHandler.Init(mController);
+        mRotationHandler.SetType(_rotationType);
+    }
+
     public override void EnterState()
     {
         mDefaultHeight = transform.position.y;
-
-        mPreviousForward = mController.Movement.Direction == PlayerMovement.EDirection.Left ?
-                           Vector3.left : Vector3.right;
 
         mController.Animator.onAnimationIK -= updateAnimatorIK;
         mController.Animator.onAnimationIK += updateAnimatorIK;
@@ -124,44 +113,26 @@ public class PlayerMoveState : PlayerStateBase
             mController.Animator.SetFrontWall(false);
         }
 
-        if (mTurnTimer > 0f)
+        if (_moveRootMotion)
         {
-            if (_moveRootMotion)
-            {
-                var deltaPosition = mController.Animator.Animator.deltaPosition;
-                deltaPosition.z = 0f;
-                transform.position += deltaPosition;
-                // Debug.Log(deltaPosition);
-            }
-            else
-            {
-                Vector2 finalMoveInput = resultMoveInput;
-                finalMoveInput.x = 0f;
-                // mController.Movement.Move(finalMoveInput);
-            }
+            var deltaPosition = mController.Animator.Animator.deltaPosition;
+            // deltaPosition.x *= 2f;
+            deltaPosition.z = 0f;
+            transform.position += deltaPosition;
+            // Debug.Log($"deltaPosition: {deltaPosition}, resultPosition: {transform.position}");
         }
         else
         {
-            if (_moveRootMotion)
-            {
-                var deltaPosition = mController.Animator.Animator.deltaPosition;
-                // deltaPosition.x *= 2f;
-                deltaPosition.z = 0f;
-                transform.position += deltaPosition;
-                // Debug.Log($"deltaPosition: {deltaPosition}, resultPosition: {transform.position}");
-            }
-            else
-            {
-                Vector2 finalMoveInput = resultMoveInput;
+            Vector2 finalMoveInput = resultMoveInput;
 
-                if (mbRotating)
-                    finalMoveInput.x = 0f;
+            // if (mbRotating)
+            if(mRotationHandler.State == RotationHandler.EState.Rotating)
+                finalMoveInput.x = 0f;
 
-                mController.Movement.Move(finalMoveInput);
-                // Debug.Log("MoveInputX: " + resultMoveInput.x); 
+            mController.Movement.Move(finalMoveInput);
+            // Debug.Log("MoveInputX: " + resultMoveInput.x); 
 
-                // Debug.Log($"velocity: {mController.Movement.Velocity}, moveInput: {resultMoveInput}");
-            }
+            // Debug.Log($"velocity: {mController.Movement.Velocity}, moveInput: {resultMoveInput}");
         }
 
         mController.Animator.SetInputXMagnitude(Mathf.Abs(resultMoveInput.x));
@@ -194,359 +165,10 @@ public class PlayerMoveState : PlayerStateBase
         mController.Animator.SetMoveInputYPressed(mController.InputHandler.MoveInputYPressed);
         mController.Animator.SetMoveInputYHeld(mController.InputHandler.MoveInputYHeld);
 
-        // Set Direction
-        // 키입력이 들어오고 방향이 바뀌는 찰나 시점에 대한 코드
-        //if (mController.InputHandler.MoveInput.x > .001f || mController.InputHandler.MoveInput.x < -.001f)
-        //{
-        //    EDirection targetDirection = mController.InputHandler.MoveInput.x > 0f ? EDirection.Right : EDirection.Left;
+        // Rotation
+        mRotationHandler.Update();
 
-        //    // 키 입력 방향과 현재 방향이 다르면 방향 전환
-        //    if (targetDirection != mController.Movement.Direction)
-        //    {
-        //        mbDirectionChanged = true;
-        //        mController.Movement.SetDirection(targetDirection);
-        //    }
-        //}
-
-        // Turn CW/CCW
-        Vector3 currentForward = transform.forward;
-        // 한 프레임 돌아간 각도
-        float deltaRotatedAngle = Vector3.SignedAngle(mPreviousForward, currentForward, Vector3.up);
-
-        if (_turn180)
-        {
-            if (checkOppositeInputX() && mTurnTimer <= 0f)
-            {
-                // mController.InputHandler.ResetMoveInputXOppositePressed();
-                mbDirectionChanged = true;
-                mController.Movement.SetDirection(mController.Movement.OppositeDirection);
-                mTurnTimer = _turnInterval;
-            }
-
-            // 회전 시작하면 어느 방향 회전인지 체크 후 Turn 애니메이션 전환
-            if (mbDirectionChanged)
-            {
-                mController.Movement.SetRotationToCurrentDirection();
-
-                mController.Animator.TurnL(true);
-                mController.Animator.TurnR(false);
-                mbDirectionChanged = false;
-
-                // Debug.Log($"TurnL: True, InputXMagnitude: {Mathf.Abs(resultMoveInput.x)}");
-            }
-            // 회전 방향 체크 중이 아니면 
-            else
-            {
-                if (deltaRotatedAngle > -1f && deltaRotatedAngle < 1f)
-                {
-                    mController.Animator.TurnL(false);
-                    mController.Animator.TurnR(false);
-                    mbRotating = false;
-                }
-            }
-
-            if (mTurnTimer > 0f)
-            {
-                mTurnTimer -= Time.deltaTime;
-                // Debug.Log(mTurnTimer);
-            }
-
-            mPreviousForward = currentForward;
-
-            var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
-
-            if (currentStateInfo.IsTag("Run"))
-            {
-                Debug.Log(mController.Animator.Animator.deltaRotation);
-            }
-
-            updateFootIK();
-        }
-        else if (_turnRootMotion)
-        {
-            var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
-
-            // 키입력이 들어오고 방향이 바뀌는 찰나 시점에 대한 코드
-            //if (mController.InputHandler.MoveInput.x > .001f || mController.InputHandler.MoveInput.x < -.001f)
-            //{
-            //    EDirection targetDirection = mController.InputHandler.MoveInput.x > 0f ? EDirection.Right : EDirection.Left;
-
-            //    // 키 입력 방향과 현재 방향이 다르면 방향 전환
-            //    if (targetDirection != mController.Movement.Direction)
-            //    {
-            //        mbDirectionChanged = true;
-            //        mController.Movement.SetDirection(targetDirection);
-            //    }
-            //}
-            if (checkOppositeInputX() && mTurnTimer <= 0f)
-            {
-                // mController.InputHandler.ResetMoveInputXOppositePressed();
-                mbDirectionChanged = true;
-                // mController.Movement.SetRotationToCurrentDirection();
-                mController.Movement.SetDirection(mController.Movement.OppositeDirection);
-                mTurnTimer = _turnInterval;
-
-                // Debug.Log($"Direction Changed: {mController.Movement.Direction}");
-            }
-
-            // 회전 시작하면 어느 방향 회전인지 체크 후 Turn 애니메이션 전환
-            if (mbDirectionChanged)
-            {
-                mController.Animator.TurnL(true);
-                mController.Animator.TurnR(false);
-                mbDirectionChanged = false;
-                mbRotating = true;
-                mDeltaRotatedAngle = Number.DEG_0;
-                mRootMotionVelocity = 0f;
-
-                // Debug.Log($"Start Direction Change");
-            }
-            // 회전 방향 체크 중이 아니면 
-            else
-            {
-
-
-                // Debug.Log($"Rotating: {mbRotating}, IsTurn: {currentStateInfo.IsTag("Turn")}, IsInTransition: {mController.Animator.Animator.IsInTransition(0)}, TurnTimer: {mTurnTimer}");
-
-                mController.Animator.TurnL(false);
-                mController.Animator.TurnR(false);
-
-                ////if (deltaRotatedAngle > -1f && deltaRotatedAngle < 1f)
-                if (Mathf.Abs(mDeltaRotatedAngle) > _rootMotionRotationSnapAngle)
-                {
-                    // Debug.Log(mDeltaRotatedAngle);
-                    // mDeltaRotatedAngle = Number.DEG_0;
-                    //mController.Animator.TurnL(false);
-                    //mController.Animator.TurnR(false);
-                    // mbRotating = false;
-                    // mController.Movement.SetRotationToCurrentDirection();
-                    mController.Movement.UpdateRotation();
-                    // Debug.Log("Rotation Snapped!");
-                }
-            }
-
-            if (mTurnTimer > 0f)
-            {
-                mTurnTimer -= Time.deltaTime;
-                // Debug.Log(mTurnTimer);
-            }
-
-            mPreviousForward = currentForward;
-
-
-
-            // Rotate
-            if (mbRotating)
-            {
-                var deltaPosition = mController.Animator.Animator.deltaPosition;
-                deltaPosition.z = 0f;
-                // transform.position += deltaPosition;
-                float rootMotionVelocity = deltaPosition.x / Time.deltaTime;
-                rootMotionVelocity = Mathf.Clamp(rootMotionVelocity, -mController.Movement.MoveSpeed, mController.Movement.MoveSpeed);
-
-                if (!(currentStateInfo.IsTag("Turn") && mController.Animator.Animator.IsInTransition(0)))
-                    mController.Movement.SetVelocity(Vector3.right * rootMotionVelocity);
-                if (Mathf.Abs(rootMotionVelocity) > Mathf.Abs(mRootMotionVelocity))
-                    mRootMotionVelocity = rootMotionVelocity;
-
-                var deltaRotation = mController.Animator.Animator.deltaRotation;
-                var normalizedX = (deltaRotation.eulerAngles.x < 180f) ? deltaRotation.eulerAngles.x : deltaRotation.eulerAngles.x - 360f;
-                var normalizedY = (deltaRotation.eulerAngles.y < 180f) ? deltaRotation.eulerAngles.y : deltaRotation.eulerAngles.y - 360f;
-                var normalizedZ = (deltaRotation.eulerAngles.z < 180f) ? deltaRotation.eulerAngles.z : deltaRotation.eulerAngles.z - 360f;
-                var normalizedDeltaRotationEuler = new Vector3(normalizedX, normalizedY, normalizedZ);
-                var finalDeltaRotationEuler = normalizedDeltaRotationEuler * _rootMotionRotationSpeed;
-                var finalDeltaRotation = Quaternion.Euler(finalDeltaRotationEuler);
-                transform.rotation *= finalDeltaRotation;
-
-                mDeltaRotatedAngle += normalizedY;
-                Debug.Log(mDeltaRotatedAngle);
-
-
-
-                if (mTurnTimer > 0f)
-                {
-                    mTurnTimer -= Time.deltaTime;
-                    // Debug.Log(mTurnTimer);
-                }
-
-                if (mTurnTimer < 0f && (!currentStateInfo.IsTag("Turn"))) //  || Mathf.Abs(mRootMotionVelocity) > mController.Movement.MoveSpeed))
-                {
-                    mbRotating = false;
-
-                    var vel = Vector3.right * mRootMotionVelocity;
-                    // mController.Movement.SetVelocity(vel);
-                    Debug.Log($"Tag is not Turn anymore, stop rotating. Velocity: {vel}, normalizedTime: {currentStateInfo.normalizedTime}");
-                }
-            }
-
-            // Debug.Log($"velocity: {mController.Movement.Velocity}, rotating: {mbRotating}, IsTurn: {currentStateInfo.IsTag("Turn")},transition: {mController.Animator.Animator.IsInTransition(0)}");
-
-            updateFootIK();
-        }
-        #region UpdateRotation
-        else
-        {
-            // 키입력이 들어오고 방향이 바뀌는 찰나 시점에 대한 코드
-            if (mController.InputHandler.MoveInput.x > .001f || mController.InputHandler.MoveInput.x < -.001f)
-            {
-                EDirection targetDirection = mController.InputHandler.MoveInput.x > 0f ? EDirection.Right : EDirection.Left;
-
-                // 키 입력 방향과 현재 방향이 다르면 방향 전환
-                if (targetDirection != mController.Movement.Direction)
-                {
-                    mbDirectionChanged = true;
-                    mController.Movement.SetDirection(targetDirection);
-                }
-            }
-
-            // 회전 시작하면 어느 방향 회전인지 체크 후 Turn 애니메이션 전환
-            if (mbDirectionChanged)
-            {
-                mController.Animator.TurnL(true);
-                mController.Animator.TurnR(false);
-                mbDirectionChanged = false;
-                mbRotating = true;
-                mRotationPivotPosition = transform.position;
-                mRotationMoveDistance = 0f;
-                mRemainAngles = Vector3.SignedAngle(transform.forward, mController.Movement.DirectionToVector(), Vector3.up);
-                // mRemainAngles = (mRemainAngles + Number.DEG_360) % Number.DEG_360;
-                mRemainAngles = Mathf.Abs(mRemainAngles);
-                Debug.Log($"remainAngles: {mRemainAngles}");
-
-                //// 반시계방향 회전 트리거
-                //if (deltaRotatedAngle < -5f)
-                //{
-                //    mController.Animator.TurnL(true);
-                //    mController.Animator.TurnR(false);
-                //    mbDirectionChanged = false;
-
-                //    // 회전 각도가 있으면 회전이라고 의도를 갖게 되는데
-                //    // 지금은 사용되는 곳이 없지만 혹시 사용되면 신경을 써야할 것 같다
-                //    mbRotating = true;
-                //    mbRotatingCW = false;
-                //}
-                //// 시계방향 회전 트리거
-                //else if (deltaRotatedAngle > 5f)
-                //{
-                //    mController.Animator.TurnL(false);
-                //    mController.Animator.TurnR(true);
-                //    mbDirectionChanged = false;
-                //    mbRotating = true;
-                //    mbRotatingCW = true;
-                //}
-
-                Debug.Log($"Start DirectionChanged, deltaRotatedAngle: {deltaRotatedAngle}");
-            }
-            // 회전 방향 체크 중이 아니면 
-            else
-            {
-                mController.Animator.TurnL(false);
-                mController.Animator.TurnR(false);
-
-                //if (deltaRotatedAngle > -1f && deltaRotatedAngle < 1f)
-                //{
-                //    mController.Animator.TurnL(false);
-                //    mController.Animator.TurnR(false);
-                //    mbRotating = false;
-
-                //    Debug.Log($"mbRotating: {mbRotating}");
-                //}
-                //else
-                //{
-                //    Debug.Log($"deltaRotatedAngle: {deltaRotatedAngle}");
-                //}
-            }
-
-            mPreviousForward = currentForward;
-
-            var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
-
-
-            // Rotate
-            //if (mbRotating)
-            //{
-            //    if (currentStateInfo.IsTag("Turn"))
-            //    {
-            //        float positionValue = _runTurnPositionCurve.Evaluate(currentStateInfo.normalizedTime);
-            //        float currentPosition = positionValue * _runTurnMoveSpeed;
-
-            //        float lastPositionValue = _runTurnPositionCurve.Evaluate(currentStateInfo.normalizedTime - Time.deltaTime);
-            //        float deltaPosition = positionValue - lastPositionValue;
-            //        // float velocity = deltaPosition / Time.deltaTime;
-            //        float velocity = positionValue * mController.Movement.MoveSpeed * _runTurnMoveSpeed;
-
-            //        Vector3 moveDirection = mController.Movement.DirectionToVector();
-            //        transform.position = mRotationPivotPosition + moveDirection * currentPosition;
-            //        //Vector3 newPosition = transform.position;
-            //        //newPosition.x = mRotationPivotPosition.x + moveDirection.x * currentPosition;
-            //        //transform.position = newPosition;
-            //        // mController.Movement.SetVelocity(moveDirection * velocity * _runTurnMoveSpeed);
-            //        // mController.Movement.SetVelocity(moveDirection * velocity);
-
-            //        //if (positionValue < 0.01f)
-            //        //{
-            //        //    transform.position = mRotationPivotPosition + moveDirection * currentPosition;
-            //        //}
-            //        //else
-            //        //{
-            //        //    mController.Movement.SetVelocity(moveDirection * velocity);
-            //        //}
-            //        if (mController.Animator.Animator.IsInTransition(0))
-            //        {
-            //            mbRotating = false;
-            //        }
-
-            //        mRotationMoveDistance += velocity * Time.deltaTime;
-
-            //        Debug.Log($"normalizedTime: {currentStateInfo.normalizedTime}, positionValue: {positionValue}, velocity: {velocity}, rigidbody velocity: {mController.Movement.Velocity}, moveDirection: {moveDirection}, deltaPosition: {velocity * Time.deltaTime}, moveDistance: {mRotationMoveDistance}");
-            //    }
-
-            //    float rotationValue = _runTurnRotationCurve.Evaluate(currentStateInfo.normalizedTime);
-
-            //    if (currentStateInfo.IsTag("Turn") && rotationValue < .99f)
-            //    {
-            //        //float positionValue = _runTurnPositionCurve.Evaluate(currentStateInfo.normalizedTime);
-            //        //float currentPosition = positionValue * _runTurnMoveSpeed;
-
-            //        //float lastPositionValue = _runTurnPositionCurve.Evaluate(currentStateInfo.normalizedTime - Time.deltaTime);
-            //        //float deltaPosition = positionValue - lastPositionValue;
-            //        //// float velocity = deltaPosition / Time.deltaTime;
-            //        //float velocity = positionValue * mController.Movement.MoveSpeed;
-
-            //        //Vector3 moveDirection = mController.Movement.DirectionToVector();
-            //        //// transform.position = mRotationPivotPosition + moveDirection * currentPosition;
-            //        //// mController.Movement.SetVelocity(moveDirection * velocity * _runTurnMoveSpeed);
-            //        //mController.Movement.SetVelocity(moveDirection * velocity);
-
-            //        // float rotationValue = _runTurnRotationCurve.Evaluate(currentStateInfo.normalizedTime);
-            //        float currentAngles = rotationValue * Number.DEG_180;
-
-            //        PlayerMovement.EDirection previousDirection = mController.Movement.OppositeDirection;
-            //        Vector3 newEulerAngles = PlayerMovement.DirectionToEulerAngles(previousDirection);
-            //        newEulerAngles.y -= currentAngles;
-
-            //        Quaternion targetRotation = Quaternion.Euler(newEulerAngles);
-            //        transform.rotation = targetRotation;
-
-            //        Debug.Log($"normalizedTime: {currentStateInfo.normalizedTime}, velocity: {mController.Movement.Velocity},  currentAngles: {currentAngles}, targetAngles: {newEulerAngles.y}");
-
-            //        if (rotationValue > .99f)
-            //        {
-            //            // mbRotating = false;
-            //            //mController.Movement.SetRotationToCurrentDirection();
-            //            //Debug.Log("Rotation Snapped!");
-            //        }
-            //    }
-            //}
-            //else
-            //{
-            //    mController.Movement.UpdateRotation();
-            //}
-            // transform.rotation *= mController.Animator.Animator.deltaRotation;
-
-            updateFootIK();
-        }
-        #endregion
+        updateFootIK();
 
         //mController.Animator.SetInputXMagnitude(Mathf.Abs(resultMoveInput.x));
         //mController.Animator.SetInputXRaw(mController.InputHandler.MoveInputRaw.x);
@@ -670,94 +292,7 @@ public class PlayerMoveState : PlayerStateBase
 
     private void FixedUpdate()
     {
-        var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
-
-
-        // Rotate
-        if (mbRotating)
-        {
-            Animator animator = mController.Animator.Animator;
-            // var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
-
-            if (currentStateInfo.IsTag("Turn"))
-            {
-                //float positionValue = _runTurnPositionCurve.Evaluate(currentStateInfo.normalizedTime);
-                float positionValue = animator.GetFloat("PositionCurve");
-                float currentPosition = positionValue * _runTurnMoveSpeed;
-
-                //float lastPositionValue = _runTurnPositionCurve.Evaluate(currentStateInfo.normalizedTime - Time.deltaTime);
-                //float deltaPosition = positionValue - lastPositionValue;
-                // float velocity = deltaPosition / Time.deltaTime;
-                float velocity = positionValue * mController.Movement.MoveSpeed * _runTurnMoveSpeed;
-
-                Vector3 moveDirection = mController.Movement.DirectionToVector();
-                transform.position = mRotationPivotPosition + moveDirection * currentPosition;
-                // transform.position += deltaPosition * moveDirection;
-                // mController.Movement.SetVelocity(moveDirection * velocity * _runTurnMoveSpeed);
-                // mController.Movement.SetVelocity(moveDirection * velocity);
-
-                //if (positionValue < 0.01f)
-                //{
-                //    transform.position = mRotationPivotPosition + moveDirection * currentPosition;
-                //}
-                //else
-                //{
-                //    mController.Movement.SetVelocity(moveDirection * velocity);
-                //}
-
-                if (mController.Animator.Animator.IsInTransition(0))
-                {
-                    mbRotating = false;
-                }
-
-                mRotationMoveDistance += velocity * Time.deltaTime;
-
-                // Debug.Log($"normalizedTime: {currentStateInfo.normalizedTime}, positionValue: {positionValue}, velocity: {velocity}, rigidbody velocity: {mController.Movement.Velocity}, moveDirection: {moveDirection}, deltaPosition: {velocity * Time.deltaTime}, moveDistance: {mRotationMoveDistance}");
-            }
-
-            // float rotationValue = _runTurnRotationCurve.Evaluate(currentStateInfo.normalizedTime);
-            float rotationValue = animator.GetFloat("RotationCurve");
-
-            if (currentStateInfo.IsTag("Turn") && rotationValue < .99f)
-            {
-                //float positionValue = _runTurnPositionCurve.Evaluate(currentStateInfo.normalizedTime);
-                //float currentPosition = positionValue * _runTurnMoveSpeed;
-
-                //float lastPositionValue = _runTurnPositionCurve.Evaluate(currentStateInfo.normalizedTime - Time.deltaTime);
-                //float deltaPosition = positionValue - lastPositionValue;
-                //// float velocity = deltaPosition / Time.deltaTime;
-                //float velocity = positionValue * mController.Movement.MoveSpeed;
-
-                //Vector3 moveDirection = mController.Movement.DirectionToVector();
-                //// transform.position = mRotationPivotPosition + moveDirection * currentPosition;
-                //// mController.Movement.SetVelocity(moveDirection * velocity * _runTurnMoveSpeed);
-                //mController.Movement.SetVelocity(moveDirection * velocity);
-
-                // float rotationValue = _runTurnRotationCurve.Evaluate(currentStateInfo.normalizedTime);
-                // float currentAngles = rotationValue * Number.DEG_180;
-                float currentAngles = rotationValue * mRemainAngles;
-
-                PlayerMovement.EDirection previousDirection = mController.Movement.OppositeDirection;
-                Vector3 newEulerAngles = PlayerMovement.DirectionToEulerAngles(previousDirection);
-                newEulerAngles.y -= currentAngles;
-
-                Quaternion targetRotation = Quaternion.Euler(newEulerAngles);
-                transform.rotation = targetRotation;
-
-                // Debug.Log($"normalizedTime: {currentStateInfo.normalizedTime}, velocity: {mController.Movement.Velocity},  currentAngles: {currentAngles}, targetAngles: {newEulerAngles.y}");
-
-                if (rotationValue > .99f)
-                {
-                    mbRotating = false;
-                    // mController.Movement.SetRotationToCurrentDirection();
-                    //Debug.Log("Rotation Snapped!");
-                }
-            }
-        }
-        else
-        {
-            mController.Movement.UpdateRotation();
-        }
+        mRotationHandler.FixedUpdate();
     }
 
     public void EnterToIdle()
@@ -772,16 +307,6 @@ public class PlayerMoveState : PlayerStateBase
         // moveInput.x = mController.Movement.Direction == EDirection.Right ? startMoveInputX : -startMoveInputX;
         moveInput.x = startMoveInputX;
         mController.InputHandler.SetMoveInput(moveInput);
-    }
-
-    public void EndTurn()
-    {
-        mDeltaRotatedAngle = Number.DEG_0;
-        mController.Animator.TurnL(false);
-        mController.Animator.TurnR(false);
-        mbRotating = false;
-        mController.Movement.SetRotationToCurrentDirection();
-        Debug.Log("Rotation Snapped!");
     }
 
     private void Start()
