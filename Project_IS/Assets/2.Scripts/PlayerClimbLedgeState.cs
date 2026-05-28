@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Animations.Rigging;
 using static PlayerClimbLedgeState;
 
 public class PlayerClimbLedgeState : PlayerStateBase
@@ -50,6 +51,10 @@ public class PlayerClimbLedgeState : PlayerStateBase
     [SerializeField] private float _exitNormalizedTimeChest = .745f;
     [SerializeField] private float _exitNormalizedTimeStomach = .68f;
     [SerializeField] private float _exitNormalizedTimeKnee = .53f;
+
+    [Header("IK Settings")]
+    [SerializeField] private TwoBoneIKConstraint _leftHandIK;
+    [SerializeField] private TwoBoneIKConstraint _rightHandIK;
 
     private Animator mAnimator;
     private ClimbLedgeInfo mClimbLedgeInfo;
@@ -109,6 +114,8 @@ public class PlayerClimbLedgeState : PlayerStateBase
     public override void Tick()
     {
         mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
+
+        updateHandIK();
     }
 
     public void SetInfo(ClimbLedgeInfo climbLedgeInfo)
@@ -320,8 +327,10 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
             transform.position = newPos;
 
-            timer += Time.deltaTime;
-            yield return null;
+            timer += Time.fixedDeltaTime;
+            yield return new WaitForFixedUpdate();
+            //timer += Time.deltaTime;
+            //yield return null;
         }
 
         Vector3 targetPos = transform.position;
@@ -365,6 +374,33 @@ public class PlayerClimbLedgeState : PlayerStateBase
             //}
 
             yield return null;
+        }
+    }
+
+    private void updateHandIK()
+    {
+        float leftHandWeight = mAnimator.GetFloat("LeftHandWeight");
+        _leftHandIK.weight = leftHandWeight;
+
+        Vector3 leftHandOrigin = _leftHandIK.data.tip.position;
+
+        if (Physics.Raycast(leftHandOrigin, Vector3.down, out RaycastHit leftHit, .5f, mController.Movement.GroundLayer))
+        {
+            Vector3 targetPos = leftHit.point;
+
+            _leftHandIK.data.target.position = targetPos;
+        }
+
+        float rightHandWeight = mAnimator.GetFloat("RightHandWeight");
+        _rightHandIK.weight = rightHandWeight;
+
+        Vector3 rightHandOrigin = _rightHandIK.data.tip.position;
+
+        if (Physics.Raycast(rightHandOrigin, Vector3.down, out RaycastHit rightHit, .5f, mController.Movement.GroundLayer))
+        {
+            Vector3 targetPos = rightHit.point;
+
+            _rightHandIK.data.target.position = targetPos;
         }
     }
 

@@ -34,10 +34,22 @@ public class PlayerJumpState : PlayerStateBase
     public override void ExitState()
     {
         // mController.Animator.SetLanding();
+        mController.Animator.SetVertical(0f);
     }
 
     public override void Tick()
     {
+        var currentStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+
+        if(currentStateInfo.IsTag("IdleJump"))
+        {
+            float normalizedVelocityY = 1f - ((mController.Movement.Velocity.y + 4f) / 8f);
+            mController.Animator.SetVertical(normalizedVelocityY);
+
+            Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {normalizedVelocityY}");
+        }
+
+        mController.Movement.UpdateRotation(Time.deltaTime * 20f);
         mController.Animator.SetHorizontal(mController.InputHandler.MoveInput.x);
 
         if (!mController.Movement.Jumping)

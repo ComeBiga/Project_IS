@@ -10,7 +10,11 @@ public class PlayerAnimator : MonoBehaviour
     public Animator Animator => mAnimator;
     public AnimationEventReceiver AnimationEventReceiver => _animationEventReceiver;
 
+    public event Action onAnimatorMove = null;
     public event Action onAnimationIK = null;
+    public event Action<string, AnimatorStateInfo> onEnterState = null;
+    public event Action<string, AnimatorStateInfo> onUpdateState = null;
+    public event Action<string, AnimatorStateInfo> onExitState = null;
 
     [SerializeField] private AnimationEventReceiver _animationEventReceiver;
     [SerializeField] private bool _trasitionLog = false;
@@ -319,9 +323,41 @@ public class PlayerAnimator : MonoBehaviour
         mAnimator.SetTrigger(PushHash);
     }
 
+    public void EnterState(string stateName, AnimatorStateInfo animatorStateInfo)
+    {
+        onEnterState?.Invoke(stateName, animatorStateInfo);
+    }
+
+    public void UpdateState(string stateName, AnimatorStateInfo animatorStateInfo)
+    {
+        onUpdateState?.Invoke(stateName, animatorStateInfo);
+    }
+
+    public void ExitState(string stateName, AnimatorStateInfo animatorStateInfo)
+    {
+        onExitState?.Invoke(stateName, animatorStateInfo);
+    }
+
+    private Dictionary<int, string> mStateHashToName = new Dictionary<int, string>();
+    private readonly int RunTurnStateHash = Animator.StringToHash("Base Layer.Turn.RunTurn");
+    private readonly int RunTurnRStateHash = Animator.StringToHash("Base Layer.Turn.RunTurn_R");
+    private readonly int RunToIdleLStateHash = Animator.StringToHash("Base Layer.Run.RunToIdle_L");
+    private readonly int RunToIdleRStateHash = Animator.StringToHash("Base Layer.Run.RunToIdle_R");
+    private readonly int RunStateHash = Animator.StringToHash("Base Layer.Run.Run");
+    private readonly int IdleToRunStateHash = Animator.StringToHash("Base Layer.Run.IdleToRun");
+    private readonly int IdleStateHash = Animator.StringToHash("Base Layer.Idle");
+
     private void Awake()
     {
         mAnimator = GetComponent<Animator>();
+
+        mStateHashToName.Add(RunTurnStateHash, "RunTurn");
+        mStateHashToName.Add(RunTurnRStateHash, "RunTurn_R");
+        mStateHashToName.Add(RunToIdleLStateHash, "RunToIdle_L");
+        mStateHashToName.Add(RunToIdleRStateHash, "RunToIdle_R");
+        mStateHashToName.Add(RunStateHash, "Run");
+        mStateHashToName.Add(IdleToRunStateHash, "IdleToRun");
+        mStateHashToName.Add(IdleStateHash, "Idle");
     }
 
     private void Update()
@@ -331,8 +367,26 @@ public class PlayerAnimator : MonoBehaviour
             if(mAnimator.IsInTransition(0))
             {
                 AnimatorTransitionInfo transitionInfo = mAnimator.GetAnimatorTransitionInfo(0);
-                Debug.Log($"Enter transition: {transitionInfo.fullPathHash}, AnyState:{transitionInfo.anyState}");
+                AnimatorStateInfo currentStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+                AnimatorStateInfo nextStateInfo = mAnimator.GetNextAnimatorStateInfo(0);
+                string currentStateName = GetStateName(currentStateInfo.fullPathHash);
+                string nextStateName = GetStateName(nextStateInfo.fullPathHash);
+                // Debug.Log($"Enter transition: {transitionInfo.fullPathHash}, AnyState:{transitionInfo.anyState}, IsTurn: {currentStateInfo.IsTag("Turn")}, IsRunToIdle: {currentStateInfo.IsTag("RunToIdle")}");
+                Debug.Log($"Enter transition: {transitionInfo.fullPathHash}, Transition Duration: {transitionInfo.duration}, Current State: {currentStateName}, Next State: {nextStateName}");
+                Debug.Log($"TurnL: {mAnimator.GetBool(TurnLHash)}, TurnR: {mAnimator.GetBool(TurnRHash)}");
             }
+        }
+    }
+
+    private string GetStateName(int stateHash)
+    {
+        if (mStateHashToName.TryGetValue(stateHash, out string stateName))
+        {
+            return stateName;
+        }
+        else
+        {
+            return $"Unknown State: {stateHash}";
         }
     }
 
@@ -341,7 +395,7 @@ public class PlayerAnimator : MonoBehaviour
     // 계산에 문제가 없도록 남겨둘 필요가 있음
     private void OnAnimatorMove()
     {
-
+        onAnimatorMove?.Invoke();
     }
 
     private void OnAnimatorIK(int layerIndex)

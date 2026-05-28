@@ -11,6 +11,8 @@ public class RotationHandler
     public PlayerController PlayerController => mPlayerController;
     public EState State => mState;
     public bool IsRotating => mbIsRotating;
+    public bool TurnToTurn => mbTurnToTurn;
+    public AnimationCurveRotation AnimationCurveRotation => mAnimationCurveRotation;
 
     private RotationBase mCurrentRotation;
     private AnimationCurveRotation mAnimationCurveRotation;
@@ -22,8 +24,12 @@ public class RotationHandler
     private EType mType = EType.AnimationCurve;
     private bool mbIsRotating = false;
     private bool mbDirectionChanged = false;
-    private bool mbEnterRotate = false;
-
+    private bool mbEnterUpdate = false;
+    private bool mbEnterFixedUpdate = false;
+    private bool mbEnterAnimatorMove = false;
+    private bool mbTurnToTurn = false;
+    private float mInputInterval = 0f;
+    private float mInputTimer = 0f;
 
     public void Init(PlayerController playerController)
     {
@@ -33,10 +39,14 @@ public class RotationHandler
         mRootMotionRotation = new RootMotionRotation(this);
         mOffset180Rotation = new Offset180Rotation(this);
 
+        mPlayerController.Animator.onAnimatorMove += onAnimatorMove;
+
         mState = EState.StandBy;
         mbIsRotating = false;
         mbDirectionChanged = false;
-        mbEnterRotate = false;
+        mbEnterUpdate = false;
+        mbEnterFixedUpdate = false;
+        mInputTimer = mInputInterval;
     }
 
     public void SetType(EType type)
@@ -61,19 +71,57 @@ public class RotationHandler
     {
         mState = EState.Rotating;
         mbIsRotating = true;
+        mbEnterUpdate = false;
+        mbEnterFixedUpdate = false;
+        mbEnterAnimatorMove = false;
     }
 
     public void EndRotation()
     {
         mState = EState.StandBy;
         mbIsRotating = false;
-        mbEnterRotate = false;
+        mbEnterUpdate = false;
+        mbEnterFixedUpdate = false;
+        mbEnterAnimatorMove = false;
+
+        mCurrentRotation.OnEndRotation();
+    }
+
+    public void FixedUpdate()
+    {
+        // Debug.Log($"[{Time.frameCount}] Entered RotationHandler.FixedUpdate, State: {mState}");
+
+        if (mState != EState.Rotating)
+            return;
+
+        if (!mbEnterFixedUpdate)
+        {
+            mbEnterFixedUpdate = true;
+            mCurrentRotation.OnBeforeFixedUpdate();
+        }
+
+        mCurrentRotation.FixedUpdate();
     }
 
     public void Update()
     {
-        if (checkOppositeInputX())
+        // Debug.Log($"[{Time.frameCount}] Entered RotationHandler.Update, State: {mState}");
+
+        mInputTimer += Time.deltaTime;
+
+        if (mInputTimer > mInputInterval && checkOppositeInputX())
         {
+            mInputTimer = 0f;
+
+            if (mState == EState.Rotating)
+            {
+                mbTurnToTurn = true;
+            }
+            else
+            {
+                mbTurnToTurn = false;
+            }
+
             mState = EState.DirectionChanged;
         }
 
@@ -91,12 +139,18 @@ public class RotationHandler
         }
     }
 
-    public void FixedUpdate()
+    private void onAnimatorMove()
     {
-        if (mState == EState.Rotating)
+        if (mState != EState.Rotating)
+            return;
+
+        if (!mbEnterAnimatorMove)
         {
-            mCurrentRotation.FixedUpdate();
+            mbEnterAnimatorMove = true;
+            mCurrentRotation.OnBeforeAnimatorMove();
         }
+
+        mCurrentRotation.OnAnimatorMove();
     }
 
     private void standBy()
@@ -113,10 +167,10 @@ public class RotationHandler
 
     private void rotate()
     {
-        if(!mbEnterRotate)
+        if (!mbEnterUpdate)
         {
-            mbEnterRotate = true;
-            mCurrentRotation.OnBeforeRotate();
+            mbEnterUpdate = true;
+            mCurrentRotation.OnBeforeUpdate();
         }
 
         mCurrentRotation.Update();

@@ -1,6 +1,5 @@
 using System.Collections;
 using System.Collections.Generic;
-using Unity.IO.LowLevel.Unsafe;
 using UnityEngine;
 
 public class PlayerRunJumpState : PlayerStateBase
@@ -42,6 +41,8 @@ public class PlayerRunJumpState : PlayerStateBase
     {
         jumpUpward = true;
         // mController.Animator.SetLanding();
+
+        mController.Animator.SetVertical(0f);
     }
 
     public override void Tick()
@@ -59,12 +60,41 @@ public class PlayerRunJumpState : PlayerStateBase
                 mMoveInput.x = 0f;
         }
 
+        var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
+
+        if (currentStateInfo.IsTag("RunJump"))
+        {
+            float velocityY = mController.Movement.Velocity.y;
+            float resultNormalizedVelocityY = 0f;
+
+            if (velocityY > 0f)
+            {
+                float normalizedVelocityY = 1f - (mController.Movement.Velocity.y / 4f);
+                resultNormalizedVelocityY = normalizedVelocityY * .2f;
+                // mController.Animator.SetVertical(normalizedVelocityY * .2f);
+            }
+            else
+            {
+                float normalizedVelocityY = 1f - ((mController.Movement.Velocity.y + 4f) / 4f);
+                resultNormalizedVelocityY = (normalizedVelocityY * .8f) + .2f;
+                // mController.Animator.SetVertical((normalizedVelocityY * .8f) + .2f);
+            }
+
+            //float normalizedVelocityY = 1f - ((mController.Movement.Velocity.y + 4f) / 8f);
+            //mController.Animator.SetVertical(normalizedVelocityY);
+            mController.Animator.SetVertical(resultNormalizedVelocityY);
+
+            // Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {normalizedVelocityY}");
+            Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {resultNormalizedVelocityY}");
+        }
+
         // mController.Movement.Move(mMoveInput);
         mController.Movement.UpdateJump(mMoveInput);
         mController.Animator.SetHorizontal(mController.InputHandler.MoveInput.x);
         mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
 
-        mController.Movement.UpdateRotation();
+        // mController.Movement.UpdateRotation();
+        mController.Movement.UpdateRotation(Time.deltaTime * 20f);
 
         if (!mController.Movement.Jumping)
         {
@@ -95,14 +125,14 @@ public class PlayerRunJumpState : PlayerStateBase
         }
 
         // fall
-        PlayerFallState fallState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Fall) as PlayerFallState;
+        //PlayerFallState fallState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Fall) as PlayerFallState;
 
-        if (fallState.CheckFall())
-        // if (transform.position.y < mDefaultHeight - .1f)
-        {
-            mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
-            return;
-        }
+        //if (fallState.CheckFall())
+        //// if (transform.position.y < mDefaultHeight - .1f)
+        //{
+        //    mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
+        //    return;
+        //}
 
         // Interactable
         int bHitDirection = checkInteractableObject(out RaycastHit interactableHitInfo);

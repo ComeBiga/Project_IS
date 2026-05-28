@@ -20,12 +20,32 @@ public abstract class RotationBase
     }
 
     public abstract void Start();
-    public abstract void OnDirectionchanged();
-    public abstract void Update();
-    public abstract void FixedUpdate();
     public abstract void StandBy();
+    public abstract void OnDirectionchanged();
+    public abstract void FixedUpdate();
+    public abstract void Update();
 
-    public virtual void OnBeforeRotate()
+    public virtual void OnAnimatorMove()
+    {
+
+    }
+
+    public virtual void OnBeforeFixedUpdate()
+    {
+
+    }
+
+    public virtual void OnBeforeUpdate()
+    {
+
+    }
+
+    public virtual void OnBeforeAnimatorMove()
+    {
+
+    }
+
+    public virtual void OnEndRotation()
     {
 
     }

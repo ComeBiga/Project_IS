@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 620fea1c231bd594b9cceb17c56562df
+guid: 4abb3728ab7151443b275755388ba728
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -33,10 +33,10 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: Male_Run_Turn_RootMotion
-      takeName: Armature_Male|Armature_Male_Run_Turn_RootMotionAction
-      internalID: -3145952004936022691
-      firstFrame: 0
+      name: Male_ClimbLedge_Stomach_RootMotion_Critical
+      takeName: Armature_Male|Armature_Male_ClimbLedge_Stomach_RootMotionAction
+      internalID: -1310830664826476397
+      firstFrame: 6
       lastFrame: 15
       wrapMode: 0
       orientationOffsetY: 0
@@ -46,31 +46,22 @@ ModelImporter:
       hasAdditiveReferencePose: 0
       loopTime: 0
       loopBlend: 0
-      loopBlendOrientation: 0
-      loopBlendPositionY: 1
+      loopBlendOrientation: 1
+      loopBlendPositionY: 0
       loopBlendPositionXZ: 0
-      keepOriginalOrientation: 1
-      keepOriginalPositionY: 1
-      keepOriginalPositionXZ: 1
-      heightFromFeet: 0
+      keepOriginalOrientation: 0
+      keepOriginalPositionY: 0
+      keepOriginalPositionXZ: 0
+      heightFromFeet: 1
       mirror: 0
       bodyMask: 01000000010000000100000001000000010000000100000001000000010000000100000001000000010000000100000001000000
       curves:
-      - name: LeftFootCurve
+      - name: LeftHandWeight
         curve:
           serializedVersion: 2
           curve:
           - serializedVersion: 3
             time: 0
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 0.09205021
             value: 1
             inSlope: 0
             outSlope: 0
@@ -79,7 +70,7 @@ ModelImporter:
             inWeight: 0
             outWeight: 0
           - serializedVersion: 3
-            time: 0.59574467
+            time: 0.6081081
             value: 1
             inSlope: 0
             outSlope: 0
@@ -88,8 +79,8 @@ ModelImporter:
             inWeight: 0
             outWeight: 0
           - serializedVersion: 3
-            time: 0.76950353
-            value: 0
+            time: 0.8783784
+            value: 1
             inSlope: 0
             outSlope: 0
             tangentMode: 0
@@ -108,30 +99,12 @@ ModelImporter:
           preInfinity: 3
           postInfinity: 3
           rotationOrder: 4
-      - name: RightFootCurve
+      - name: RightHandWeight
         curve:
           serializedVersion: 2
           curve:
           - serializedVersion: 3
             time: 0
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 0.21985814
-            value: 0
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 0.31205672
             value: 1
             inSlope: 0
             outSlope: 0
@@ -140,7 +113,7 @@ ModelImporter:
             inWeight: 0
             outWeight: 0
           - serializedVersion: 3
-            time: 0.38297874
+            time: 0.6081081
             value: 1
             inSlope: 0
             outSlope: 0
@@ -149,8 +122,8 @@ ModelImporter:
             inWeight: 0
             outWeight: 0
           - serializedVersion: 3
-            time: 0.5177305
-            value: 0
+            time: 0.8783784
+            value: 1
             inSlope: 0
             outSlope: 0
             tangentMode: 0

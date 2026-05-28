@@ -1,5 +1,5 @@
 fileFormatVersion: 2
-guid: 620fea1c231bd594b9cceb17c56562df
+guid: cb9ed6f977e9ce645a9799acde0de47e
 ModelImporter:
   serializedVersion: 22200
   internalIDToNameTable: []
@@ -33,11 +33,11 @@ ModelImporter:
     extraUserProperties: []
     clipAnimations:
     - serializedVersion: 16
-      name: Male_Run_Turn_RootMotion
-      takeName: Armature_Male|Armature_Male_Run_Turn_RootMotionAction
-      internalID: -3145952004936022691
+      name: Male_Run_Turn_R_RootMotion
+      takeName: Armature_Male|Armature_Male_Run_Turn_R_RootMotionAction
+      internalID: 6078033324951117625
       firstFrame: 0
-      lastFrame: 15
+      lastFrame: 14
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -70,7 +70,25 @@ ModelImporter:
             inWeight: 0
             outWeight: 0
           - serializedVersion: 3
-            time: 0.09205021
+            time: 0.093851134
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.20711973
+            value: 0
+            inSlope: 0
+            outSlope: 0
+            tangentMode: 0
+            weightedMode: 0
+            inWeight: 0
+            outWeight: 0
+          - serializedVersion: 3
+            time: 0.30420712
             value: 1
             inSlope: 0
             outSlope: 0
@@ -79,16 +97,7 @@ ModelImporter:
             inWeight: 0
             outWeight: 0
           - serializedVersion: 3
-            time: 0.59574467
-            value: 1
-            inSlope: 0
-            outSlope: 0
-            tangentMode: 0
-            weightedMode: 0
-            inWeight: 0
-            outWeight: 0
-          - serializedVersion: 3
-            time: 0.76950353
+            time: 0.40453076
             value: 0
             inSlope: 0
             outSlope: 0
@@ -122,7 +131,7 @@ ModelImporter:
             inWeight: 0
             outWeight: 0
           - serializedVersion: 3
-            time: 0.21985814
+            time: 0.19417477
             value: 0
             inSlope: 0
             outSlope: 0
@@ -131,7 +140,7 @@ ModelImporter:
             inWeight: 0
             outWeight: 0
           - serializedVersion: 3
-            time: 0.31205672
+            time: 0.34951454
             value: 1
             inSlope: 0
             outSlope: 0
@@ -140,7 +149,7 @@ ModelImporter:
             inWeight: 0
             outWeight: 0
           - serializedVersion: 3
-            time: 0.38297874
+            time: 0.631068
             value: 1
             inSlope: 0
             outSlope: 0
@@ -149,7 +158,7 @@ ModelImporter:
             inWeight: 0
             outWeight: 0
           - serializedVersion: 3
-            time: 0.5177305
+            time: 0.77993524
             value: 0
             inSlope: 0
             outSlope: 0

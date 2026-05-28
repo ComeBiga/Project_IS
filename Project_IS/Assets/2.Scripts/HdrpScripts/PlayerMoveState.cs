@@ -27,6 +27,8 @@ public class PlayerMoveState : PlayerStateBase
     [SerializeField] private TwoBoneIKConstraint _leftLegIKConstraint;
     [SerializeField] private TwoBoneIKConstraint _rightLegIKConstraint;
     [SerializeField] private float _footIKMaxDistance = 1f;
+    [SerializeField] private AnimationCurve _idleTurnRotationCurve;
+    [SerializeField] private AnimationCurve _idleTurnPositionCurve;
     [SerializeField] private AnimationCurve _runTurnRotationCurve;
     [SerializeField] private AnimationCurve _runTurnPositionCurve;
 
@@ -65,11 +67,19 @@ public class PlayerMoveState : PlayerStateBase
 
         mRotationHandler.Init(mController);
         mRotationHandler.SetType(_rotationType);
+        mRotationHandler.AnimationCurveRotation.SetAnimationCurve(_idleTurnPositionCurve, _idleTurnRotationCurve, _runTurnPositionCurve, _runTurnRotationCurve);
     }
 
     public override void EnterState()
     {
         mDefaultHeight = transform.position.y;
+
+        mbLeftFootIK = false;
+        mbLeftFootIKFullWeight = false;
+        mbLeftTransition = false;
+        mbRightFootIK = false;
+        mbRightFootIKFullWeight = false;
+        mbRightTransition = false;
 
         mController.Animator.onAnimationIK -= updateAnimatorIK;
         mController.Animator.onAnimationIK += updateAnimatorIK;
@@ -90,6 +100,8 @@ public class PlayerMoveState : PlayerStateBase
         mController.Animator.onAnimationIK -= updateAnimatorIK;
         _leftLegIKConstraint.weight = 0f;
         _rightLegIKConstraint.weight = 0f;
+
+        mRotationHandler.EndRotation();
     }
 
     public override void Tick()
@@ -126,7 +138,8 @@ public class PlayerMoveState : PlayerStateBase
             Vector2 finalMoveInput = resultMoveInput;
 
             // if (mbRotating)
-            if(mRotationHandler.State == RotationHandler.EState.Rotating)
+            // if(mRotationHandler.State == RotationHandler.EState.Rotating)
+            if(mRotationHandler.AnimationCurveRotation.PositionCurveActive)
                 finalMoveInput.x = 0f;
 
             mController.Movement.Move(finalMoveInput);
@@ -804,14 +817,14 @@ public class PlayerMoveState : PlayerStateBase
                     mLeftFootPosition = footPosition;
 
                     // mLeftFootRotation = Quaternion.LookRotation(mController.Movement.DirectionToVector(), Vector3.up);
-                    // Debug.Log($"Left Foot IK Updated. Foot Position: {footPosition}");
+                    // Debug.Log($"[{Time.frameCount}] Left Foot IK Updated. Foot Position: {footPosition}");
                 }
                 else
                 {
                     weightLeftFoot = 0f;
                 }
 
-                // Debug.Log($"Left Foot IK Full Weight. value: {valueLeftFoot}, weight: {weightLeftFoot}");
+                // Debug.Log($"[{Time.frameCount}] Left Foot IK Full Weight. value: {valueLeftFoot}, weight: {weightLeftFoot}");
             }
             else
             {
@@ -833,7 +846,7 @@ public class PlayerMoveState : PlayerStateBase
             {
                 mbLeftFootIK = true;
 
-                // Debug.Log($"Start Left Foot IK.");
+                // Debug.Log($"[{Time.frameCount}] Start Left Foot IK.");
             }
             else
             {
@@ -847,7 +860,7 @@ public class PlayerMoveState : PlayerStateBase
 
                 // weightLeftFoot *= multiplier;
                 // Debug.Log($"distance: {distance}, multiplier: {multiplier}, weight: {weightLeftFoot}");
-                // Debug.Log($"Left Foot IK Weight: {valueLeftFoot}, multiplied weight: {weightLeftFoot}");
+                // Debug.Log($"[{Time.frameCount}] Left Foot IK Weight: {valueLeftFoot}, multiplied weight: {weightLeftFoot}");
             }
 
             if (mbLeftFootIKFullWeight == false)
@@ -864,12 +877,12 @@ public class PlayerMoveState : PlayerStateBase
                     mLeftFootPosition = footPosition;
 
                     // mLeftFootRotation = Quaternion.LookRotation(mController.Movement.DirectionToVector(), Vector3.up);
-                    // Debug.Log($"Left Foot IK Updated. Foot Position: {footPosition}");
+                    // Debug.Log($"[{Time.frameCount}] Left Foot IK Updated. Foot Position: {footPosition}");
 
                     if (Vector3.Distance(leftFootPos, hitInfo.point) < .09f)
                     {
                         mbLeftFootIKFullWeight = true;
-                        // Debug.Log($"Left Foot touched ground before Full Weight.");
+                        // Debug.Log($"[{Time.frameCount}] Left Foot touched ground before Full Weight.");
                     }
                 }
                 else
@@ -898,7 +911,7 @@ public class PlayerMoveState : PlayerStateBase
                 mbLeftFootIK = false;
                 mbLeftFootIKFullWeight = false;
 
-                // Debug.Log($"End Left Foot IK.");
+                // Debug.Log($"[{Time.frameCount}] End Left Foot IK.");
             }
         }
 

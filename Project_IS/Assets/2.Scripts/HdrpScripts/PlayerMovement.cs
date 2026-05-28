@@ -162,6 +162,11 @@ public class PlayerMovement : MonoBehaviour
         mRigidbody.MoveRotation(Quaternion.Lerp(transform.rotation, targetRotation, t));
     }
 
+    public void UpdateRotation(float t)
+    {
+        UpdateRotation(mDirection, t);
+    }
+
     public void UpdateRotation(EDirection direction)
     {
         UpdateRotation(direction, Time.deltaTime * _rotateSpeed);
