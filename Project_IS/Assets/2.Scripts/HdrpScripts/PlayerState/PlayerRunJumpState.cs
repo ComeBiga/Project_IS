@@ -19,6 +19,11 @@ public class PlayerRunJumpState : PlayerStateBase
     private float mInteractableDistance;
     private float mSidePassZDistance;
 
+    // Ledge
+    private bool mbLedgeDetected = false;
+    private Vector3 mLedgePoint;
+    private PlayerClimbLedgeState.ClimbLedgeInfo mDetectedLedgeInfo;
+
     public override void EnterState()
     {
         if(jumpUpward)
@@ -40,9 +45,12 @@ public class PlayerRunJumpState : PlayerStateBase
     public override void ExitState()
     {
         jumpUpward = true;
+        mbLedgeDetected = false;
         // mController.Animator.SetLanding();
 
         mController.Animator.SetVertical(0f);
+
+        mController.Animator.onAnimatorFixedUpdate -= onAnimatorFixedUpdate;
     }
 
     public override void Tick()
@@ -116,7 +124,33 @@ public class PlayerRunJumpState : PlayerStateBase
             return;
         }
 
-        if (_climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out RaycastHit hitInfo))
+        int ledgeDetection = _climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out Collider detectedCollider);
+        mDetectedLedgeInfo = climbLedgeInfo;
+
+        // if (_climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out RaycastHit hitInfo))
+        if(mbLedgeDetected == false && ledgeDetection == 0)
+        {
+            mbLedgeDetected = true;
+
+            Bounds bounds = detectedCollider.bounds;
+            mLedgePoint = climbLedgeInfo.nearestLedgePoint;
+
+            // Left Hand
+            Vector3 leftHandBonePos = mController.Animator.Animator.GetBoneTransform(HumanBodyBones.LeftHand).position;
+            Vector3 leftHandTargetPos = mLedgePoint;
+            leftHandTargetPos.z = leftHandBonePos.z;
+            _climbLedgeState.LeftHandIK.data.target.position = leftHandTargetPos;
+
+            // Right Hand
+            Vector3 rightHandBonePos = mController.Animator.Animator.GetBoneTransform(HumanBodyBones.RightHand).position;
+            Vector3 rightHandTargetPos = mLedgePoint;
+            rightHandTargetPos.z = rightHandBonePos.z;
+            _climbLedgeState.RightHandIK.data.target.position = rightHandTargetPos;
+
+            mController.Animator.onAnimatorFixedUpdate -= onAnimatorFixedUpdate;
+            mController.Animator.onAnimatorFixedUpdate += onAnimatorFixedUpdate;
+        }
+        else if (ledgeDetection == 1)
         {
             // _climbLedgeState.SetLedge(hitInfo.collider.bounds);
             _climbLedgeState.SetInfo(climbLedgeInfo);
@@ -148,6 +182,61 @@ public class PlayerRunJumpState : PlayerStateBase
     public void SetDefaultHeight(float height)
     {
         mDefaultHeight = height;
+    }
+
+    private void onAnimatorFixedUpdate()
+    {
+        // Left Hand
+        // IK Weight
+        //Vector3 leftShoulderBonePos = mController.Animator.Animator.GetBoneTransform(HumanBodyBones.LeftShoulder).position;
+        //leftShoulderBonePos.z = 0f;
+        //Vector3 ledgePoint = mLedgePoint;
+        //ledgePoint.z = 0f;
+        //float distanceShoulderToLedge = Vector3.Distance(leftShoulderBonePos, ledgePoint);
+        float distanceShoulderToLedge = _climbLedgeState.GetDistanceShoulderToLedge(mLedgePoint);
+        //float gapToLedge = distanceShoulderToLedge - _climbLedgeState.RaycastDistance;
+        //float shoulderToElbowLength = Vector3.Distance(mController.Animator.Animator.GetBoneTransform(HumanBodyBones.LeftShoulder).position, mController.Animator.Animator.GetBoneTransform(HumanBodyBones.LeftLowerArm).position);
+        //float elbowToHandLength = Vector3.Distance(mController.Animator.Animator.GetBoneTransform(HumanBodyBones.LeftLowerArm).position, mController.Animator.Animator.GetBoneTransform(HumanBodyBones.LeftHand).position);
+        //float armLength = shoulderToElbowLength + elbowToHandLength;
+        float armLength = _climbLedgeState.GetArmLength();
+        float gapToLedge = distanceShoulderToLedge - armLength; // _raycastDistance;
+        // float gapToLedge = mDetectedLedgeInfo.gapToLedge;
+        float maxGapToLedge = mDetectedLedgeInfo.maxGapToLedge;
+        float gapToLedgeRatio = Mathf.Clamp01(gapToLedge / maxGapToLedge);
+        float weight = 1 - gapToLedgeRatio;
+        _climbLedgeState.LeftHandIK.weight = weight;
+
+        Debug.Log($"[{Time.frameCount}] Gap To Ledge: {gapToLedge}, Max Gap To Ledge: {maxGapToLedge}, IK Weight: {weight}");
+
+        // IK Target Position
+        // Vector3 leftHandBonePos = mController.Animator.Animator.GetBoneTransform(HumanBodyBones.LeftHand).position;
+        // Vector3 leftHandTargetPos = mLedgePoint;
+        //// leftHandTargetPos.z = -.2f; //leftHandBonePos.z;
+        // leftHandTargetPos.z = _climbLedgeState.GetLeftHandIKTargetPosition().z;
+        // _climbLedgeState.LeftHandIK.data.target.position = leftHandTargetPos;
+        _climbLedgeState.LeftHandIK.data.target.position = _climbLedgeState.GetLeftHandIKTargetPosition(mDetectedLedgeInfo);
+
+        // Right Hand
+        // IK Weight
+        _climbLedgeState.RightHandIK.weight = weight;
+
+        // IK Target Position
+        //Vector3 rightHandBonePos = mController.Animator.Animator.GetBoneTransform(HumanBodyBones.RightHand).position;
+        //Vector3 rightHandTargetPos = mLedgePoint;
+        //// rightHandTargetPos.z = .2f; // rightHandBonePos.z;
+        //rightHandTargetPos.z = _climbLedgeState.GetRightHandIKTargetPosition().z;
+        //_climbLedgeState.RightHandIK.data.target.position = rightHandTargetPos;
+        _climbLedgeState.RightHandIK.data.target.position = _climbLedgeState.GetRightHandIKTargetPosition(mDetectedLedgeInfo);
+
+        // IK Target Rotation
+        Vector3 normal = Vector3.up;
+        Vector3 up = mController.Movement.DirectionToVector();
+        Vector3 forward = -normal;
+        Quaternion targetRot = Quaternion.LookRotation(forward, up);
+        _climbLedgeState.LeftHandIK.data.target.rotation = targetRot;
+        _climbLedgeState.RightHandIK.data.target.rotation = targetRot;
+        _climbLedgeState.LeftHandIK.data.targetRotationWeight = 1f;
+        _climbLedgeState.RightHandIK.data.targetRotationWeight = 1f;
     }
 
     // TODO: Interactable 처리 static 클래스 만들기

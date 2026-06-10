@@ -10,6 +10,7 @@ public class PlayerAnimator : MonoBehaviour
     public Animator Animator => mAnimator;
     public AnimationEventReceiver AnimationEventReceiver => _animationEventReceiver;
 
+    public event Action onAnimatorFixedUpdate = null;
     public event Action onAnimatorMove = null;
     public event Action onAnimationIK = null;
     public event Action<string, AnimatorStateInfo> onEnterState = null;
@@ -346,6 +347,8 @@ public class PlayerAnimator : MonoBehaviour
     private readonly int RunStateHash = Animator.StringToHash("Base Layer.Run.Run");
     private readonly int IdleToRunStateHash = Animator.StringToHash("Base Layer.Run.IdleToRun");
     private readonly int IdleStateHash = Animator.StringToHash("Base Layer.Idle");
+    private readonly int IdleJumpStateHash = Animator.StringToHash("Base Layer.Jump.IdleJump");
+    private readonly int RunJumpStateHash = Animator.StringToHash("Base Layer.Jump.RunJump Blend Tree");
 
     private void Awake()
     {
@@ -358,6 +361,13 @@ public class PlayerAnimator : MonoBehaviour
         mStateHashToName.Add(RunStateHash, "Run");
         mStateHashToName.Add(IdleToRunStateHash, "IdleToRun");
         mStateHashToName.Add(IdleStateHash, "Idle");
+        mStateHashToName.Add(IdleJumpStateHash, "IdleJump");
+        mStateHashToName.Add(RunJumpStateHash, "RunJump");
+    }
+
+    private void FixedUpdate()
+    {
+        onAnimatorFixedUpdate?.Invoke();
     }
 
     private void Update()

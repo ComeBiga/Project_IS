@@ -192,20 +192,36 @@ public class PlayerMoveState : PlayerStateBase
         {
             if (mController.Movement.IsGrounded)
             {
-                // 점프 입력이 됐을 때 이동 입력이 있으면 무조건 RunJump
-                if (mController.InputHandler.MoveInput.x > .01f || mController.InputHandler.MoveInput.x < -.01f)
-                {
-                    PlayerRunJumpState runJumpState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.RunJump) as PlayerRunJumpState;
-                    runJumpState.SetDefaultHeight(mDefaultHeight);
-                    // runJumpState.SetTurningCW(mbRotatingCW);
+                var climbLedgeState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbLedge) as PlayerClimbLedgeState;
 
-                    mController.StateMachine.SwitchState(PlayerStateMachine.EState.RunJump);
-                    mController.InputHandler.ResetJump();
+                // if (climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out RaycastHit ledgeHitInfo))
+                if (climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out Collider detectedCollider) == 1)
+                {
+                    climbLedgeState.SetInfo(climbLedgeInfo);
+                    mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbLedge);
+
+                    return;
                 }
                 else
                 {
-                    mController.StateMachine.SwitchState(PlayerStateMachine.EState.IdleJump);
-                    mController.InputHandler.ResetJump();
+                    // 점프 입력이 됐을 때 이동 입력이 있으면 무조건 RunJump
+                    if (mController.InputHandler.MoveInput.x > .01f || mController.InputHandler.MoveInput.x < -.01f)
+                    {
+                        PlayerRunJumpState runJumpState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.RunJump) as PlayerRunJumpState;
+                        runJumpState.SetDefaultHeight(mDefaultHeight);
+                        // runJumpState.SetTurningCW(mbRotatingCW);
+
+                        mController.StateMachine.SwitchState(PlayerStateMachine.EState.RunJump);
+                        mController.InputHandler.ResetJump();
+                    }
+                    else
+                    {
+                        mController.StateMachine.SwitchState(PlayerStateMachine.EState.IdleJump);
+                        mController.InputHandler.ResetJump();
+
+                    }
+
+                    return;
                 }
             }
         }

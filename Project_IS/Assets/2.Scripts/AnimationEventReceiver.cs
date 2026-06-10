@@ -12,6 +12,7 @@ public class AnimationEventReceiver : MonoBehaviour
     public event Action onFootStepBig = null;
     public event Action onTouchHand = null;
     public event Action<int> onFrontFoot = null;
+    public event Action onReleaseHand = null;
 
     private void FootStep()
     {
@@ -55,5 +56,10 @@ public class AnimationEventReceiver : MonoBehaviour
         }
 
         onFrontFoot?.Invoke(index);
+    }
+
+    private void ReleaseHand()
+    {
+        onReleaseHand?.Invoke();
     }
 }

@@ -18,6 +18,10 @@ public class GameSystem : MonoBehaviour
     private bool _updateTimeScale = false;
     [SerializeField]
     private float _timeScale = 1f;
+    [SerializeField]
+    private bool _useTimeScalePreset = false;
+    [SerializeField]
+    private List<float> _timeScalePreset;
 
     [Header("CheckPoint")]
     [SerializeField]
@@ -51,6 +55,34 @@ public class GameSystem : MonoBehaviour
     {
         if (_updateTimeScale)
             Time.timeScale = _timeScale;
+
+        if(_useTimeScalePreset)
+        {
+            if (Input.GetKeyDown(KeyCode.Alpha1))
+            {
+                Time.timeScale = _timeScalePreset[0];
+            }
+
+            if (Input.GetKeyDown(KeyCode.Alpha2))
+            {
+                Time.timeScale = _timeScalePreset[1];
+            }
+
+            if(Input.GetKeyDown(KeyCode.Alpha3))
+            {
+                Time.timeScale = _timeScalePreset[2];
+            }
+
+            if(Input.GetKeyDown(KeyCode.Alpha4))
+            {
+                Time.timeScale = _timeScalePreset[3];
+            }
+
+            if(Input.GetKeyDown(KeyCode.Alpha5))
+            {
+                Time.timeScale = _timeScalePreset[4];
+            }
+        }
 
         if (Input.GetKeyDown(KeyCode.P))
         {

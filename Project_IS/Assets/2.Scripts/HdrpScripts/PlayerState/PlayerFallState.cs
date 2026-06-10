@@ -214,9 +214,11 @@ public class PlayerFallState : PlayerStateBase
             return;
         }
 
-        if (_climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out RaycastHit ledgeHitInfo))
+        // if (_climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out RaycastHit ledgeHitInfo))
+        if (_climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out Collider detectedCollider) == 1)
         {
-            Ground ground = ledgeHitInfo.collider.GetComponent<Ground>();
+            // Ground ground = ledgeHitInfo.collider.GetComponent<Ground>();
+            Ground ground = detectedCollider.GetComponent<Ground>();
 
             if (ground != null)
             {
