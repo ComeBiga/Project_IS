@@ -67,6 +67,11 @@ public class PlayerAnimator : MonoBehaviour
 
     private Animator mAnimator;
 
+    public float GetVertical()
+    {
+        return mAnimator.GetFloat(VerticalHash);
+    }
+
     public void SetState(int value)
     {
         mAnimator.SetInteger(StateHash, value);
@@ -165,6 +170,11 @@ public class PlayerAnimator : MonoBehaviour
     public void SetFall()
     {
         mAnimator.SetTrigger(FallHash);
+    }
+
+    public void ResetFall()
+    {
+        mAnimator.ResetTrigger(FallHash);
     }
 
     //public void SetLanding()
@@ -349,6 +359,8 @@ public class PlayerAnimator : MonoBehaviour
     private readonly int IdleStateHash = Animator.StringToHash("Base Layer.Idle");
     private readonly int IdleJumpStateHash = Animator.StringToHash("Base Layer.Jump.IdleJump");
     private readonly int RunJumpStateHash = Animator.StringToHash("Base Layer.Jump.RunJump Blend Tree");
+    private readonly int FallStartStateHash = Animator.StringToHash("Base Layer.Fall-Landing.Fall_Start");
+    private readonly int FallLoopStateHash = Animator.StringToHash("Base Layer.Fall-Landing.Fall_Loop");
 
     private void Awake()
     {
@@ -363,6 +375,8 @@ public class PlayerAnimator : MonoBehaviour
         mStateHashToName.Add(IdleStateHash, "Idle");
         mStateHashToName.Add(IdleJumpStateHash, "IdleJump");
         mStateHashToName.Add(RunJumpStateHash, "RunJump");
+        mStateHashToName.Add(FallStartStateHash, "Fall Start");
+        mStateHashToName.Add(FallLoopStateHash, "Fall Loop");
     }
 
     private void FixedUpdate()

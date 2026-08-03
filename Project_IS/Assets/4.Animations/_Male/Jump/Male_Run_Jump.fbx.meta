@@ -37,7 +37,7 @@ ModelImporter:
       takeName: Armature_Male|Armature_Male_Run_Jump_Near_RootMotionAction
       internalID: -2075540856513467451
       firstFrame: 4
-      lastFrame: 14
+      lastFrame: 13
       wrapMode: 0
       orientationOffsetY: 0
       level: 0
@@ -66,7 +66,7 @@ ModelImporter:
       takeName: Armature_Male|Armature_Male_Run_Jump_RootMotionAction
       internalID: 4912653948319498456
       firstFrame: 4
-      lastFrame: 14
+      lastFrame: 13
       wrapMode: 0
       orientationOffsetY: 0
       level: 0

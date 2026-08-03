@@ -81,6 +81,9 @@ public class PlayerMoveState : PlayerStateBase
         mbRightFootIKFullWeight = false;
         mbRightTransition = false;
 
+        //mController.Animator.onAnimatorMove -= updateAnimatorMove;
+        //mController.Animator.onAnimatorMove += updateAnimatorMove;
+
         mController.Animator.onAnimationIK -= updateAnimatorIK;
         mController.Animator.onAnimationIK += updateAnimatorIK;
 
@@ -97,6 +100,7 @@ public class PlayerMoveState : PlayerStateBase
 
     public override void ExitState()
     {
+        mController.Animator.onAnimatorMove -= updateAnimatorMove;
         mController.Animator.onAnimationIK -= updateAnimatorIK;
         _leftLegIKConstraint.weight = 0f;
         _rightLegIKConstraint.weight = 0f;
@@ -146,11 +150,13 @@ public class PlayerMoveState : PlayerStateBase
             // Debug.Log("MoveInputX: " + resultMoveInput.x); 
 
             // Debug.Log($"velocity: {mController.Movement.Velocity}, moveInput: {resultMoveInput}");
+
         }
 
         mController.Animator.SetInputXMagnitude(Mathf.Abs(resultMoveInput.x));
         mController.Animator.SetInputXRaw(mController.InputHandler.MoveInputRaw.x);
         mController.Animator.SetInputX(Mathf.Abs(mController.InputHandler.MoveInputRaw.x) > .1f);
+        mController.Animator.SetHorizontal((4f - Mathf.Abs(mController.Movement.Velocity.x) / 4f));
         // mController.Movement.Move(mController.InputHandler.MoveInput);
         //mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
         // Debug.Log($"moveInput: {resultMoveInput}");
@@ -229,9 +235,11 @@ public class PlayerMoveState : PlayerStateBase
         // Fall
         PlayerFallState fallState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Fall) as PlayerFallState;
 
-        if (fallState.CheckFall())
+        if(!mController.Movement.IsGrounded && !mController.Movement.Jumping)
+        // if (fallState.CheckFall())
         // if (mController.Movement.Velocity.y < -1f)
         {
+            fallState.SetFallIndex(0);
             mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
 
             return;
@@ -322,6 +330,9 @@ public class PlayerMoveState : PlayerStateBase
     private void FixedUpdate()
     {
         mRotationHandler.FixedUpdate();
+
+        //Transform trLeftHand = mController.Animator.Animator.GetBoneTransform(HumanBodyBones.LeftHand);
+        //Debug.Log($"Left hand Height: {trLeftHand.position.y}");
     }
 
     public void EnterToIdle()
@@ -782,11 +793,6 @@ public class PlayerMoveState : PlayerStateBase
         }
     }
 
-    private void Update()
-    {
-        
-    }
-
     private void updateFootIK()
     {
         Animator animator = mController.Animator.Animator;
@@ -1066,6 +1072,19 @@ public class PlayerMoveState : PlayerStateBase
         _rightLegIKConstraint.weight = weightRightFoot;
         _rightLegIKConstraint.data.target.position = mRightFootPosition;
         // _rightLegIKTarget.transform.position = mRightFootPosition;
+
+        // Debug.Log($"[{Time.frameCount}] Right Foot IK Weight: {weightRightFoot}");
+    }
+
+    private void updateAnimatorMove()
+    {
+        Animator animator = mController.Animator.Animator;
+
+        Vector3 deltaPosition = animator.deltaPosition;
+        deltaPosition.y = 0f; 
+        deltaPosition.z = 0f;
+
+        transform.position += deltaPosition;
     }
 
     private Vector3 mLeftFootPosition;

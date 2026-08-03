@@ -25,6 +25,7 @@ public class PlayerFallState : PlayerStateBase
     private bool mbLanding = false;
     private float mMinVelocityY = 0f;
     private float mStartMoveInputX = 0f;
+    private int mFallIndex = 0;
 
     // Ladder
     private float mPathZPosition;
@@ -49,6 +50,7 @@ public class PlayerFallState : PlayerStateBase
         mMinVelocityY = 0f;
         mStartMoveInputX = 0f;
 
+        mController.Animator.SetIndex(mFallIndex);
         mController.Animator.SetFall();
         // mController.Animator.ResetLanding();
         mController.Animator.SetLanding(false);
@@ -61,18 +63,147 @@ public class PlayerFallState : PlayerStateBase
         mInteractableDistance = moveState.InteractableDistance;
         mFrontWallCheckDistance = moveState.FrontWallCheckDistance;
         mFrontWallCheckLayer = moveState.FrontWallCheckLayer;
+
+        //StartCoroutine(eFixedUpdate());
+        //mController.Animator.onAnimatorMove += TestOnAnimatorMove;
+        //mController.Animator.onAnimationIK += TestOnAnimatorIK;
+
+        // Debug.Log($"[{Time.frameCount}] FallState EnterState - MoveInput: {mController.InputHandler.MoveInput}, Velocity: {mController.Movement.Velocity}");
+    }
+
+    private void TestOnAnimatorMove()
+    {
+        Debug.Log($"[{Time.frameCount}] FallState OnAnimatorMove - MoveInput: {mController.InputHandler.MoveInput}, Velocity: {mController.Movement.Velocity}");
+
+        if(mController.Movement.IsGrounded)
+        {
+            // mController.Movement.SetVelocity(Vector3.one * 100f);
+        }
+    }
+
+    private void TestOnAnimatorIK()
+    {
+        Debug.Log($"[{Time.frameCount}] FallState OnAnimatorIK - MoveInput: {mController.InputHandler.MoveInput}, Velocity: {mController.Movement.Velocity}");
+    }
+
+    private IEnumerator eFixedUpdate()
+    {
+        while (true)
+        {
+            Debug.Log($"[{Time.frameCount}] FallState FixedUpdate - MoveInput: {mController.InputHandler.MoveInput}, Velocity: {mController.Movement.Velocity}");
+            yield return new WaitForFixedUpdate();
+        }
     }
 
     public override void ExitState()
     {
         mbLanding = false;
+
+        mController.Animator.SetIndex(0);
+        mController.Animator.ResetFall();
         // mController.Animator.SetInputXMagnitude(0f);
-        mController.Animator.SetLanding(false);
+        // mController.Animator.SetLanding(false);
 
         if (mLandingRoutine != null)
         {
             StopCoroutine(mLandingRoutine);
             mLandingRoutine = null;
+        }
+
+        // Debug.Log($"[{Time.frameCount}] FallState ExitState - MoveInput: {mController.InputHandler.MoveInput}, Velocity: {mController.Movement.Velocity}");
+    }
+
+    public override void FixedTick()
+    {
+        Debug.Log($"[{Time.frameCount}] FallState FixedTick");
+
+        float inputXMagnitude = Mathf.Abs(mController.InputHandler.MoveInput.x);
+
+        if (mController.Movement.IsGrounded)
+        {
+            mbLanding = true;
+            // mController.Animator.SetInputXMagnitude(0f);
+
+            // Heavy Landing
+            if (mMinVelocityY < _heavyLandingVelocityY)
+            {
+                mController.Movement.SetVelocity(Vector3.zero);
+                // mController.Animator.SetHeavyLanding();
+                mController.Animator.SetLanding(true);
+                mController.Animator.SetIndex(2);
+
+                PlayerMoveState moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+                moveState.EnterToIdle();
+            }
+            // Medium Landing
+            else if (mMinVelocityY < _mediumLandingVelocityY)
+            {
+                mController.Animator.SetIndex(1);
+
+                // Idle Landing
+                if (inputXMagnitude < .1f)
+                {
+                    // mController.Movement.SetVelocity(Vector3.zero);
+                    // mController.Animator.SetLanding();
+                    mController.Animator.SetLanding(true);
+                    // mController.Animator.PlayIdleLanding(landingType: 1, 0f);
+
+                    mLandingRoutine = StartCoroutine(eIdleLanding());
+                }
+                // Running Landing
+                else
+                {
+                    // mController.Movement.SetVelocity(Vector3.zero);
+                    // mController.Animator.SetLanding();
+                    mController.Animator.SetLanding(true);
+                    // mController.Animator.CrossFadeRunningLanding(landingType: 1, .1f);
+                    mStartMoveInputX = 1f;
+
+                    mLandingRoutine = StartCoroutine(eRunningLanding());
+                }
+            }
+            // Soft Landing
+            else
+            {
+                mController.Animator.SetIndex(0);
+
+                // Idle Landing
+                if (inputXMagnitude < .1f)
+                {
+                    mController.Movement.SetVelocity(Vector3.zero);
+                    // mController.Animator.SetLanding();
+                    mController.Animator.SetLanding(true);
+                    // mController.Animator.PlayIdleLanding(landingType: 0, 0f);
+                    // mController.Animator.CrossFadeIdleLanding(landingType: 0, .05f);
+                    // mController.Animator.CrossFadeIdleLanding(landingType: 0, 0f);
+
+                    mLandingRoutine = StartCoroutine(eIdleLanding());
+                    // EndLanding();
+                }
+                // Running Landing
+                else
+                {
+                    Debug.Log($"[{Time.frameCount}] Soft Running Landing - Velocity: {mController.Movement.Velocity}");
+                    // mController.Movement.SetVelocity(Vector3.zero);
+                    // mController.Animator.SetLanding();
+                    mController.Animator.SetLanding(true);
+                    // mController.Animator.CrossFadeRunningLanding(landingType: 0, 0f);
+                    mStartMoveInputX = 1f;
+
+                    // mLandingRoutine = StartCoroutine(eRunningLanding());
+                    EndLanding();
+                }
+            }
+
+            if (mController.Movement.CheckInteractableByOverlap(out Collider[] hitColliders))
+            {
+                var fallingGround = hitColliders[0].GetComponentInParent<FallingGround>();
+                // Debug.Log($"Land on {hitColliders[0].name}");
+
+                fallingGround?.StepOn();
+            }
+
+            return;
         }
     }
 
@@ -90,6 +221,46 @@ public class PlayerFallState : PlayerStateBase
 
             return;
         }
+
+        var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
+
+        // Jump Animation NormalizedTime
+        if (currentStateInfo.IsTag("RunJump"))
+        {
+            float motionTime = mController.Animator.GetVertical();
+            motionTime += Time.fixedDeltaTime;
+
+            mController.Animator.SetVertical(motionTime);
+
+            // Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {motionTime}, Current State NormalizedTime: {currentStateInfo.normalizedTime}");
+        }
+
+
+        Vector3 fallVelocity = mController.Movement.Velocity;
+
+        float dampingDirection = -mController.Movement.DirectionToVector().x;
+        fallVelocity.x += 3.5f * dampingDirection * Time.deltaTime;
+
+        // Debug.Log($"[{Time.frameCount}] FallState - MoveInput: {mController.InputHandler.MoveInput}, Velocity: {mController.Movement.Velocity}, fallVelocity: {fallVelocity}");
+
+        if(mController.Movement.Direction == EDirection.Left)
+        {
+            if(fallVelocity.x > 0f)
+            {
+                fallVelocity.x = 0f;
+            }
+        }
+        else if(mController.Movement.Direction == EDirection.Right)
+        {
+            if (fallVelocity.x < 0f)
+            {
+                fallVelocity.x = 0f;
+            }
+        }
+
+        mController.Movement.SetVelocity(fallVelocity);
+        // mController.Movement.Move(mController.InputHandler.MoveInput);
+        // Debug.Log($"[{Time.frameCount}] FallState - MoveInput: {mController.InputHandler.MoveInput}, Velocity: {mController.Movement.Velocity}, fallVelocity: {fallVelocity}");
 
         // Terrain Normal
         if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hitInfo, .1f, LayerMask.GetMask("Ground")))
@@ -128,91 +299,95 @@ public class PlayerFallState : PlayerStateBase
             }
         }
 
-        if (mController.Movement.IsGrounded)
-        {
-            mbLanding = true;
-            // mController.Animator.SetInputXMagnitude(0f);
-            float inputXMagnitude = Mathf.Abs(mController.InputHandler.MoveInput.x);
-            mController.Animator.SetInputXMagnitude(inputXMagnitude);
+        float inputXMagnitude = Mathf.Abs(mController.InputHandler.MoveInput.x);
+        mController.Animator.SetInputXMagnitude(inputXMagnitude);
 
-            // Heavy Landing
-            if (mMinVelocityY < _heavyLandingVelocityY)
-            {
-                mController.Movement.SetVelocity(Vector3.zero);
-                // mController.Animator.SetHeavyLanding();
-                mController.Animator.SetLanding(true);
-                mController.Animator.SetIndex(2);
+        //if (mController.Movement.IsGrounded)
+        //{
+        //    mbLanding = true;
+        //    // mController.Animator.SetInputXMagnitude(0f);
 
-                PlayerMoveState moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
-                moveState.EnterToIdle();
-            }
-            // Medium Landing
-            else if (mMinVelocityY < _mediumLandingVelocityY)
-            {
-                mController.Animator.SetIndex(1);
+        //    // Heavy Landing
+        //    if (mMinVelocityY < _heavyLandingVelocityY)
+        //    {
+        //        mController.Movement.SetVelocity(Vector3.zero);
+        //        // mController.Animator.SetHeavyLanding();
+        //        mController.Animator.SetLanding(true);
+        //        mController.Animator.SetIndex(2);
 
-                // Idle Landing
-                if (inputXMagnitude < .1f)
-                {
-                    mController.Movement.SetVelocity(Vector3.zero);
-                    // mController.Animator.SetLanding();
-                    mController.Animator.SetLanding(true);
-                    mController.Animator.PlayIdleLanding(landingType: 1, 0f);
+        //        PlayerMoveState moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+        //        moveState.EnterToIdle();
+        //    }
+        //    // Medium Landing
+        //    else if (mMinVelocityY < _mediumLandingVelocityY)
+        //    {
+        //        mController.Animator.SetIndex(1);
 
-                    // mLandingRoutine = StartCoroutine(eIdleLanding());
-                }
-                // Running Landing
-                else
-                {
-                    // mController.Movement.SetVelocity(Vector3.zero);
-                    // mController.Animator.SetLanding();
-                    mController.Animator.SetLanding(true);
-                    mController.Animator.CrossFadeRunningLanding(landingType: 1, .1f);
+        //        // Idle Landing
+        //        if (inputXMagnitude < .1f)
+        //        {
+        //            mController.Movement.SetVelocity(Vector3.zero);
+        //            // mController.Animator.SetLanding();
+        //            mController.Animator.SetLanding(true);
+        //            // mController.Animator.PlayIdleLanding(landingType: 1, 0f);
 
-                    mLandingRoutine = StartCoroutine(eRunningLanding());
-                }
-            }
-            // Soft Landing
-            else
-            {
-                mController.Animator.SetIndex(0);
+        //            // mLandingRoutine = StartCoroutine(eIdleLanding());
+        //        }
+        //        // Running Landing
+        //        else
+        //        {
+        //            // mController.Movement.SetVelocity(Vector3.zero);
+        //            // mController.Animator.SetLanding();
+        //            mController.Animator.SetLanding(true);
+        //            // mController.Animator.CrossFadeRunningLanding(landingType: 1, .1f);
+        //            mStartMoveInputX = 1f;
 
-                // Idle Landing
-                if (inputXMagnitude < .1f)
-                {
-                    mController.Movement.SetVelocity(Vector3.zero);
-                    // mController.Animator.SetLanding();
-                    mController.Animator.SetLanding(true);
-                    // mController.Animator.PlayIdleLanding(landingType: 0, 0f);
-                    // mController.Animator.CrossFadeIdleLanding(landingType: 0, .05f);
-                    mController.Animator.CrossFadeIdleLanding(landingType: 0, 0f);
+        //            mLandingRoutine = StartCoroutine(eRunningLanding());
+        //        }
+        //    }
+        //    // Soft Landing
+        //    else
+        //    {
+        //        mController.Animator.SetIndex(0);
 
-                    // mLandingRoutine = StartCoroutine(eIdleLanding());
-                    EndLanding();
-                }
-                // Running Landing
-                else
-                {
-                    // mController.Movement.SetVelocity(Vector3.zero);
-                    // mController.Animator.SetLanding();
-                    mController.Animator.SetLanding(true);
-                    mController.Animator.CrossFadeRunningLanding(landingType: 0, 0f);
+        //        // Idle Landing
+        //        if (inputXMagnitude < .1f)
+        //        {
+        //            mController.Movement.SetVelocity(Vector3.zero);
+        //            // mController.Animator.SetLanding();
+        //            mController.Animator.SetLanding(true);
+        //            // mController.Animator.PlayIdleLanding(landingType: 0, 0f);
+        //            // mController.Animator.CrossFadeIdleLanding(landingType: 0, .05f);
+        //            // mController.Animator.CrossFadeIdleLanding(landingType: 0, 0f);
 
-                    // mLandingRoutine = StartCoroutine(eRunningLanding());
-                    EndLanding();
-                }
-            }
+        //            mLandingRoutine = StartCoroutine(eIdleLanding());
+        //            // EndLanding();
+        //        }
+        //        // Running Landing
+        //        else
+        //        {
+        //            Debug.Log($"[{Time.frameCount}] Soft Running Landing - Velocity: {mController.Movement.Velocity}");
+        //            // mController.Movement.SetVelocity(Vector3.zero);
+        //            // mController.Animator.SetLanding();
+        //            mController.Animator.SetLanding(true);
+        //            // mController.Animator.CrossFadeRunningLanding(landingType: 0, 0f);
+        //            mStartMoveInputX = 1f;
 
-            if (mController.Movement.CheckInteractableByOverlap(out Collider[] hitColliders))
-            {
-                var fallingGround = hitColliders[0].GetComponentInParent<FallingGround>();
-                // Debug.Log($"Land on {hitColliders[0].name}");
+        //            // mLandingRoutine = StartCoroutine(eRunningLanding());
+        //            EndLanding();
+        //        }
+        //    }
 
-                fallingGround?.StepOn();
-            }
+        //    if (mController.Movement.CheckInteractableByOverlap(out Collider[] hitColliders))
+        //    {
+        //        var fallingGround = hitColliders[0].GetComponentInParent<FallingGround>();
+        //        // Debug.Log($"Land on {hitColliders[0].name}");
 
-            return;
-        }
+        //        fallingGround?.StepOn();
+        //    }
+
+        //    return;
+        //}
 
         // if (_climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out RaycastHit ledgeHitInfo))
         if (_climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out Collider detectedCollider) == 1)
@@ -243,6 +418,13 @@ public class PlayerFallState : PlayerStateBase
         int bHitDirection = checkInteractableObject(out RaycastHit interactableHitInfo);
 
         updateInteractable(bHitDirection, interactableHitInfo);
+
+        // Debug.Log($"[{Time.frameCount}] FallState EndTick - MoveInput: {mController.InputHandler.MoveInput}, Velocity: {mController.Movement.Velocity}, fallVelocity: {fallVelocity}");
+    }
+
+    public void SetFallIndex(int index)
+    {
+        mFallIndex = index;
     }
 
     public void EndLanding()
@@ -262,7 +444,7 @@ public class PlayerFallState : PlayerStateBase
         else
         {
             // Soft Running Landing은 EnterToIdle 호출 안 함
-            // moveState.EnterToIdle();
+            moveState.EnterToIdle();
         }
 
         mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
@@ -284,27 +466,25 @@ public class PlayerFallState : PlayerStateBase
     {
         float timer = 0f;
 
-        while (true)
+        while (timer < _idleLandingDuration)
         {
-            if(timer < _idleLandingDuration)
-            {
-                timer += Time.deltaTime;
-                yield return null;
-                continue;
-            }
-
             if (Mathf.Abs(mController.InputHandler.MoveInput.x) > .1f)
             {
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+                EndLanding();
                 yield break;
             }
 
+            timer += Time.deltaTime;
             yield return null;
         }
+
+        EndLanding();
     }
 
     private IEnumerator eRunningLanding()
     {
+
         while(true)
         {
             AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
@@ -312,82 +492,110 @@ public class PlayerFallState : PlayerStateBase
             if (animatorStateInfo.IsTag("RunningLanding"))
                 break;
 
-            if (animatorStateInfo.IsTag("IdleLanding"))
-                yield break;
-
             yield return null;
         }
 
-        float distance = 0f;
-        PlayerMovement.EDirection direction = mController.Movement.Direction;
-        float moveSpeed = mController.Movement.MoveSpeed;
-
-        while(mbLanding)
+        while(true)
         {
             AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
 
             if (!animatorStateInfo.IsTag("RunningLanding"))
                 break;
 
-            Vector3 deltaPosition = mAnimator.deltaPosition;
-            deltaPosition.x = deltaPosition.x * _runningLandingSpeed;
-            deltaPosition.z = 0f;
-            // transform.position += deltaPosition;
-
-            Vector3 velocity = mAnimator.velocity;
-            velocity.x = velocity.x * _runningLandingSpeed;
-            
-            // Wall Check
-            if(checkWallForMove(out Vector2 resultMoveInput))
-            {
-                EndLanding();
-                yield break;
-            }
-
-            if (direction == PlayerMovement.EDirection.Left)
-            {
-                //if (mController.InputHandler.MoveInput.x > 0f)
-                //{
-                //    EndLanding();
-                //    yield break;
-                //}
-
-                if (velocity.x > -moveSpeed)
-                    velocity.x = -moveSpeed;
-            }
-            else
-            {
-                //if (mController.InputHandler.MoveInput.x < 0f)
-                //{
-                //    EndLanding();
-                //    yield break;
-                //}
-
-                if (velocity.x < moveSpeed)
-                    velocity.x = moveSpeed;
-            }
-
-            velocity.y = mController.Movement.Velocity.y;
-            velocity.z = 0f;
-            mController.Movement.SetVelocity(velocity);
-            // Debug.Log(velocity);
-
-            distance += deltaPosition.x;
-
-            mStartMoveInputX = deltaPosition.x / (Time.deltaTime * mController.Movement.MoveSpeed);
-            // Debug.Log($"moveInputX: {mStartMoveInputX}, normalizedTime: {animatorStateInfo.normalizedTime}");
-
-            //if(animatorStateInfo.normalizedTime > .8f)
-            //{
-            //    EndLanding();
-            //    yield break;
-            //}
+            mController.Movement.Move(mController.Movement.DirectionToVector());
 
             yield return null;
         }
 
-        // Debug.Log(distance);
+        EndLanding();
     }
+
+
+    //private IEnumerator eRunningLanding()
+    //{
+    //    while(true)
+    //    {
+    //        AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+
+    //        if (animatorStateInfo.IsTag("RunningLanding"))
+    //            break;
+
+    //        if (animatorStateInfo.IsTag("IdleLanding"))
+    //            yield break;
+
+    //        yield return null;
+    //    }
+
+    //    float distance = 0f;
+    //    PlayerMovement.EDirection direction = mController.Movement.Direction;
+    //    float moveSpeed = mController.Movement.MoveSpeed;
+
+    //    while(mbLanding)
+    //    {
+    //        AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+
+    //        if (!animatorStateInfo.IsTag("RunningLanding"))
+    //            break;
+
+    //        Vector3 deltaPosition = mAnimator.deltaPosition;
+    //        deltaPosition.x = deltaPosition.x * _runningLandingSpeed;
+    //        deltaPosition.z = 0f;
+    //        // transform.position += deltaPosition;
+
+    //        Vector3 velocity = mAnimator.velocity;
+    //        velocity.x = velocity.x * _runningLandingSpeed;
+            
+    //        // Wall Check
+    //        if(checkWallForMove(out Vector2 resultMoveInput))
+    //        {
+    //            EndLanding();
+    //            yield break;
+    //        }
+
+    //        if (direction == PlayerMovement.EDirection.Left)
+    //        {
+    //            //if (mController.InputHandler.MoveInput.x > 0f)
+    //            //{
+    //            //    EndLanding();
+    //            //    yield break;
+    //            //}
+
+    //            if (velocity.x > -moveSpeed)
+    //                velocity.x = -moveSpeed;
+    //        }
+    //        else
+    //        {
+    //            //if (mController.InputHandler.MoveInput.x < 0f)
+    //            //{
+    //            //    EndLanding();
+    //            //    yield break;
+    //            //}
+
+    //            if (velocity.x < moveSpeed)
+    //                velocity.x = moveSpeed;
+    //        }
+
+    //        velocity.y = mController.Movement.Velocity.y;
+    //        velocity.z = 0f;
+    //        mController.Movement.SetVelocity(velocity);
+    //        // Debug.Log(velocity);
+
+    //        distance += deltaPosition.x;
+
+    //        mStartMoveInputX = deltaPosition.x / (Time.deltaTime * mController.Movement.MoveSpeed);
+    //        // Debug.Log($"moveInputX: {mStartMoveInputX}, normalizedTime: {animatorStateInfo.normalizedTime}");
+
+    //        //if(animatorStateInfo.normalizedTime > .8f)
+    //        //{
+    //        //    EndLanding();
+    //        //    yield break;
+    //        //}
+
+    //        yield return null;
+    //    }
+
+    //    // Debug.Log(distance);
+    //}
 
     private int checkInteractableObject(out RaycastHit hitInfo)
     {

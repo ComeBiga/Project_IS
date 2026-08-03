@@ -84,12 +84,17 @@ public class GameSystem : MonoBehaviour
             }
         }
 
+        if (Input.GetKeyDown(KeyCode.O))
+        {
+            _checkPoint = _goPlayerCharacter.transform.position;
+        }
+
         if (Input.GetKeyDown(KeyCode.P))
         {
-            Vector3 position = _trPlayerCharacter.position;
+            Vector3 position = _goPlayerCharacter.transform.position;
             position.x = _checkPoint.x;
             position.y = _checkPoint.y;
-            _trPlayerCharacter.position = position;
+            _goPlayerCharacter.transform.position = position;
         }
     }
 

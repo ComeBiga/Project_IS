@@ -139,16 +139,16 @@ public class RootMotionRotation : RotationBase
 
     }
 
-    private Vector3 rotateVector(Vector3 vector3, float angle)
-    {
-        float rad = angle * Mathf.Deg2Rad;
-        float cos = Mathf.Cos(rad);
-        float sin = Mathf.Sin(rad);
-        float newX = vector3.x * cos - vector3.z * sin;
-        float newZ = vector3.x * sin + vector3.z * cos;
+    //private Vector3 rotateVector(Vector3 vector3, float angle)
+    //{
+    //    float rad = angle * Mathf.Deg2Rad;
+    //    float cos = Mathf.Cos(rad);
+    //    float sin = Mathf.Sin(rad);
+    //    float newX = vector3.x * cos - vector3.z * sin;
+    //    float newZ = vector3.x * sin + vector3.z * cos;
 
-        return new Vector3(newX, vector3.y, newZ);
-    }
+    //    return new Vector3(newX, vector3.y, newZ);
+    //}
 
     private void onAnimatorMove()
     {

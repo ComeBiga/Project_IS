@@ -6,9 +6,9 @@ using UnityEngine;
 [RequireComponent(typeof(PlayerController))]
 public class PlayerStateMachine : MonoBehaviour
 {
-    public enum EState { Move = 0, IdleJump, RunJump, Ladder, PushPull = 4,
-                        ClimbObject = 5, Fall, ClimbLedge, ClimbRope, Slope,
-                        Die = 10, 
+    public enum EState { Idle = 0, Move, IdleJump, RunJump, Ladder, 
+                        PushPull = 5, ClimbObject, Fall, ClimbLedge, ClimbRope, 
+                        Slope = 10, Die, 
                         Interact = 100, }
 
     public EState CurrentState => mCurrentState;
@@ -19,7 +19,8 @@ public class PlayerStateMachine : MonoBehaviour
     private PlayerController mController;
     private EState mCurrentState;
     private PlayerStateBase mCurrentStateBase;
-    private Dictionary<EState, PlayerStateBase> mStateDic = new Dictionary<EState, PlayerStateBase>(10);
+    private Dictionary<EState, PlayerStateBase> mStateDic = new Dictionary<EState, PlayerStateBase>(20);
+    private Dictionary<Type, PlayerStateBase> mStateTypeDic = new Dictionary<Type, PlayerStateBase>(20);
 
     public void Initialize()
     {
@@ -57,5 +58,20 @@ public class PlayerStateMachine : MonoBehaviour
     private void Awake()
     {
         mController = GetComponent<PlayerController>();
+    }
+
+    private void resisterStates()
+    {
+        PlayerStateBase[] states = GetComponentsInChildren<PlayerStateBase>();
+
+        foreach (var state in states)
+        {
+            ResisterState(state);
+        }
+    }
+
+    private void resisterStateByType(PlayerStateBase state)
+    {
+
     }
 }

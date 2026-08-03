@@ -38,6 +38,8 @@ public class PlayerInputHandler : MonoBehaviour
     {
         MoveInput = Vector2.zero;
         // Input.ResetInputAxes();
+
+        Debug.Log($"[{Time.frameCount}] ResetMoveInput");
     }
 
     public void ResetMoveInputXOppositePressed()
@@ -49,6 +51,8 @@ public class PlayerInputHandler : MonoBehaviour
     public void SetMoveInput(Vector2 value)
     {
         MoveInput = value;
+
+        Debug.Log($"[{Time.frameCount}] SetMoveInput: {value}");
     }
 
     public Vector2 GetInputMagnitude()
@@ -68,6 +72,7 @@ public class PlayerInputHandler : MonoBehaviour
         if (Input.GetAxisRaw("Horizontal") > .99f)
         {
             if (newMoveInput.x < 0f)
+            // if (newMoveInput.x < 0f && MoveInputXOppositePressed == false)
             {
                 newMoveInput.x = 0f;
                 MoveInputXOppositePressed = true;
@@ -81,6 +86,7 @@ public class PlayerInputHandler : MonoBehaviour
         else if (Input.GetAxisRaw("Horizontal") < -.99f)
         {
             if (newMoveInput.x > 0f)
+            // (newMoveInput.x > 0f && MoveInputXOppositePressed == false)
             {
                 newMoveInput.x = 0f;
                 MoveInputXOppositePressed = true;
@@ -123,6 +129,8 @@ public class PlayerInputHandler : MonoBehaviour
         }
 
         calculateInput();
+
+        Debug.Log($"[{Time.frameCount}] Horizontal: {Input.GetAxis("Horizontal")}, MoveInput: {MoveInput}, MoveInputRaw: {MoveInputRaw}");
     }
 
     private void calculateInput()

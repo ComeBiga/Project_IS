@@ -20,6 +20,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
     public enum EAnimationType { RootMotion, PositionFixedOnLedge }
 
+    public MultiAimConstraint HeadAimIK => _headAimIK;
     public TwoBoneIKConstraint LeftHandIK => _leftHandIK;
     public TwoBoneIKConstraint RightHandIK => _rightHandIK;
     public float RaycastDistance => _raycastDistance;
@@ -63,16 +64,20 @@ public class PlayerClimbLedgeState : PlayerStateBase
     [SerializeField] private float _exitNormalizedTimeKnee = .53f;
 
     [Header("IK Settings")]
+    [SerializeField] private MultiAimConstraint _headAimIK;
     [SerializeField] private TwoBoneIKConstraint _leftHandIK;
     [SerializeField] private TwoBoneIKConstraint _rightHandIK;
     [SerializeField] private float _handIKTargetOffsetX = .1f;
     [SerializeField] private float _handIKTargetOffsetY = .02f;
     [SerializeField] private float _handIKTargetOffsetZ = .2f;
 
+    private enum EClimbState { Hanging, LerpDelay, Lerp, Climb }
+
     private Animator mAnimator;
     private ClimbLedgeInfo mClimbLedgeInfo;
     private Bounds mLedgeBounds;
     private Ground mGround;
+    private EClimbState mClimbState;
 
     private bool mbClimb = false;
     private float mStartMoveInputX;
@@ -81,6 +86,8 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
     private Vector3 mHangingVelocity = Vector3.zero;
     private bool mbEnterAnimatorMove = false;
+    private bool mbStartClimb = false;
+    private bool mbLerpDelay = false;
     private bool mbLerpPosition = false;
     private float mAnimatorMoveTimer = 0f;
     private float mTargetX = 0f;
@@ -105,7 +112,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
     public override void EnterState()
     {
         mHangingVelocity = mController.Movement.Velocity;
-        Debug.Log($"Hanging Velocity: {mHangingVelocity}, deltaX: {mHangingVelocity.x * Time.fixedDeltaTime}");
+        // Debug.Log($"Hanging Velocity: {mHangingVelocity}, deltaX: {mHangingVelocity.x * Time.fixedDeltaTime}");
         mController.Movement.SetVelocity(Vector3.zero);
         mController.Movement.SetKinematic(true);
         mController.Movement.SetUseGravity(false);
@@ -159,6 +166,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
         mGround = null;
         mbEnterAnimatorMove = false;
+        mbStartClimb = false;
         mController.Animator.AnimationEventReceiver.onTouchHand -= onFootStepFromFall;
         mController.Animator.onAnimatorMove -= updateAnimatorMove;
         mController.Animator.onAnimationIK -= onAnimatorIK;
@@ -270,7 +278,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
         Vector3 center = _detectionBoxCollider.transform.position + _detectionBoxCollider.center;
         Vector3 halfExtents = _detectionBoxCollider.size / 2f;
-        Debug.Log($" Detection Box Center: {center}, halfExtents: {_detectionBoxCollider.size}, Character Transform: {transform.position}, Rotation: {_detectionBoxCollider.transform.rotation.eulerAngles}");
+        // Debug.Log($" Detection Box Center: {center}, halfExtents: {_detectionBoxCollider.size}, Character Transform: {transform.position}, Rotation: {_detectionBoxCollider.transform.rotation.eulerAngles}");
 
         Collider[] colliders = Physics.OverlapBox(center,
                                 halfExtents,
@@ -283,7 +291,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
             return -1;
         }
 
-        Debug.Log($"Ledge Checked");
+        // Debug.Log($"Ledge Checked");
 
         detectedCollider = colliders[0];
         Bounds detectedColliderBounds = detectedCollider.bounds;
@@ -322,7 +330,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
             return -1;
         }
 
-        Debug.Log($"Height Checked");
+        // Debug.Log($"Height Checked");
 
         if(ledgePoint.y > reachHeight)
         {
@@ -340,8 +348,8 @@ public class PlayerClimbLedgeState : PlayerStateBase
             return 0;
         }
 
-        Debug.Log($"Distance Checked");
-        Debug.Log($"LedgePoint: {ledgePoint}, Box Bounds.max: {_detectionBoxCollider.bounds.max.y}");
+        // Debug.Log($"Distance Checked");
+        // Debug.Log($"LedgePoint: {ledgePoint}, Box Bounds.max: {_detectionBoxCollider.bounds.max.y}");
 
         Vector3 origin = getOrigin();
         Vector3 direction = getDirection();
@@ -357,6 +365,14 @@ public class PlayerClimbLedgeState : PlayerStateBase
                 climbLedgeInfo.raycastOrigin = pos;
 
                 break;
+            }
+        }
+
+        if(climbLedgeInfo.checkIndex == 0)
+        {
+            if(mController.Movement.Velocity.y < 2.5f)
+            {
+                climbLedgeInfo.checkIndex = 4;
             }
         }
 
@@ -391,7 +407,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
         targetPos.y += _handIKTargetOffsetY;
         targetPos.z = (mController.Movement.Direction == PlayerMovement.EDirection.Left) ? -_handIKTargetOffsetZ : _handIKTargetOffsetZ;
 
-        if(climbLedgeInfo.checkIndex <= 0)
+        if(climbLedgeInfo.checkIndex == 0 || climbLedgeInfo.checkIndex == 4)
         {
             targetPos.x = climbLedgeInfo.nearestLedgePoint.x;
         }
@@ -431,7 +447,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
     {
         if (mGround != null)
         {
-            Debug.Log("LedgeFootStepSoune");
+            Debug.Log("LedgeFootStepSound");
             mGround.PlayFootStepBigSound(volume: .5f);
         }
     }
@@ -615,8 +631,10 @@ public class PlayerClimbLedgeState : PlayerStateBase
     private void enterAnimatorMove()
     {
         // mController.Animator.onAnimatorFixedUpdate += updateHandIKWeight;
+        mClimbState = EClimbState.Lerp;
         mbClimb = true;
         mbLerpPosition = true;
+        _headAimIK.weight = 0f;
         mStartPos = transform.position;
         mTargetY = mClimbLedgeInfo.ledgeBounds.max.y;
 
@@ -628,11 +646,24 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
         switch (mClimbLedgeInfo.checkIndex)
         {
-            case 0:
-                Debug.Log("OverHead Ledge Climb");
+            case 4:
+                Debug.Log("OverHead Ledge Hanging");
+                mClimbState = EClimbState.Hanging;
                 mbClimb = false;
                 mbLerpPosition = false;
                 mController.Animator.SetVertical(0f);
+                _headAimIK.weight = 1f;
+                mTargetY -= _lerpYOffsetOverHead;
+                exitNormalizedTime = _exitNormalizedTimeOverHead;
+                lerpXOffset = _lerpXOffsetOverHead;
+                break;
+            case 0:
+                Debug.Log("OverHead Ledge Climb");
+                mClimbState = EClimbState.Hanging;
+                mbClimb = false;
+                mbLerpPosition = false;
+                mController.Animator.SetVertical(0f);
+                _headAimIK.weight = 1f;
                 mTargetY -= _lerpYOffsetOverHead;
                 exitNormalizedTime = _exitNormalizedTimeOverHead;
                 lerpXOffset = _lerpXOffsetOverHead;
@@ -664,9 +695,10 @@ public class PlayerClimbLedgeState : PlayerStateBase
         }
 
         mTargetX = (mController.Movement.Direction == PlayerMovement.EDirection.Left) ?
-                    mClimbLedgeInfo.nearestLedgePoint.x + lerpXOffset : mClimbLedgeInfo.nearestLedgePoint.x - lerpXOffset;
+                    mClimbLedgeInfo.nearestLedgePoint.x - lerpXOffset : mClimbLedgeInfo.nearestLedgePoint.x + lerpXOffset;
 
         mAnimatorMoveTimer = 0f;
+        Debug.Log($"Enter Animator Move");
     }
 
     private void updateAnimatorMove()
@@ -678,100 +710,201 @@ public class PlayerClimbLedgeState : PlayerStateBase
             enterAnimatorMove();
         }
 
-        float duration = .2f;
+        float hangingDuration = .2f;
 
-        if (!mbClimb)
+        // if (!mbLerpPosition)
+        if(mClimbState == EClimbState.Hanging)
         {
-            if(mController.InputHandler.MoveInputRaw.y > .9f)
+            if (mController.InputHandler.MoveInputRaw.y > .9f)
             {
+                mClimbState = EClimbState.Lerp;
                 mbClimb = true;
                 // mController.Animator.SetClimbLedge();
                 mController.Animator.SetVertical(1f);
                 mAnimatorMoveTimer = 0f;
                 mbLerpPosition = true;
+                // mbLerpDelay = true;
+                Debug.Log($"Input Y during Hanging");
+
+                return;
             }
             else
             {
                 // normalizedTime이 일정 비율이 넘으면 상태 전환
                 AnimatorStateInfo stateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
 
-                if(stateInfo.IsTag("Hanging"))
-                {
-                    Vector3 deltaPosition = mAnimator.deltaPosition;
+                //if(stateInfo.IsTag("Hanging"))
+                //{
+                //    Vector3 deltaPosition = mAnimator.deltaPosition;
 
-                    //float deltaX = mHangingVelocity.x * Time.fixedDeltaTime;
-                    //if (deltaPosition.x > deltaX)
-                    //    deltaPosition.x = deltaX;
-                    if (transform.position.x < mClimbLedgeInfo.nearestLedgePoint.x + .15f)
+                //    //float deltaX = mHangingVelocity.x * Time.fixedDeltaTime;
+                //    //if (deltaPosition.x > deltaX)
+                //    //    deltaPosition.x = deltaX;
+                //    if (transform.position.x < mClimbLedgeInfo.nearestLedgePoint.x + .15f)
+                //    {
+                //        deltaPosition.x = 0f;
+                //    }
+
+                //    deltaPosition.z = 0f;
+
+                //    transform.position += deltaPosition;
+                //    // Debug.Log($"Delta Position: {deltaPosition}");
+                //}
+                //else
+                //{
+                //    float deltaX = mHangingVelocity.x * Time.fixedDeltaTime;
+                //    // float deltaY = mHangingVelocity.y * Time.fixedDeltaTime;
+                //    float deltaY = 0f;
+
+                //    if(transform.position.x < mClimbLedgeInfo.nearestLedgePoint.x + .15f)
+                //    {
+                //        deltaX = 0f;
+                //    }
+
+                //    Vector3 deltaPosition = new Vector3(deltaX, deltaY, 0f);
+                //    transform.position += deltaPosition;
+                //}
+
+                if (mAnimatorMoveTimer < hangingDuration)
+                {
+                    Vector3 targetPos = transform.position;
+                    targetPos.x = mClimbLedgeInfo.nearestLedgePoint.x;
+                    targetPos.x = (mController.Movement.Direction == PlayerMovement.EDirection.Left) ? targetPos.x + .15f : targetPos.x - .15f;
+                    targetPos.y = mClimbLedgeInfo.nearestLedgePoint.y - 2.03f;
+
+                    float t = mAnimatorMoveTimer / hangingDuration;
+                    Vector3 newPos = transform.position;
+                    newPos.x = Mathf.Lerp(mStartPos.x, targetPos.x, t);
+                    newPos.y = Mathf.Lerp(mStartPos.y, targetPos.y, t);
+
+                    transform.position = newPos;
+
+                    mAnimatorMoveTimer += Time.fixedDeltaTime;
+
+                    updateHandIKTargetPosition();
+
+                    if (mAnimatorMoveTimer > hangingDuration)
                     {
-                        deltaPosition.x = 0f;
+                        mStartPos.x = targetPos.x;
+                        mStartPos.y = targetPos.y;
+
+                        if (mClimbLedgeInfo.checkIndex == 0)
+                        {
+                            mClimbState = EClimbState.Lerp;
+                            mbClimb = true;
+                            mController.Animator.SetVertical(1f);
+                            mAnimatorMoveTimer = 0f;
+                            mbLerpPosition = true;
+                            // mbLerpDelay = true;
+
+                            Debug.Log($"Immediately Climb as Index 0");
+                        }
                     }
 
-                    deltaPosition.z = 0f;
-
-                    transform.position += deltaPosition;
-                    // Debug.Log($"Delta Position: {deltaPosition}");
+                    return;
                 }
                 else
                 {
-                    float deltaX = mHangingVelocity.x * Time.fixedDeltaTime;
-                    // float deltaY = mHangingVelocity.y * Time.fixedDeltaTime;
-                    float deltaY = 0f;
-
-                    if(transform.position.x < mClimbLedgeInfo.nearestLedgePoint.x + .15f)
+                    if (mClimbLedgeInfo.checkIndex == 0)
                     {
-                        deltaX = 0f;
+                        mClimbState = EClimbState.Lerp;
+                        mbClimb = true;
+                        mController.Animator.SetVertical(1f);
+                        mAnimatorMoveTimer = 0f;
+                        mbLerpPosition = true;
+                        // mbLerpDelay = true;
+
+                        Debug.Log($"Immediately Climb as Index 0");
                     }
-
-                    Vector3 deltaPosition = new Vector3(deltaX, deltaY, 0f);
-                    transform.position += deltaPosition;
+                    else
+                    {
+                        return;
+                    }
                 }
-
-                //if (mAnimatorMoveTimer < duration)
-                //{
-                //    Vector3 targetPos = transform.position;
-                //    targetPos.x = mClimbLedgeInfo.nearestLedgePoint.x + .2f;
-
-                //    float t = mAnimatorMoveTimer / duration;
-                //    Vector3 newPos = transform.position;
-                //    newPos.x = Mathf.Lerp(mStartPos.x, targetPos.x, t);
-
-                //    transform.position = newPos;
-
-                //    mAnimatorMoveTimer += Time.fixedDeltaTime;
-                //}
-
-                updateHandIKTargetPosition();
-
-                return;
             }
         }
 
-        if (mbLerpPosition && mAnimatorMoveTimer < duration)
+        // if(mbLerpDelay)
+        if(mClimbState == EClimbState.LerpDelay)
         {
-            float t = mAnimatorMoveTimer / duration;
+            float delayDuration = .1f;
 
-            Vector3 newPos = transform.position;
-            newPos.x = Mathf.Lerp(mStartPos.x, mTargetX, t);
-            newPos.y = Mathf.Lerp(mStartPos.y, mTargetY, t);
-            //newPos.x = Mathf.Lerp(transform.position.x, mTargetX, t);
-            //newPos.y = Mathf.Lerp(transform.position.y, mTargetY, t);
-
-            transform.position = newPos;
-            // mDeltaPosition = newPos - transform.position;
-
-            mAnimatorMoveTimer += Time.fixedDeltaTime;
-
-            if(mAnimatorMoveTimer > duration)
+            if (mAnimatorMoveTimer < delayDuration)
             {
-                Vector3 targetPos = transform.position;
-                targetPos.y = mTargetY;
-                transform.position = targetPos;
+                float t = mAnimatorMoveTimer / delayDuration;
 
-                // mController.Animator.onAnimatorFixedUpdate += updateHandIKWeight;
+                Vector3 newPos = transform.position;
+                // newPos.y = Mathf.Lerp(mStartPos.y, mStartPos.y + (2.03f - .8f), t);
+                newPos.y = Mathf.Lerp(mStartPos.y, mStartPos.y + .8f, t);
+
+                transform.position = newPos;
+                // mDeltaPosition = newPos - transform.position;
+
+                mAnimatorMoveTimer += Time.fixedDeltaTime;
+
+                if (mAnimatorMoveTimer > delayDuration)
+                {
+                    mClimbState = EClimbState.Lerp;
+                    //Vector3 targetPos = transform.position;
+                    //targetPos.y = mTargetY;
+                    //transform.position = targetPos;
+                    mStartPos.y = transform.position.y;
+                    mbClimb = true;
+                    mbLerpDelay = false;
+                    // mbLerpPosition = true;
+                    mAnimatorMoveTimer = 0f;
+                    mController.Animator.SetVertical(1f);
+
+                    Debug.Log($"Lerp Delay End");
+                }
+            }
+
+            updateHandIKTargetPosition();
+            Debug.Log($"Lerp Delay");
+
+            return;
+        }
+
+        float duration = .2f;
+        float duration1 = duration * .8f;
+        float duration2 = duration - duration1;
+
+        //if (mbLerpPosition && mAnimatorMoveTimer < duration)
+        if(mClimbState == EClimbState.Lerp)
+        {
+            if(mAnimatorMoveTimer < duration)
+            {
+                float t = mAnimatorMoveTimer / duration;
+
+                Vector3 newPos = transform.position;
+                newPos.x = Mathf.Lerp(mStartPos.x, mTargetX, t);
+                // if(mAnimatorMoveTimer > duration1)
+                //float xt = Mathf.Clamp01((mAnimatorMoveTimer - duration1) / duration2);
+                //newPos.x = Mathf.Lerp(mStartPos.x, mTargetX, xt);
+                newPos.y = Mathf.Lerp(mStartPos.y, mTargetY, t);
+
+                // Debug.Log($"xt: {xt}, Timer-duration1: {mAnimatorMoveTimer - duration1}, duration2: {duration2}");
+
+                transform.position = newPos;
+                // mDeltaPosition = newPos - transform.position;
+
+                Debug.Log($"Lerp Timer: {mAnimatorMoveTimer}, t: {t}");
+                mAnimatorMoveTimer += Time.fixedDeltaTime;
+
+                if(mAnimatorMoveTimer > duration)
+                {
+                    mClimbState = EClimbState.Climb;
+                    Vector3 targetPos = transform.position;
+                    targetPos.y = mTargetY;
+                    transform.position = targetPos;
+                    mbLerpPosition = false;
+
+                    // mController.Animator.onAnimatorFixedUpdate += updateHandIKWeight;
+                }
             }
         }
-        else
+        // else
+        else if (mClimbState == EClimbState.Climb)
         {
             if (mbClimb)
             {
@@ -808,6 +941,16 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
     private void updateHandIKWeight()
     {
+        if(mbClimb && !mbStartClimb)
+        {
+            mbStartClimb = true;
+
+            // _leftHandIK.data.targetPositionWeight = 0f;
+        }
+
+        if (mbClimb)
+            _headAimIK.weight = 0f;
+
         float leftHandWeight = mAnimator.GetFloat("LeftHandWeight");
 
         //if(leftHandWeight < .5f)
@@ -830,7 +973,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
             float gapRatio = 1 - gapToLedgeRatio;
             _leftHandIK.weight = gapRatio;
 
-            Debug.Log($"[{Time.frameCount}] Gap To Ledge: {gapToLedge}, Max Gap To Ledge: {maxGapToLedge}, IK Weight: {leftHandWeight}");
+            // Debug.Log($"[{Time.frameCount}] Gap To Ledge: {gapToLedge}, Max Gap To Ledge: {maxGapToLedge}, IK Weight: {leftHandWeight}");
 
             //if (_leftHandIK.weight > .99f)
             //{
@@ -842,7 +985,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
             //    mController.Animator.onAnimatorFixedUpdate += releaseHandIKWeight;
             //}
 
-            if(mbClimb)
+            if(!mbLerpPosition && mbClimb)
                 _leftHandIK.data.targetPositionWeight = leftHandWeight;
 
             Vector3 leftHandBone = mAnimator.GetBoneTransform(HumanBodyBones.LeftHand).position;
@@ -857,7 +1000,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
             // _leftHandIK.data.targetRotationWeight = leftHandRotationWeight;
             _leftHandIK.data.targetRotationWeight = 1f;
 
-            Debug.Log($"[{Time.frameCount}] Left Hand Distance: {distance}, Hand Size: {handSize}, Hand Distance Ratio: {handDistanceRatio}, Target Rotation Weight: {leftHandRotationWeight}");
+            // Debug.Log($"[{Time.frameCount}] Left Hand Distance: {distance}, Hand Size: {handSize}, Hand Distance Ratio: {handDistanceRatio}, Target Rotation Weight: {leftHandRotationWeight}");
 
 
             //if (distance < .01f)
@@ -944,6 +1087,9 @@ public class PlayerClimbLedgeState : PlayerStateBase
             float gapToLedgeRatio = Mathf.Clamp01(gapToLedge / maxGapToLedge);
             float resultWeight = 1 - gapToLedgeRatio;
             _rightHandIK.weight = resultWeight;
+
+            if (!mbLerpPosition && mbClimb)
+                _rightHandIK.data.targetPositionWeight = rightHandWeight;
         }
     }
 
@@ -984,7 +1130,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
                 _rightHandIK.data.targetPositionWeight = 1f;
                 _rightHandIK.data.targetRotationWeight = 1f;
                 mController.Animator.onAnimatorFixedUpdate -= releaseHandIKWeight;
-                Debug.Log($"Left Hand IK Released, Weight: {leftHandWeight}");
+                // Debug.Log($"Left Hand IK Released, Weight: {leftHandWeight}");
             }
         }
 
@@ -1185,6 +1331,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
     private void onAnimatorIK()
     {
+        // Left Hand
         mAnimator.SetIKPositionWeight(AvatarIKGoal.LeftHand, 1f - _leftHandIK.data.targetPositionWeight);
 
         Vector3 leftHandIKPosition = mAnimator.GetIKPosition(AvatarIKGoal.LeftHand);
@@ -1194,6 +1341,18 @@ public class PlayerClimbLedgeState : PlayerStateBase
             Vector3 targetPos = GetLeftHandIKTargetPosition(mClimbLedgeInfo);
             targetPos.x = leftHit.point.x;
             mAnimator.SetIKPosition(AvatarIKGoal.LeftHand, targetPos);
+        }
+
+        // Right Hand
+        mAnimator.SetIKPositionWeight(AvatarIKGoal.RightHand, 1f - _rightHandIK.data.targetPositionWeight);
+
+        Vector3 rightHandIKPosition = mAnimator.GetIKPosition(AvatarIKGoal.RightHand);
+
+        if(Physics.Raycast(rightHandIKPosition, Vector3.down, out RaycastHit rightHit, .5f, mController.Movement.GroundLayer))
+        {
+            Vector3 targetPos = GetRightHandIKTargetPosition(mClimbLedgeInfo);
+            targetPos.x = rightHit.point.x;
+            mAnimator.SetIKPosition(AvatarIKGoal.RightHand, targetPos);
         }
     }
 
@@ -1237,21 +1396,25 @@ public class PlayerClimbLedgeState : PlayerStateBase
         if (!Application.isPlaying)
             return;
 
-        Transform trLeftElbow = mAnimator.GetBoneTransform(HumanBodyBones.LeftLowerArm);
-        Gizmos.color = Color.blue;
-        Gizmos.DrawRay(trLeftElbow.position, trLeftElbow.up * .1f);
-        Gizmos.color = Color.green;
-        Gizmos.DrawRay(trLeftElbow.position, trLeftElbow.forward * .1f);
-        Gizmos.color = Color.red;
-        Gizmos.DrawRay(trLeftElbow.position, trLeftElbow.right * .1f);
+        //Transform trLeftElbow = mAnimator.GetBoneTransform(HumanBodyBones.LeftLowerArm);
+        //Gizmos.color = Color.blue;
+        //Gizmos.DrawRay(trLeftElbow.position, trLeftElbow.up * .1f);
+        //Gizmos.color = Color.green;
+        //Gizmos.DrawRay(trLeftElbow.position, trLeftElbow.forward * .1f);
+        //Gizmos.color = Color.red;
+        //Gizmos.DrawRay(trLeftElbow.position, trLeftElbow.right * .1f);
 
-        Transform trLeftHand = mAnimator.GetBoneTransform(HumanBodyBones.LeftHand);
-        Gizmos.color = Color.blue;
-        Gizmos.DrawRay(trLeftHand.position, trLeftHand.up * .1f);
-        Gizmos.color = Color.green;
-        Gizmos.DrawRay(trLeftHand.position, trLeftHand.forward * .1f);
-        Gizmos.color = Color.red;
-        Gizmos.DrawRay(trLeftHand.position, trLeftHand.right * .1f);
+        //Transform trLeftHand = mAnimator.GetBoneTransform(HumanBodyBones.LeftHand);
+        //Gizmos.color = Color.blue;
+        //Gizmos.DrawRay(trLeftHand.position, trLeftHand.up * .1f);
+        //Gizmos.color = Color.green;
+        //Gizmos.DrawRay(trLeftHand.position, trLeftHand.forward * .1f);
+        //Gizmos.color = Color.red;
+        //Gizmos.DrawRay(trLeftHand.position, trLeftHand.right * .1f);
+
+        //float minLerpHeight = .8f;
+        //Gizmos.DrawRay(transform.position + Vector3.up * minLerpHeight, mController.Movement.DirectionToVector());
+        //Gizmos.DrawRay(transform.position + Vector3.up * (minLerpHeight + .3f), mController.Movement.DirectionToVector());
 
         //Transform trRightHand = mAnimator.GetBoneTransform(HumanBodyBones.RightHand);
         //Gizmos.color = Color.blue;
@@ -1275,12 +1438,12 @@ public class PlayerClimbLedgeState : PlayerStateBase
         //Gizmos.color = Color.magenta;
         //Gizmos.DrawWireSphere(leftMiddleBone, .02f);
 
-
-        Vector3 center = _detectionBoxCollider.transform.position + _detectionBoxCollider.center;
-        Vector3 halfExtents = _detectionBoxCollider.size / 2f;
-        Gizmos.color = Color.red;
-        Gizmos.matrix = Matrix4x4.TRS(center, _detectionBoxCollider.transform.rotation, Vector3.one);
-        Gizmos.DrawWireCube(Vector3.zero, _detectionBoxCollider.size);
+        // Bounds Cube
+        //Vector3 center = _detectionBoxCollider.transform.position + _detectionBoxCollider.center;
+        //Vector3 halfExtents = _detectionBoxCollider.size / 2f;
+        //Gizmos.color = Color.red;
+        //Gizmos.matrix = Matrix4x4.TRS(center, _detectionBoxCollider.transform.rotation, Vector3.one);
+        //Gizmos.DrawWireCube(Vector3.zero, _detectionBoxCollider.size);
 
         //Gizmos.color = Color.blue;
         //Gizmos.DrawRay(debugLeftHandIKTargetPos, debugLeftHandIKHitNormal * .5f);

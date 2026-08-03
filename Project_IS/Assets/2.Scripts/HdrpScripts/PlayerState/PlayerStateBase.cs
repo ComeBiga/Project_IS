@@ -18,4 +18,6 @@ public abstract class PlayerStateBase : MonoBehaviour
     public virtual void ExitState() { }
 
     public virtual void Tick() { }
+
+    public virtual void FixedTick() { }
 }

@@ -32,6 +32,25 @@ public class PlayerController : MonoBehaviour
         mMovement.Initialize();
         mStateMachine.Initialize();
         mCharacterSound.Initialize(this);
+
+        StartCoroutine(eLateFixedUpdate());
+    }
+
+    private void FixedUpdate()
+    {
+        mMovement.FixedTick();
+
+        mStateMachine.CurrentStateBase.FixedTick();
+    }
+
+    private IEnumerator eLateFixedUpdate()
+    {
+        while(true)
+        {
+            mMovement.LateFixedTick();
+
+            yield return new WaitForFixedUpdate();
+        }
     }
 
     // Update is called once per frame

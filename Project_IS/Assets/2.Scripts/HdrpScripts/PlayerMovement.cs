@@ -36,6 +36,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float _jumpForce = 5f;
     [SerializeField] private float _minJumpVelocityX = 2f;
     [SerializeField] private Transform _trGroundCheck;
+    [SerializeField] private Vector3 _groundCheckPosOffset;
     [SerializeField] private float _groundCheckRadius = .1f;
     [SerializeField] private float _groundCheckDisableDuration = .2f;   // 점프 직후 점프 중복 방지를 위해 바닥 체크하지 않는 시간
     [SerializeField] private LayerMask _groundLayer;
@@ -51,9 +52,12 @@ public class PlayerMovement : MonoBehaviour
     private PhysicMaterial mPhysicsMaterial;
     private EDirection mDirection = EDirection.Right;
     private bool mbJumping = false;
-    private bool mbIsGrounded = false;
+    private bool mbIsGrounded = true;
+    private bool mbIsGroundedEnter = false;
     private float mGroundCheckDisableTimer = 0f;
     private Ground mGround;
+    private RaycastHit? mGroundHitInfo = null;
+    private Vector3 mGroundedVelocity = Vector3.zero;
 
     private Terrain mTerrain;
 
@@ -72,6 +76,8 @@ public class PlayerMovement : MonoBehaviour
         velocity.x = moveInput.x * _moveSpeed;
         mRigidbody.velocity = velocity;
 
+        // Debug.Log($"[{Time.frameCount}] MoveInput: {moveInput}, Velocity: {mRigidbody.velocity}");
+
         checkStep();
     }
     
@@ -85,6 +91,7 @@ public class PlayerMovement : MonoBehaviour
     public void SetVelocity(Vector3 velocity)
     {
         mRigidbody.velocity = velocity;
+        // Debug.Log($"[{Time.frameCount}] SetVelocity - Velocity: {mRigidbody.velocity}");
     }
 
     // 현재 방향과 반대 방향으로 변수를 설정하는 함수
@@ -297,6 +304,8 @@ public class PlayerMovement : MonoBehaviour
         }
 
         mRigidbody.velocity = velocity;
+
+        Debug.Log($"[{Time.frameCount}] UpdateJump - MoveInput: {moveInput}, Velocity: {mRigidbody.velocity}");
     }
 
     public void StopJump()
@@ -387,18 +396,54 @@ public class PlayerMovement : MonoBehaviour
 
     #endregion
 
+    public void FixedTick()
+    {
+        Debug.Log($"[{Time.frameCount}] PlayerMovement FixedTick");
+
+        // Check Ground
+        calculateGrounded();
+    }
+
+    public void LateFixedTick()
+    {
+        //if (mbIsGroundedEnter)
+        //{
+        //    Debug.Log($"[{Time.frameCount}] eLateFixedUpdate - IsGrounded: {mbIsGrounded}");
+
+        //    float deltaPositionX = mGroundedVelocity.x * Time.fixedDeltaTime;
+        //    float currentFrameXpos = transform.position.x + deltaPositionX;
+        //    float nextFrameXpos = currentFrameXpos + deltaPositionX;
+        //    float yPos = mGroundHitInfo.Value.point.y;
+        //    transform.position = new Vector3(currentFrameXpos, yPos, transform.position.z);
+
+        //    Debug.Log($"[{Time.frameCount}] LateFixedUpdate - GroundedVelocity: {mGroundedVelocity}, deltaPositionX: {deltaPositionX}");
+
+        //    mGroundHitInfo = null;
+        //}
+    }
+
     public void Tick()
     {
         _animator.SetVelocityY(mRigidbody.velocity.y);
 
-        // Check Ground
-        checkGround();
+        
 
         // mRigidbody.AddForce(_slideDirection * _slideSpeed, ForceMode.Acceleration);
         //Vector3 deltaVel = _slideDirection * _slideSpeed * Time.fixedDeltaTime;
         //mRigidbody.velocity += deltaVel;
         // Debug.Log($"deltaVel: {deltaVel}, velocity: {mRigidbody.velocity}");
+        //if(mbJumping)
+        //    Debug.Log($"velocity: {mRigidbody.velocity}");
     }
+
+    //private void FixedUpdate()
+    //{
+    //    Debug.Log($"[{Time.frameCount}] PlayerMovement FixedUpdate");
+
+    //    // Check Ground
+    //    // checkGround();
+    //    calculateGrounded();
+    //}
 
     private void checkGround()
     {
@@ -412,7 +457,7 @@ public class PlayerMovement : MonoBehaviour
         else
         {
             // 바닥을 Sphere로 체크하고 있는데 다른 기능들을 생각해서 Laycast로 바꿔야 될 것 같음
-            mbIsGrounded = Physics.CheckSphere(_trGroundCheck.position, _groundCheckRadius, _groundLayer);
+            mbIsGrounded = Physics.CheckSphere(_trGroundCheck.position + _groundCheckPosOffset, _groundCheckRadius, _groundLayer);
             Collider[] groundColliders = Physics.OverlapSphere(_trGroundCheck.position, _groundCheckRadius, _groundLayer, QueryTriggerInteraction.Ignore);
             if(groundColliders.Length > 0)
             {
@@ -425,6 +470,74 @@ public class PlayerMovement : MonoBehaviour
             }
 
             // _animator.SetIsGrounded(mbIsGrounded);
+        }
+
+        _animator.SetIsGrounded(mbIsGrounded);
+        Debug.Log($"[{Time.frameCount}] IsGrounded: {mbIsGrounded}");
+    }
+
+    private void calculateGrounded()
+    {
+        if (mGroundCheckDisableTimer > 0f)
+        {
+            mGroundCheckDisableTimer -= Time.deltaTime;
+            mbIsGrounded = false;
+
+            _animator.SetIsGrounded(mbIsGrounded);
+
+            return;
+        }
+
+        if (mbIsGroundedEnter)
+        {
+            mbIsGroundedEnter = false;
+            Debug.Log($"[{Time.frameCount}] eLateFixedUpdate - IsGrounded: {mbIsGrounded}");
+
+            float deltaPositionX = mGroundedVelocity.x * Time.fixedDeltaTime;
+            float currentFrameXpos = transform.position.x + deltaPositionX;
+            float nextFrameXpos = currentFrameXpos + deltaPositionX;
+            float yPos = mGroundHitInfo.Value.point.y;
+            transform.position = new Vector3(currentFrameXpos, yPos, transform.position.z);
+
+            Debug.Log($"[{Time.frameCount}] LateFixedUpdate - GroundedVelocity: {mGroundedVelocity}, deltaPositionX: {deltaPositionX}");
+
+            mGroundHitInfo = null;
+        }
+
+        if (Physics.Raycast(transform.position + Vector3.up * .01f, Vector3.down, out RaycastHit hitInfo, 5f, _groundLayer, QueryTriggerInteraction.Ignore))
+        {
+            float deltaPositionY = Velocity.y * Time.fixedDeltaTime;
+            float currentFrameYpos = transform.position.y + deltaPositionY;
+            float nextFrameYpos = currentFrameYpos + deltaPositionY;
+
+            if(nextFrameYpos < hitInfo.point.y || transform.position.y < hitInfo.point.y + .01f)
+            {
+                if(mbIsGrounded == false)
+                {
+                    mbIsGroundedEnter = true;
+                    mbIsGrounded = true;
+                    mbJumping = false;
+
+                    mGroundHitInfo = hitInfo;
+                    mGroundedVelocity = Velocity;
+
+                    Debug.Log($"[{Time.frameCount}] Enter Grounded");
+                }
+            }
+            else
+            {
+                mbIsGrounded = false;
+
+                Debug.Log($"[{Time.frameCount}] Exit Grounded");
+            }
+
+            Debug.Log($"[{Time.frameCount}] Raycast hit: {hitInfo.collider.name}, hit point: {hitInfo.point}, velocity: {Velocity}, nextFrameYpos: {nextFrameYpos}, IsGrounded: {mbIsGrounded}");
+        }
+        else
+        {
+            mbIsGrounded = false;
+
+            Debug.Log($"[{Time.frameCount}] Ground Not Found");
         }
 
         _animator.SetIsGrounded(mbIsGrounded);
@@ -455,6 +568,21 @@ public class PlayerMovement : MonoBehaviour
         }
     }
 
+    private void OnCollisionEnter(Collision collision)
+    {
+        if(collision.collider != null)
+        {
+            Debug.Log($"[{Time.frameCount}] OnCollisionEnter - collision: {collision.collider.name}");
+
+            if(collision.collider.gameObject.layer == LayerMask.NameToLayer("Ground"))
+            {
+                Debug.Log($"[{Time.frameCount}] OnCollisionEnter - Ground collision: {collision.collider.name}");
+            }
+
+            // Debug.Log($"[{Time.frameCount}] OnCollisionEnter - collision: {collision.collider.name}, body: {collision.body.name}");
+        }
+    }
+
     private void OnCollisionStay(Collision collision)
     {
         if(collision.collider != null)
@@ -468,6 +596,9 @@ public class PlayerMovement : MonoBehaviour
 
     private void OnDrawGizmosSelected()
     {
+        Gizmos.color = Color.blue;
+        Gizmos.DrawWireSphere(_trGroundCheck.position + _groundCheckPosOffset, _groundCheckRadius);
+
         if(_drawStepRay)
         {
             Vector3 origin = transform.position;

@@ -11,6 +11,7 @@ public class PlayerRunJumpState : PlayerStateBase
 
     private Vector3 mMoveInput;
     private float mDefaultHeight;
+    private float mMotionTime = 0f;
 
     // Ladder
     private float mPathZPosition;
@@ -26,11 +27,15 @@ public class PlayerRunJumpState : PlayerStateBase
 
     public override void EnterState()
     {
-        if(jumpUpward)
+        mMotionTime = 0f;
+
+        if (jumpUpward)
             mController.Movement.JumpFoward();
 
         //mController.Animator.SetRunJump();
         mController.Animator.SetJump();
+
+        mController.Animator.SetVertical(0f);
 
         var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
         mPathZPosition = moveState.PathZPosition;
@@ -48,7 +53,7 @@ public class PlayerRunJumpState : PlayerStateBase
         mbLedgeDetected = false;
         // mController.Animator.SetLanding();
 
-        mController.Animator.SetVertical(0f);
+        // mController.Animator.SetVertical(0f);
 
         mController.Animator.onAnimatorFixedUpdate -= onAnimatorFixedUpdate;
     }
@@ -70,30 +75,38 @@ public class PlayerRunJumpState : PlayerStateBase
 
         var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
 
+        // Jump Animation NormalizedTime
         if (currentStateInfo.IsTag("RunJump"))
         {
             float velocityY = mController.Movement.Velocity.y;
+            float maxJumpUpVelocity = 4f;
             float resultNormalizedVelocityY = 0f;
+            float jumpUpNormalizedTimeDuration = .2f;
+            float fallNormalizedTimeDuration = .8f;
 
+            // Jump Up
             if (velocityY > 0f)
             {
-                float normalizedVelocityY = 1f - (mController.Movement.Velocity.y / 4f);
-                resultNormalizedVelocityY = normalizedVelocityY * .2f;
-                // mController.Animator.SetVertical(normalizedVelocityY * .2f);
+                float normalizedVelocityY = 1f - (mController.Movement.Velocity.y / maxJumpUpVelocity);
+                // resultNormalizedVelocityY = normalizedVelocityY * jumpUpNormalizedTimeDuration;
+                mMotionTime = normalizedVelocityY * jumpUpNormalizedTimeDuration;
             }
+            // Fall
             else
             {
-                float normalizedVelocityY = 1f - ((mController.Movement.Velocity.y + 4f) / 4f);
-                resultNormalizedVelocityY = (normalizedVelocityY * .8f) + .2f;
-                // mController.Animator.SetVertical((normalizedVelocityY * .8f) + .2f);
+                // float normalizedVelocityY = 1f - ((mController.Movement.Velocity.y + maxJumpUpVelocity) / maxJumpUpVelocity);
+                // resultNormalizedVelocityY = (normalizedVelocityY * fallNormalizedTimeDuration) + jumpUpNormalizedTimeDuration;
+                // mMotionTime += Time.fixedDeltaTime;
+                float normalizedVelocityY = 1f - ((mController.Movement.Velocity.y + maxJumpUpVelocity) / maxJumpUpVelocity);
+                mMotionTime = (normalizedVelocityY * fallNormalizedTimeDuration) + jumpUpNormalizedTimeDuration;
             }
 
-            //float normalizedVelocityY = 1f - ((mController.Movement.Velocity.y + 4f) / 8f);
-            //mController.Animator.SetVertical(normalizedVelocityY);
-            mController.Animator.SetVertical(resultNormalizedVelocityY);
+            // mController.Animator.SetVertical(resultNormalizedVelocityY);
+            mController.Animator.SetVertical(mMotionTime);
 
             // Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {normalizedVelocityY}");
-            Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {resultNormalizedVelocityY}");
+            // Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {resultNormalizedVelocityY}, Current State NormalizedTime: {currentStateInfo.normalizedTime}");
+            Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {mMotionTime}, Current State NormalizedTime: {currentStateInfo.normalizedTime}");
         }
 
         // mController.Movement.Move(mMoveInput);
@@ -159,14 +172,15 @@ public class PlayerRunJumpState : PlayerStateBase
         }
 
         // fall
-        //PlayerFallState fallState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Fall) as PlayerFallState;
+        PlayerFallState fallState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Fall) as PlayerFallState;
 
-        //if (fallState.CheckFall())
-        //// if (transform.position.y < mDefaultHeight - .1f)
-        //{
-        //    mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
-        //    return;
-        //}
+        if (fallState.CheckFall())
+        // if (transform.position.y < mDefaultHeight - .1f)
+        {
+            fallState.SetFallIndex(1);
+            mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
+            return;
+        }
 
         // Interactable
         int bHitDirection = checkInteractableObject(out RaycastHit interactableHitInfo);
@@ -204,6 +218,14 @@ public class PlayerRunJumpState : PlayerStateBase
         float maxGapToLedge = mDetectedLedgeInfo.maxGapToLedge;
         float gapToLedgeRatio = Mathf.Clamp01(gapToLedge / maxGapToLedge);
         float weight = 1 - gapToLedgeRatio;
+
+        float ledgeHeightFromFeet = mLedgePoint.y - transform.position.y;
+        float lerpHeightRange = .6f;
+        float minLerpHeight = .5f;
+        float maxLerpHeight = minLerpHeight + lerpHeightRange;
+        float lerpHeightRatio = Mathf.Clamp01((ledgeHeightFromFeet - minLerpHeight) / lerpHeightRange);
+        weight = weight * lerpHeightRatio;
+
         _climbLedgeState.LeftHandIK.weight = weight;
 
         Debug.Log($"[{Time.frameCount}] Gap To Ledge: {gapToLedge}, Max Gap To Ledge: {maxGapToLedge}, IK Weight: {weight}");
@@ -215,6 +237,12 @@ public class PlayerRunJumpState : PlayerStateBase
         // leftHandTargetPos.z = _climbLedgeState.GetLeftHandIKTargetPosition().z;
         // _climbLedgeState.LeftHandIK.data.target.position = leftHandTargetPos;
         _climbLedgeState.LeftHandIK.data.target.position = _climbLedgeState.GetLeftHandIKTargetPosition(mDetectedLedgeInfo);
+
+        // Head Aim
+        Vector3 aimTarget = mDetectedLedgeInfo.nearestLedgePoint;
+        aimTarget.z = 0f;
+        _climbLedgeState.HeadAimIK.data.sourceObjects.GetTransform(0).position = aimTarget;
+        _climbLedgeState.HeadAimIK.weight = weight;
 
         // Right Hand
         // IK Weight

@@ -6,7 +6,7 @@ using static PlayerMovement;
 public class RotationHandler
 {
     public enum EState { StandBy, DirectionChanged, Rotating }
-    public enum EType { AnimationCurve, RootMotion, Offset180 }
+    public enum EType { AnimationCurve, RootMotion, Offset180, Normal }
 
     public PlayerController PlayerController => mPlayerController;
     public EState State => mState;
@@ -18,6 +18,7 @@ public class RotationHandler
     private AnimationCurveRotation mAnimationCurveRotation;
     private RootMotionRotation mRootMotionRotation;
     private Offset180Rotation mOffset180Rotation;
+    private NormalRotation mNormalRotation;
 
     private PlayerController mPlayerController;
     private EState mState = EState.StandBy;
@@ -38,6 +39,7 @@ public class RotationHandler
         mAnimationCurveRotation = new AnimationCurveRotation(this);
         mRootMotionRotation = new RootMotionRotation(this);
         mOffset180Rotation = new Offset180Rotation(this);
+        mNormalRotation = new NormalRotation(this);
 
         mPlayerController.Animator.onAnimatorMove += onAnimatorMove;
 
@@ -63,6 +65,9 @@ public class RotationHandler
                 break;
             case EType.Offset180:
                 mCurrentRotation = mOffset180Rotation;
+                break;
+            case EType.Normal:
+                mCurrentRotation = mNormalRotation;
                 break;
         }
     }
