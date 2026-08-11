@@ -108,7 +108,8 @@ public class PlayerRopeClimbState : PlayerStateBase
             {
                 if(!mRopeHandler.CouldClimbDown())
                 {
-                    mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+                    // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+                    mController.StateMachine.SwitchState<PlayerMoveState>();
 
                     return;
                 }
@@ -133,11 +134,13 @@ public class PlayerRopeClimbState : PlayerStateBase
             {
                 StartCoroutine(eJumpAway());
 
-                PlayerRunJumpState runJumpState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.RunJump) as PlayerRunJumpState;
+                // PlayerRunJumpState runJumpState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.RunJump) as PlayerRunJumpState;
+                PlayerRunJumpState runJumpState = mController.StateMachine.GetStateBase<PlayerRunJumpState>();
                 // runJumpState.jumpUpward = false;
                 runJumpState.SetDefaultHeight(transform.position.y);
 
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.RunJump);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.RunJump);
+                mController.StateMachine.SwitchState<PlayerRunJumpState>();
                 mController.InputHandler.ResetJump();
 
                 mController.Movement.ForceJump();
@@ -333,7 +336,8 @@ public class PlayerRopeClimbState : PlayerStateBase
                 if(_printDetectedSegmentIndex)
                     Debug.Log($"Rope Detected! Segment Index: {mDetectedSegmentIndex}");
 
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbRope);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbRope);
+                mController.StateMachine.SwitchState<PlayerRopeClimbState>();
             }
         }
 

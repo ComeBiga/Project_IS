@@ -98,12 +98,14 @@ public class PlayerPushPullState : PlayerStateBase
                 mbPushPull = false;
                 mPushPullObject.StopPushPull();
 
-                var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+                // var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+                var moveState = mController.StateMachine.GetStateBase<PlayerMoveState>();
                 moveState.EnterToIdle();
 
                 mAnimType = 0;
                 mController.Animator.SetIndex(mAnimType);
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+                mController.StateMachine.SwitchState<PlayerMoveState>();
             }
 
             return;
@@ -113,7 +115,8 @@ public class PlayerPushPullState : PlayerStateBase
         {
             mAnimType = 0;
             mController.Animator.SetIndex(mAnimType);
-            mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+            // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+            mController.StateMachine.SwitchState<PlayerMoveState>();
             return;
         }
 

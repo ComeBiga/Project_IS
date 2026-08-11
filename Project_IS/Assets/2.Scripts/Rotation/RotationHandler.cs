@@ -7,9 +7,11 @@ public class RotationHandler
 {
     public enum EState { StandBy, DirectionChanged, Rotating }
     public enum EType { AnimationCurve, RootMotion, Offset180, Normal }
+    public enum ERotationDirection { Left, Right }
 
     public PlayerController PlayerController => mPlayerController;
     public EState State => mState;
+    public ERotationDirection RotationDirection => mRotationDirection;
     public bool IsRotating => mbIsRotating;
     public bool TurnToTurn => mbTurnToTurn;
     public AnimationCurveRotation AnimationCurveRotation => mAnimationCurveRotation;
@@ -23,6 +25,7 @@ public class RotationHandler
     private PlayerController mPlayerController;
     private EState mState = EState.StandBy;
     private EType mType = EType.AnimationCurve;
+    private ERotationDirection mRotationDirection;
     private bool mbIsRotating = false;
     private bool mbDirectionChanged = false;
     private bool mbEnterUpdate = false;
@@ -79,6 +82,8 @@ public class RotationHandler
         mbEnterUpdate = false;
         mbEnterFixedUpdate = false;
         mbEnterAnimatorMove = false;
+
+        // mPlayerController.Animator.SetTurnTrigger();
     }
 
     public void EndRotation()
@@ -90,6 +95,11 @@ public class RotationHandler
         mbEnterAnimatorMove = false;
 
         mCurrentRotation.OnEndRotation();
+    }
+
+    public void SetRotationDirection(ERotationDirection rotationDirection)
+    {
+        mRotationDirection = rotationDirection;
     }
 
     public void FixedUpdate()
@@ -130,7 +140,12 @@ public class RotationHandler
             mState = EState.DirectionChanged;
         }
 
-        switch(mState)
+        UpdateTurnState();
+    }
+
+    public void UpdateTurnState()
+    {
+        switch (mState)
         {
             case EState.StandBy:
                 standBy();
@@ -142,6 +157,18 @@ public class RotationHandler
                 rotate();
                 break;
         }
+    }
+
+    public void SetTurnState(EState state)
+    {
+        mState = state;
+    }
+
+    public void SetTurnType(PlayerTurnState.ETurnType turnType)
+    {
+        mNormalRotation.SetTurnType(turnType);
+
+        mPlayerController.Animator.SetIndex((turnType == PlayerTurnState.ETurnType.Idle) ? 0 : 1);
     }
 
     private void onAnimatorMove()

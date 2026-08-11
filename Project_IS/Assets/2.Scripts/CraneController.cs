@@ -49,7 +49,8 @@ public class CraneController : InteractableObject
     {
         if(!playerController.InputHandler.IsInteracting)
         {
-            playerController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+            // playerController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+            playerController.StateMachine.SwitchState<PlayerMoveState>();
 
             return;
         }

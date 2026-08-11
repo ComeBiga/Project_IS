@@ -178,6 +178,10 @@ public class PlayerMovement : MonoBehaviour
     {
         UpdateRotation(direction, Time.deltaTime * _rotateSpeed);
     }
+    public Quaternion DirectionToRotation()
+    {
+        return DirectionToRotation(mDirection);
+    }
 
     // 해당 방향을 나타내는 Quaternion 값을 반환
     public Quaternion DirectionToRotation(EDirection direction)
@@ -304,8 +308,6 @@ public class PlayerMovement : MonoBehaviour
         }
 
         mRigidbody.velocity = velocity;
-
-        Debug.Log($"[{Time.frameCount}] UpdateJump - MoveInput: {moveInput}, Velocity: {mRigidbody.velocity}");
     }
 
     public void StopJump()
@@ -398,8 +400,6 @@ public class PlayerMovement : MonoBehaviour
 
     public void FixedTick()
     {
-        Debug.Log($"[{Time.frameCount}] PlayerMovement FixedTick");
-
         // Check Ground
         calculateGrounded();
     }
@@ -473,7 +473,6 @@ public class PlayerMovement : MonoBehaviour
         }
 
         _animator.SetIsGrounded(mbIsGrounded);
-        Debug.Log($"[{Time.frameCount}] IsGrounded: {mbIsGrounded}");
     }
 
     private void calculateGrounded()
@@ -491,15 +490,12 @@ public class PlayerMovement : MonoBehaviour
         if (mbIsGroundedEnter)
         {
             mbIsGroundedEnter = false;
-            Debug.Log($"[{Time.frameCount}] eLateFixedUpdate - IsGrounded: {mbIsGrounded}");
 
             float deltaPositionX = mGroundedVelocity.x * Time.fixedDeltaTime;
             float currentFrameXpos = transform.position.x + deltaPositionX;
             float nextFrameXpos = currentFrameXpos + deltaPositionX;
             float yPos = mGroundHitInfo.Value.point.y;
             transform.position = new Vector3(currentFrameXpos, yPos, transform.position.z);
-
-            Debug.Log($"[{Time.frameCount}] LateFixedUpdate - GroundedVelocity: {mGroundedVelocity}, deltaPositionX: {deltaPositionX}");
 
             mGroundHitInfo = null;
         }
@@ -520,24 +516,16 @@ public class PlayerMovement : MonoBehaviour
 
                     mGroundHitInfo = hitInfo;
                     mGroundedVelocity = Velocity;
-
-                    Debug.Log($"[{Time.frameCount}] Enter Grounded");
                 }
             }
             else
             {
                 mbIsGrounded = false;
-
-                Debug.Log($"[{Time.frameCount}] Exit Grounded");
             }
-
-            Debug.Log($"[{Time.frameCount}] Raycast hit: {hitInfo.collider.name}, hit point: {hitInfo.point}, velocity: {Velocity}, nextFrameYpos: {nextFrameYpos}, IsGrounded: {mbIsGrounded}");
         }
         else
         {
             mbIsGrounded = false;
-
-            Debug.Log($"[{Time.frameCount}] Ground Not Found");
         }
 
         _animator.SetIsGrounded(mbIsGrounded);
@@ -565,21 +553,6 @@ public class PlayerMovement : MonoBehaviour
             Vector3 newPosition = transform.position;
             newPosition.y = bounds.max.y;
             transform.position = newPosition;
-        }
-    }
-
-    private void OnCollisionEnter(Collision collision)
-    {
-        if(collision.collider != null)
-        {
-            Debug.Log($"[{Time.frameCount}] OnCollisionEnter - collision: {collision.collider.name}");
-
-            if(collision.collider.gameObject.layer == LayerMask.NameToLayer("Ground"))
-            {
-                Debug.Log($"[{Time.frameCount}] OnCollisionEnter - Ground collision: {collision.collider.name}");
-            }
-
-            // Debug.Log($"[{Time.frameCount}] OnCollisionEnter - collision: {collision.collider.name}, body: {collision.body.name}");
         }
     }
 

@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using static PlayerMovement;
 
 [RequireComponent(typeof(PlayerInputHandler), typeof(PlayerMovement))]
 public class PlayerController : MonoBehaviour
@@ -17,6 +18,26 @@ public class PlayerController : MonoBehaviour
     private PlayerMovement mMovement;
     private PlayerStateMachine mStateMachine;
     private PlayerCharacterSound mCharacterSound;
+
+    public bool CheckOppositeInputX()
+    {
+        bool bOppositePressed = InputHandler.MoveInputXOppositePressed;
+        InputHandler.ResetMoveInputXOppositePressed();
+
+        if (bOppositePressed)
+        {
+            return true;
+        }
+
+        EDirection InputXDirection = PlayerMovement.MoveInputXToDirection(InputHandler.MoveInput.x);
+
+        if (Mathf.Abs(InputHandler.MoveInput.x) > .001f && InputXDirection == Movement.OppositeDirection)
+        {
+            return true;
+        }
+
+        return false;
+    }
 
     private void Awake()
     {

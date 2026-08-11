@@ -260,14 +260,10 @@ public class AnimationCurveRotation : RotationBase
 
             mAnimationTimer = 0f;
             mAnimationTimerFixedUpdate = 0f;
-
-            Debug.Log($"[{Time.frameCount}] Enter [{stateName}] State");
         }
         else
         {
             mbTransitionToTurn = false;
-
-            Debug.Log($"[{Time.frameCount}] Enter [{stateName}] State");
         }
     }
 
@@ -275,7 +271,7 @@ public class AnimationCurveRotation : RotationBase
     {
         if (stateInfo.IsTag("Turn"))
         {
-            Debug.Log($"[{Time.frameCount}] Update [{stateName}] State");
+
         }
     }
 
@@ -285,9 +281,6 @@ public class AnimationCurveRotation : RotationBase
         {
             // mRotationHandler.EndRotation();
             // mbTransitionToTurn = false;
-
-            Debug.Log($"Animation Time: {mAnimationTimer}, Animation FixedUpdate Time: {mAnimationTimerFixedUpdate}");
-            Debug.Log($"[{Time.frameCount}] Exit [{stateName}] State");
         }
     }
 }

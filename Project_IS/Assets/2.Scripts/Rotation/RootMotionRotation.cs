@@ -15,7 +15,7 @@ public class RootMotionRotation : RotationBase
     public RootMotionRotation(RotationHandler rotationHandler) : base(rotationHandler)
     {
         // mPlayerAnimator.onAnimatorMove += onAnimatorMove;
-        mPlayerAnimator.onEnterState += OnEnterState;
+        // mPlayerAnimator.onEnterState += OnEnterState;
     }
 
     public override void Start()

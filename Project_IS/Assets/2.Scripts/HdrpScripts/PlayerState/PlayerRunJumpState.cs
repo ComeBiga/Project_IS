@@ -12,6 +12,8 @@ public class PlayerRunJumpState : PlayerStateBase
     private Vector3 mMoveInput;
     private float mDefaultHeight;
     private float mMotionTime = 0f;
+    private float mRotationTimer = 0f;
+    private float mRotationDuration = .2f;
 
     // Ladder
     private float mPathZPosition;
@@ -28,16 +30,19 @@ public class PlayerRunJumpState : PlayerStateBase
     public override void EnterState()
     {
         mMotionTime = 0f;
+        mRotationTimer = 0f;
 
         if (jumpUpward)
             mController.Movement.JumpFoward();
 
-        //mController.Animator.SetRunJump();
-        mController.Animator.SetJump();
-
+        mController.Animator.Play(AnimState.RunJump_Blend_Tree);
+        // mController.Animator.CrossFadeJump(true);
+        // mController.Animator.SetJump(true);
+        //mController.Animator.SetIndex(1);
         mController.Animator.SetVertical(0f);
 
-        var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+        // var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+        var moveState = mController.StateMachine.GetStateBase<PlayerMoveState>();
         mPathZPosition = moveState.PathZPosition;
         mInteractableMaxDistance = moveState.InteractableMaxDistance;
         mInteractableOffsetY = moveState.InteractableOffsetY + _interactableOffsetY;
@@ -51,7 +56,7 @@ public class PlayerRunJumpState : PlayerStateBase
     {
         jumpUpward = true;
         mbLedgeDetected = false;
-        // mController.Animator.SetLanding();
+        // mController.Animator.SetJump(false);
 
         // mController.Animator.SetVertical(0f);
 
@@ -106,7 +111,7 @@ public class PlayerRunJumpState : PlayerStateBase
 
             // Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {normalizedVelocityY}");
             // Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {resultNormalizedVelocityY}, Current State NormalizedTime: {currentStateInfo.normalizedTime}");
-            Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {mMotionTime}, Current State NormalizedTime: {currentStateInfo.normalizedTime}");
+            // Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {mMotionTime}, Current State NormalizedTime: {currentStateInfo.normalizedTime}");
         }
 
         // mController.Movement.Move(mMoveInput);
@@ -114,8 +119,11 @@ public class PlayerRunJumpState : PlayerStateBase
         mController.Animator.SetHorizontal(mController.InputHandler.MoveInput.x);
         mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
 
-        // mController.Movement.UpdateRotation();
-        mController.Movement.UpdateRotation(Time.deltaTime * 20f);
+        // mController.Movement.UpdateRotation(Time.deltaTime * 20f);
+        float t = mRotationTimer / mRotationDuration;
+        mRotationTimer += Time.deltaTime;
+        // Debug.Log($"[{Time.frameCount}] Rotation Timer: {mRotationTimer}, t: {t}");
+        mController.Movement.UpdateRotation(t);
 
         if (!mController.Movement.Jumping)
         {
@@ -131,8 +139,12 @@ public class PlayerRunJumpState : PlayerStateBase
                 fallingGround?.StepOn();
             }
 
-            mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
-            // mController.Animator.SetLanding();
+            //// mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+            //mController.StateMachine.SwitchState<PlayerMoveState>();
+            mController.StateMachine.SwitchState<PlayerLandingState>((landingState) =>
+            {
+                landingState.SetLandingType(PlayerLandingState.ELandingType.Soft);
+            });
 
             return;
         }
@@ -167,18 +179,23 @@ public class PlayerRunJumpState : PlayerStateBase
         {
             // _climbLedgeState.SetLedge(hitInfo.collider.bounds);
             _climbLedgeState.SetInfo(climbLedgeInfo);
-            mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbLedge);
+            // mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbLedge);
+            mController.StateMachine.SwitchState<PlayerClimbLedgeState>();
             return;
         }
 
         // fall
-        PlayerFallState fallState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Fall) as PlayerFallState;
+        PlayerFallState fallState = mController.StateMachine.GetStateBase<PlayerFallState>();
 
-        if (fallState.CheckFall())
+        if(mMotionTime > .99f)
+        // if (fallState.CheckFall())
         // if (transform.position.y < mDefaultHeight - .1f)
         {
-            fallState.SetFallIndex(1);
-            mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
+            mController.StateMachine.SwitchState<PlayerFallState>((fallState) =>
+            {
+                fallState.SetFallIndex(1);
+                fallState.SetFallType(PlayerFallState.EFallType.FromJump);
+            });
             return;
         }
 
@@ -228,7 +245,7 @@ public class PlayerRunJumpState : PlayerStateBase
 
         _climbLedgeState.LeftHandIK.weight = weight;
 
-        Debug.Log($"[{Time.frameCount}] Gap To Ledge: {gapToLedge}, Max Gap To Ledge: {maxGapToLedge}, IK Weight: {weight}");
+        // Debug.Log($"[{Time.frameCount}] Gap To Ledge: {gapToLedge}, Max Gap To Ledge: {maxGapToLedge}, IK Weight: {weight}");
 
         // IK Target Position
         // Vector3 leftHandBonePos = mController.Animator.Animator.GetBoneTransform(HumanBodyBones.LeftHand).position;
@@ -413,7 +430,8 @@ public class PlayerRunJumpState : PlayerStateBase
                 if (ladderCollider.tag == "LadderTop")
                     continue;
 
-                PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder) as PlayerLadderState;
+                // PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder) as PlayerLadderState;
+                PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase<PlayerLadderState>();
                 LadderHandler ladderHandler = ladderCollider.GetComponent<LadderHandler>();
 
                 // Top에서 위 키 입력했을 때 사다리 타는 걸 방지하기 위함
@@ -426,7 +444,8 @@ public class PlayerRunJumpState : PlayerStateBase
                 if (!bClimbLadder)
                     return false;
 
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Ladder);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Ladder);
+                mController.StateMachine.SwitchState<PlayerLadderState>();
                 return true;
             }
         }

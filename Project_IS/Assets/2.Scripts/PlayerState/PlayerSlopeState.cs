@@ -28,7 +28,8 @@ public class PlayerSlopeState : PlayerStateBase
 
     public override void ExitState()
     {
-        PlayerMoveState moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+        // PlayerMoveState moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+        PlayerMoveState moveState = mController.StateMachine.GetStateBase<PlayerMoveState>();
         moveState.EnterToIdle();
     }
 
@@ -74,7 +75,8 @@ public class PlayerSlopeState : PlayerStateBase
 
             if(!animatorStateInfo.IsTag("EndSlope"))
             {
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+                mController.StateMachine.SwitchState<PlayerMoveState>();
                 yield break;
             }    
 

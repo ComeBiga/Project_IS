@@ -21,7 +21,8 @@ public class LadderEndToPlatformAnimBehaviour : StateMachineBehaviour
     {
         // Debug.Log("LadderEndToPlatformAnimBehaviour - OnStateExit");
         PlayerController controller = animator.GetComponentInParent<PlayerController>();
-        var ladderStateBase = controller.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder);
+        // var ladderStateBase = controller.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder);
+        var ladderStateBase = controller.StateMachine.GetStateBase<PlayerLadderState>();
         (ladderStateBase as PlayerLadderState).EndToPlatform();
     }
 

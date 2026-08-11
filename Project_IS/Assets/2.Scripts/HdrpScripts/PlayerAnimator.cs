@@ -19,6 +19,7 @@ public class PlayerAnimator : MonoBehaviour
 
     [SerializeField] private AnimationEventReceiver _animationEventReceiver;
     [SerializeField] private bool _trasitionLog = false;
+    [SerializeField] private TransitionTable _transitionTable;
 
     // Animator Parameter Hashes
     private readonly int StateHash = Animator.StringToHash("State");
@@ -40,6 +41,8 @@ public class PlayerAnimator : MonoBehaviour
     private readonly int VelocityYHash = Animator.StringToHash("VelocityY");
     private readonly int LandingHash = Animator.StringToHash("Landing");
     private readonly int HeavyLandingHash = Animator.StringToHash("HeavyLanding");
+    private readonly int TurnHash = Animator.StringToHash("Turn");
+    private readonly int TurnTriggerHash = Animator.StringToHash("Turn Trigger");
     private readonly int TurnLHash = Animator.StringToHash("TurnL");
     private readonly int TurnRHash = Animator.StringToHash("TurnR");
     private readonly int LadderTopHash = Animator.StringToHash("LadderTop");
@@ -51,6 +54,10 @@ public class PlayerAnimator : MonoBehaviour
     private readonly int FootPositionHash = Animator.StringToHash("FootPosition");
     private readonly int InputXHash = Animator.StringToHash("InputX");
     private readonly int FrontWallHash = Animator.StringToHash("FrontWall");
+    private readonly int RunningHash = Animator.StringToHash("Running");
+    private readonly int IdleToRunHash = Animator.StringToHash("IdleToRun");
+    private readonly int RunToIdleHash = Animator.StringToHash("RunToIdle");
+    private readonly int ActivateHash = Animator.StringToHash("Activate");
 
     // Animation State Name Hashes
     private readonly int IdleLandingHash = Animator.StringToHash("IdleLanding");
@@ -64,6 +71,27 @@ public class PlayerAnimator : MonoBehaviour
     private readonly int ClimbLedgeStomachHash = Animator.StringToHash("ClimbLedge_Stomach Critical");
     private readonly int ClimbLedgeChestHash = Animator.StringToHash("ClimbLedge_Chest Critical");
     private readonly int ClimbLedgeOverHeadHash = Animator.StringToHash("ClimbLedge_OverHead Critical");
+    private readonly int IdleTurnLHash = Animator.StringToHash("Base Layer.Turn.IdleTurn StateMachine.IdleTurn");
+    private readonly int IdleTurnRHash = Animator.StringToHash("Base Layer.Turn.IdleTurn StateMachine.IdleTurn_R");
+    private readonly int RunTurnLHash = Animator.StringToHash("Base Layer.Turn.RunTurn.RunTurn");
+    private readonly int RunTurnRHash = Animator.StringToHash("Base Layer.Turn.RunTurn.RunTurn_R");
+    private readonly int IdleJumpHash = Animator.StringToHash("Base Layer.Jump.IdleJump");
+    private readonly int RunJumpHash = Animator.StringToHash("Base Layer.Jump.RunJump Blend Tree");
+    private readonly int LandingIdleSoftHash = Animator.StringToHash("Base Layer.Fall-Landing.Landing_Idle.Landing_Idle_Soft");
+    private readonly int LandingIdleMediumHash = Animator.StringToHash("Base Layer.Fall-Landing.Landing_Idle.Landing_Idle_Medium");
+    private readonly int LandingIdleHeavyHash = Animator.StringToHash("Base Layer.Fall-Landing.Landing_Idle.Landing_Idle_Heavy");
+    private readonly int LandingRunningSoftHash = Animator.StringToHash("Base Layer.Fall-Landing.Landing_Running.Landing_Running_Soft");
+    private readonly int LandingRunningMediumHash = Animator.StringToHash("Base Layer.Fall-Landing.Landing_Running.Landing_Running_Medium");
+    private readonly int LandingRunningHeavyHash = Animator.StringToHash("Base Layer.Fall-Landing.Landing_Running.Landing_Running_Heavy");
+    private readonly int FallFromRunHash = Animator.StringToHash("Base Layer.Fall-Landing.Fall_FromRun");
+    private readonly int FallFromJumpHash = Animator.StringToHash("Base Layer.Fall-Landing.Fall_FromJump");
+    private readonly int IdleToRunNameHash = Animator.StringToHash("Base Layer.Run.IdleToRun");
+    private readonly int RunNameHash = Animator.StringToHash("Base Layer.Run.Run");
+    private readonly int RunToIdleLNameHash = Animator.StringToHash("Base Layer.Run.RunToIdle_L");
+    private readonly int RunToIdleRNameHash = Animator.StringToHash("Base Layer.Run.RunToIdle_R");
+    private readonly int IdleNameHash = Animator.StringToHash("Base Layer.Idle");
+    private readonly int ClimbLedgeHangingNameHash = Animator.StringToHash("Base Layer.Climb Ledge.ClimbLedge_OverHead_Hanging");
+    private readonly int ClimbLedgeDirectlyNameHash = Animator.StringToHash("Base Layer.Climb Ledge.ClimbLedge_Directly_Critical");
 
     private Animator mAnimator;
 
@@ -147,6 +175,21 @@ public class PlayerAnimator : MonoBehaviour
         mAnimator.SetFloat(VelocityYHash, value);
     }
 
+    public void SetTurn(bool value)
+    {
+        mAnimator.SetBool(TurnHash, value);
+    }
+
+    public void SetTurnTrigger()
+    {
+        mAnimator.SetTrigger(TurnTriggerHash);
+    }
+
+    public void ResetTurnTrigger()
+    {
+        mAnimator.ResetTrigger(TurnTriggerHash);
+    }
+
     public void TurnL(bool value)
     {
         mAnimator.SetBool(TurnLHash, value);
@@ -162,14 +205,14 @@ public class PlayerAnimator : MonoBehaviour
         mAnimator.SetBool(IsGroundedHash, value);
     }
 
-    public void SetJump()
+    public void SetJump(bool value)
     {
-        mAnimator.SetTrigger(JumpHash);
+        mAnimator.SetBool(JumpHash, value);
     }
 
-    public void SetFall()
+    public void SetFall(bool value)
     {
-        mAnimator.SetTrigger(FallHash);
+        mAnimator.SetBool(FallHash, value);
     }
 
     public void ResetFall()
@@ -232,107 +275,174 @@ public class PlayerAnimator : MonoBehaviour
         mAnimator.SetBool(FrontWallHash, value);
     }
 
-    public void PlayClimbLedge(int climbLedgeType)
+    public void SetRunning(bool value)
     {
-        switch (climbLedgeType)
+        mAnimator.SetBool(RunningHash, value);
+    }
+
+    public void SetIdleToRun(bool value)
+    {
+        mAnimator.SetBool(IdleToRunHash, value);
+    }
+
+    public void SetRunToIdle(bool value)
+    {
+        mAnimator.SetBool(RunToIdleHash, value);
+    }
+
+    public void SetActivate()
+    {
+        mAnimator.SetTrigger(ActivateHash);
+    }
+
+    //public void PlayClimbLedge(int climbLedgeType)
+    //{
+    //    switch (climbLedgeType)
+    //    {
+    //        case 0:
+    //            mAnimator.Play(ClimbLedgeOverHeadHash, 0);
+    //            break;
+    //        case 1:
+    //            mAnimator.Play(ClimbLedgeChestHash, 0);
+    //            break;
+    //        case 2:
+    //            mAnimator.Play(ClimbLedgeStomachHash, 0);
+    //            break;
+    //        case 3:
+    //            mAnimator.Play(ClimbLedgeKneeHash, 0);
+    //            break;
+    //        default:
+    //            mAnimator.Play(ClimbLedgeKneeHash, 0);
+    //            break;
+    //    }
+    //}
+
+    public bool Play(AnimState nextAnimState)
+    {
+        AnimatorStateInfo currentStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+        AnimState currentState = AnimState.Idle;
+        int stateHash = -1;
+        
+        foreach(KeyValuePair<AnimState, int> pair in AnimStateHash.stateHashes)
         {
-            case 0:
-                mAnimator.Play(ClimbLedgeOverHeadHash, 0);
+            if(pair.Value == currentStateInfo.fullPathHash)
+            {
+                currentState = pair.Key;
+                stateHash = pair.Value;
                 break;
-            case 1:
-                mAnimator.Play(ClimbLedgeChestHash, 0);
-                break;
-            case 2:
-                mAnimator.Play(ClimbLedgeStomachHash, 0);
-                break;
-            case 3:
-                mAnimator.Play(ClimbLedgeKneeHash, 0);
-                break;
-            default:
-                mAnimator.Play(ClimbLedgeKneeHash, 0);
-                break;
+            }
+        }
+
+        if(stateHash == -1)
+        {
+            Debug.LogError($"stateHash 정보를 찾을 수 없습니다! currentStateHash: {currentStateInfo.fullPathHash}");
+            return false;
+        }
+
+        int nextStateHash = AnimStateHash.stateHashes[nextAnimState];
+
+        if(_transitionTable.TryGet(currentState, nextAnimState, out TransitionTable.TransitionData transitionData))
+        {
+            if (transitionData.fixedDuration)
+            {
+                mAnimator.CrossFadeInFixedTime(nextStateHash, transitionData.duration, 0, transitionData.offset);
+            }
+            else
+            {
+                mAnimator.CrossFade(nextStateHash, transitionData.duration, 0, transitionData.offset);
+            }
+
+            return true;
+        }
+        else
+        {
+            Debug.LogError($"stateHash의 transitionData를 찾을 수 없습니다! currentState: {currentState}({stateHash}), nextState: {nextAnimState}({nextStateHash})");
+            return false;
         }
     }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="normalizedTime"></param>
-    /// <param name="landingType">0:soft, 1:mideum, 2:heavy</param>
-    public void PlayIdleLanding(int landingType, float normalizedTime)
-    {
-        switch(landingType)
-        {
-            case 0:
-                mAnimator.Play(IdleSoftLandingHash, 0, normalizedTime);
-                break;
-            case 1:
-                mAnimator.Play(IdleMediumLandingHash, 0, normalizedTime);
-                break;
-            case 2:
-                mAnimator.Play(IdleHeavyLandingHash, 0, normalizedTime);
-                break;
-            default:
-                mAnimator.Play(IdleSoftLandingHash, 0, normalizedTime);
-                break;
-        }
-    }
+    //public void CrossFadeRunToIdle(bool leftFoot)
+    //{
+    //    int stateHash = leftFoot ? RunToIdleLNameHash : RunToIdleRNameHash;
 
-    public void CrossFadeIdleLanding(int landingType, float normalizedTrasitionDuration)
-    {
-        switch(landingType)
-        {
-            case 0:
-                mAnimator.CrossFade(IdleSoftLandingHash, normalizedTrasitionDuration, 0);
-                break;
-            case 1:
-                mAnimator.CrossFade(IdleMediumLandingHash, normalizedTrasitionDuration, 0);
-                break;
-            case 2:
-                mAnimator.CrossFade(IdleHeavyLandingHash, normalizedTrasitionDuration, 0);
-                break;
-            default:
-                mAnimator.CrossFade(IdleSoftLandingHash, normalizedTrasitionDuration, 0);
-                break;
-        }
-    }
+    //    mAnimator.CrossFadeInFixedTime(stateHash, .05f, 0, 0f);
+    //}
 
-    public void PlayRunningLanding(float normalizedTime)
-    {
-        mAnimator.Play(RunningLandingHash, 0, normalizedTime);
-    }
+    //public void CrossFadeTurn(bool isRunning, bool turnLeft)
+    //{
+    //    int stateHash = 0;
 
-    public void CrossFadeRunningLanding(float normalizedTransitionDuration)
-    {
-        mAnimator.CrossFade(RunningLandingHash, normalizedTransitionDuration, 0);
-    }
+    //    if(isRunning)
+    //    {
+    //        stateHash = turnLeft ? RunTurnLHash : RunTurnRHash;
+    //    }
+    //    else
+    //    {
+    //        stateHash = turnLeft ? IdleTurnLHash : IdleTurnRHash;
+    //    }
 
-    /// <summary>
-    /// 
-    /// </summary>
-    /// <param name="landingType">0:soft, 1:medium</param>
-    /// <param name="normalizedTransitionDuration"></param>
-    public void CrossFadeRunningLanding(int landingType, float normalizedTransitionDuration)
-    {
-        switch(landingType)
-        {
-            case 0:
-                mAnimator.CrossFade(RunningSoftLandingHash, normalizedTransitionDuration, 0);
-                return;
-            case 1:
-                mAnimator.CrossFade(RunningMediumLandingHash, normalizedTransitionDuration, 0);
-                return;
-            default:
-                mAnimator.CrossFade(RunningSoftLandingHash, normalizedTransitionDuration, 0);
-                return;
-        }
+    //    mAnimator.CrossFadeInFixedTime(stateHash, .05f, 0, 0f);
+    //}
 
-    }
+    //public void CrossFadeJump(bool isRunning)
+    //{
+    //    int stateHash = isRunning ? RunJumpHash : IdleJumpHash;
 
-    public void SetPush()
-    {
-        mAnimator.SetTrigger(PushHash);
-    }
+    //    mAnimator.CrossFadeInFixedTime(stateHash, .05f, 0, 0f);
+    //}
+
+    //public void CrossFadeLanding(bool isRunning, PlayerLandingState.ELandingType landingType)
+    //{
+    //    int stateHash = 0;
+
+    //    if (isRunning)
+    //    {
+    //        switch(landingType)
+    //        {
+    //            case PlayerLandingState.ELandingType.Soft:
+    //                stateHash = LandingRunningSoftHash;
+    //                break;
+    //            case PlayerLandingState.ELandingType.Medium:
+    //                stateHash = LandingRunningMediumHash;
+    //                break;
+    //            case PlayerLandingState.ELandingType.Heavy:
+    //                stateHash = LandingRunningHeavyHash;
+    //                break;
+    //        }
+    //    }
+    //    else
+    //    {
+    //        switch (landingType)
+    //        {
+    //            case PlayerLandingState.ELandingType.Soft:
+    //                stateHash = LandingIdleSoftHash;
+    //                break;
+    //            case PlayerLandingState.ELandingType.Medium:
+    //                stateHash = LandingIdleMediumHash;
+    //                break;
+    //            case PlayerLandingState.ELandingType.Heavy:
+    //                stateHash = LandingIdleHeavyHash;
+    //                break;
+    //        }
+    //    }
+
+    //    mAnimator.CrossFadeInFixedTime(stateHash, .05f, 0, 0f);
+    //}
+
+    //public void CrossFadeFall(bool fromJump)
+    //{
+    //    int stateHash = fromJump ? FallFromJumpHash : FallFromRunHash;
+    //    float transitionDuration = fromJump ? .05f : .25f;
+
+    //    mAnimator.CrossFadeInFixedTime(stateHash, transitionDuration, 0, 0f);
+    //}
+
+    //public void CrossFadeClimbLedge(bool hanging)
+    //{
+    //    int stateHash = hanging ? ClimbLedgeHangingNameHash : ClimbLedgeDirectlyNameHash;
+
+    //    mAnimator.CrossFadeInFixedTime(stateHash, .2f, 0, 0f);
+    //}
 
     public void EnterState(string stateName, AnimatorStateInfo animatorStateInfo)
     {
@@ -350,8 +460,10 @@ public class PlayerAnimator : MonoBehaviour
     }
 
     private Dictionary<int, string> mStateHashToName = new Dictionary<int, string>();
-    private readonly int RunTurnStateHash = Animator.StringToHash("Base Layer.Turn.RunTurn");
-    private readonly int RunTurnRStateHash = Animator.StringToHash("Base Layer.Turn.RunTurn_R");
+    private readonly int IdleTurnStateHash = Animator.StringToHash("Base Layer.Turn.IdleTurn StateMachine.IdleTurn");
+    private readonly int IdleTurnRStateHash = Animator.StringToHash("Base Layer.Turn.IdleTurn StateMachine.IdleTurn_R");
+    private readonly int RunTurnStateHash = Animator.StringToHash("Base Layer.Turn.RunTurn.RunTurn");
+    private readonly int RunTurnRStateHash = Animator.StringToHash("Base Layer.Turn.RunTurn.RunTurn_R");
     private readonly int RunToIdleLStateHash = Animator.StringToHash("Base Layer.Run.RunToIdle_L");
     private readonly int RunToIdleRStateHash = Animator.StringToHash("Base Layer.Run.RunToIdle_R");
     private readonly int RunStateHash = Animator.StringToHash("Base Layer.Run.Run");
@@ -361,11 +473,20 @@ public class PlayerAnimator : MonoBehaviour
     private readonly int RunJumpStateHash = Animator.StringToHash("Base Layer.Jump.RunJump Blend Tree");
     private readonly int FallStartStateHash = Animator.StringToHash("Base Layer.Fall-Landing.Fall_Start");
     private readonly int FallLoopStateHash = Animator.StringToHash("Base Layer.Fall-Landing.Fall_Loop");
+    private readonly int FallFromRunStateHash = Animator.StringToHash("Base Layer.Fall-Landing.Fall_FromRun");
+    private readonly int FallFromJumpStateHash = Animator.StringToHash("Base Layer.Fall-Landing.Fall_FromJump");
+    private readonly int LandingRunningSoftStateHash = Animator.StringToHash("Base Layer.Fall-Landing.Landing_Running.Landing_Running_Soft");
+    private readonly int LandingIdleSoftStateHash = Animator.StringToHash("Base Layer.Fall-Landing.Landing_Idle.Landing_Idle_Soft");
+    private readonly int LandingRunningMediumStateHash = Animator.StringToHash("Base Layer.Fall-Landing.Landing_Running.Landing_Running_Medium");
+    private readonly int LandingIdleMediumStateHash = Animator.StringToHash("Base Layer.Fall-Landing.Landing_Idle.Landing_Idle_Medium");
 
     private void Awake()
     {
         mAnimator = GetComponent<Animator>();
+        _transitionTable.Initialize();
 
+        mStateHashToName.Add(IdleTurnStateHash, "IdleTurn");
+        mStateHashToName.Add(IdleTurnRStateHash, "IdleTurn_R");
         mStateHashToName.Add(RunTurnStateHash, "RunTurn");
         mStateHashToName.Add(RunTurnRStateHash, "RunTurn_R");
         mStateHashToName.Add(RunToIdleLStateHash, "RunToIdle_L");
@@ -377,6 +498,13 @@ public class PlayerAnimator : MonoBehaviour
         mStateHashToName.Add(RunJumpStateHash, "RunJump");
         mStateHashToName.Add(FallStartStateHash, "Fall Start");
         mStateHashToName.Add(FallLoopStateHash, "Fall Loop");
+        mStateHashToName.Add(FallFromRunStateHash, "Fall From Run");
+        mStateHashToName.Add(FallFromJumpStateHash, "Fall From Jump");
+        mStateHashToName.Add(LandingRunningSoftStateHash, "Landing Running Soft");
+        mStateHashToName.Add(LandingIdleSoftStateHash, "Landing Idle Soft");
+        mStateHashToName.Add(LandingRunningMediumStateHash, "Landing Running Medium");
+        mStateHashToName.Add(LandingIdleMediumStateHash, "Landing Idle Medium");
+
     }
 
     private void FixedUpdate()

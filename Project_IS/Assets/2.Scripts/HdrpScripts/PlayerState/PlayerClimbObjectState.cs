@@ -129,10 +129,12 @@ public class PlayerClimbObjectState : PlayerStateBase
     {
         mbClimbing = false;
 
-        var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+        // var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+        var moveState = mController.StateMachine.GetStateBase<PlayerMoveState>();
         moveState.EnterToIdle();
 
-        mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+        // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+        mController.StateMachine.SwitchState<PlayerMoveState>();
     }
 
     private IEnumerator eClimbUp()
@@ -228,7 +230,8 @@ public class PlayerClimbObjectState : PlayerStateBase
                     deltaPosition.y = 0f;
 
                 // 캐릭터 z 위치가 0까지만 이동하게 조건을 줌
-                var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+                // var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+                var moveState = mController.StateMachine.GetStateBase<PlayerMoveState>();
 
                 if (animatorStateInfo.normalizedTime > _climbUpZDelay)
                 {

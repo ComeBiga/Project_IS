@@ -54,6 +54,7 @@ public class PlayerMoveState : PlayerStateBase
     private bool mbFrontWall = false;
     private Bounds mFrontWallBounds;
     private RaycastHit mFrontWallHitInfo;
+    private float mTimeOffset = 0f;
 
     private Terrain mTerrain;
     private Ground mGround;
@@ -65,13 +66,20 @@ public class PlayerMoveState : PlayerStateBase
     {
         base.Initialize(controller);
 
-        mRotationHandler.Init(mController);
-        mRotationHandler.SetType(_rotationType);
-        mRotationHandler.AnimationCurveRotation.SetAnimationCurve(_idleTurnPositionCurve, _idleTurnRotationCurve, _runTurnPositionCurve, _runTurnRotationCurve);
+        //mRotationHandler.Init(mController);
+        //mRotationHandler.SetType(_rotationType);
+        //mRotationHandler.AnimationCurveRotation.SetAnimationCurve(_idleTurnPositionCurve, _idleTurnRotationCurve, _runTurnPositionCurve, _runTurnRotationCurve);
     }
 
     public override void EnterState()
     {
+        if(!mController.Animator.Play(AnimState.Run))
+        {
+            // mController.Animator.CrossFadeRun(mEnterTransitionSettings);
+        }
+
+        mController.Animator.SetRunning(true);
+
         mDefaultHeight = transform.position.y;
 
         mbLeftFootIK = false;
@@ -89,8 +97,6 @@ public class PlayerMoveState : PlayerStateBase
 
         mController.Animator.AnimationEventReceiver.onFrontFoot += updateFrontFoot;
 
-        Debug.Log("Enter MoveState");
-
         if(mbEnterToIdle)
         {
             mController.InputHandler.ResetMoveInput();
@@ -100,16 +106,59 @@ public class PlayerMoveState : PlayerStateBase
 
     public override void ExitState()
     {
+        mController.Animator.SetRunning(false);
+
         mController.Animator.onAnimatorMove -= updateAnimatorMove;
         mController.Animator.onAnimationIK -= updateAnimatorIK;
         _leftLegIKConstraint.weight = 0f;
         _rightLegIKConstraint.weight = 0f;
 
-        mRotationHandler.EndRotation();
+        // mRotationHandler.EndRotation();
     }
 
     public override void Tick()
     {
+        // To Turn
+        if(mController.CheckOppositeInputX())
+        {
+            mController.StateMachine.SwitchState<PlayerTurnState>((turnState) =>
+            {
+                turnState.SetTurnType(PlayerTurnState.ETurnType.Run);
+            });
+
+            return;
+        }
+
+        // To RunToIdle
+        if(mController.InputHandler.GetInputRawMagnitude().x < .1f)
+        {
+            mController.StateMachine.SwitchState<PlayerRunToIdleState>();
+
+            return;
+        }
+
+        // To Jump
+        if (mController.InputHandler.JumpPressed)
+        {
+            mController.InputHandler.ResetJump();
+
+            var climbLedgeState = mController.StateMachine.GetStateBase<PlayerClimbLedgeState>();
+
+            if (climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out Collider detectedCollider) == 1)
+            {
+                climbLedgeState.SetInfo(climbLedgeInfo);
+                mController.StateMachine.SwitchState<PlayerClimbLedgeState>();
+
+                return;
+            }
+            else
+            {
+                mController.StateMachine.SwitchState<PlayerRunJumpState>();
+
+                return;
+            }
+        }
+
         // Move
         bool bFrontWall = checkWallForMove(out Vector2 resultMoveInput);
 
@@ -141,10 +190,10 @@ public class PlayerMoveState : PlayerStateBase
         {
             Vector2 finalMoveInput = resultMoveInput;
 
-            // if (mbRotating)
-            // if(mRotationHandler.State == RotationHandler.EState.Rotating)
-            if(mRotationHandler.AnimationCurveRotation.PositionCurveActive)
-                finalMoveInput.x = 0f;
+            //// if (mbRotating)
+            //// if(mRotationHandler.State == RotationHandler.EState.Rotating)
+            //if(mRotationHandler.AnimationCurveRotation.PositionCurveActive)
+            //    finalMoveInput.x = 0f;
 
             mController.Movement.Move(finalMoveInput);
             // Debug.Log("MoveInputX: " + resultMoveInput.x); 
@@ -184,8 +233,10 @@ public class PlayerMoveState : PlayerStateBase
         mController.Animator.SetMoveInputYPressed(mController.InputHandler.MoveInputYPressed);
         mController.Animator.SetMoveInputYHeld(mController.InputHandler.MoveInputYHeld);
 
-        // Rotation
-        mRotationHandler.Update();
+        #region Rotation
+        //// Rotation
+        //mRotationHandler.Update();
+        #endregion
 
         updateFootIK();
 
@@ -193,54 +244,64 @@ public class PlayerMoveState : PlayerStateBase
         //mController.Animator.SetInputXRaw(mController.InputHandler.MoveInputRaw.x);
         //mController.Animator.SetInputX(Mathf.Abs(mController.InputHandler.MoveInputRaw.x) > .1f);
 
-        // Jump
-        if (mController.InputHandler.JumpPressed)
-        {
-            if (mController.Movement.IsGrounded)
-            {
-                var climbLedgeState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbLedge) as PlayerClimbLedgeState;
+        #region Jump
+        //// Jump
+        //if (mController.InputHandler.JumpPressed)
+        //{
+        //    if (mController.Movement.IsGrounded)
+        //    {
+        //        // var climbLedgeState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbLedge) as PlayerClimbLedgeState;
+        //        var climbLedgeState = mController.StateMachine.GetStateBase<PlayerClimbLedgeState>();
 
-                // if (climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out RaycastHit ledgeHitInfo))
-                if (climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out Collider detectedCollider) == 1)
-                {
-                    climbLedgeState.SetInfo(climbLedgeInfo);
-                    mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbLedge);
+        //        // if (climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out RaycastHit ledgeHitInfo))
+        //        if (climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out Collider detectedCollider) == 1)
+        //        {
+        //            climbLedgeState.SetInfo(climbLedgeInfo);
+        //            // mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbLedge);
+        //            mController.StateMachine.SwitchState<PlayerClimbLedgeState>();
 
-                    return;
-                }
-                else
-                {
-                    // 점프 입력이 됐을 때 이동 입력이 있으면 무조건 RunJump
-                    if (mController.InputHandler.MoveInput.x > .01f || mController.InputHandler.MoveInput.x < -.01f)
-                    {
-                        PlayerRunJumpState runJumpState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.RunJump) as PlayerRunJumpState;
-                        runJumpState.SetDefaultHeight(mDefaultHeight);
-                        // runJumpState.SetTurningCW(mbRotatingCW);
+        //            return;
+        //        }
+        //        else
+        //        {
+        //            // 점프 입력이 됐을 때 이동 입력이 있으면 무조건 RunJump
+        //            if (mController.InputHandler.MoveInput.x > .01f || mController.InputHandler.MoveInput.x < -.01f)
+        //            {
+        //                // PlayerRunJumpState runJumpState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.RunJump) as PlayerRunJumpState;
+        //                PlayerRunJumpState runJumpState = mController.StateMachine.GetStateBase<PlayerRunJumpState>();
+        //                runJumpState.SetDefaultHeight(mDefaultHeight);
+        //                // runJumpState.SetTurningCW(mbRotatingCW);
 
-                        mController.StateMachine.SwitchState(PlayerStateMachine.EState.RunJump);
-                        mController.InputHandler.ResetJump();
-                    }
-                    else
-                    {
-                        mController.StateMachine.SwitchState(PlayerStateMachine.EState.IdleJump);
-                        mController.InputHandler.ResetJump();
+        //                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.RunJump);
+        //                mController.StateMachine.SwitchState<PlayerRunJumpState>();
+        //                mController.InputHandler.ResetJump();
+        //            }
+        //            else
+        //            {
+        //                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.IdleJump);
+        //                mController.StateMachine.SwitchState<PlayerJumpState>();
+        //                mController.InputHandler.ResetJump();
 
-                    }
+        //            }
 
-                    return;
-                }
-            }
-        }
+        //            return;
+        //        }
+        //    }
+        //}
+        #endregion
 
         // Fall
-        PlayerFallState fallState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Fall) as PlayerFallState;
+        PlayerFallState fallState = mController.StateMachine.GetStateBase<PlayerFallState>();
 
-        if(!mController.Movement.IsGrounded && !mController.Movement.Jumping)
+        if (!mController.Movement.IsGrounded && !mController.Movement.Jumping)
         // if (fallState.CheckFall())
         // if (mController.Movement.Velocity.y < -1f)
         {
-            fallState.SetFallIndex(0);
-            mController.StateMachine.SwitchState(PlayerStateMachine.EState.Fall);
+            mController.StateMachine.SwitchState<PlayerFallState>((fallState) =>
+            {
+                fallState.SetFallIndex(0);
+                fallState.SetFallType(PlayerFallState.EFallType.FromRun);
+            });
 
             return;
         }
@@ -306,12 +367,14 @@ public class PlayerMoveState : PlayerStateBase
             float slopeAngle = Vector3.Angle(Vector3.up, hitInfo.normal);
             // Debug.Log(slopeAngle);
 
-            var slopeState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Slope) as PlayerSlopeState;
+            // var slopeState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Slope) as PlayerSlopeState;
+            var slopeState = mController.StateMachine.GetStateBase<PlayerSlopeState>();
 
             if (slopeAngle > slopeState.SlopeAngle)
             {
                 // Slope State로 전환하는 코드 작성
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Slope);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Slope);
+                mController.StateMachine.SwitchState<PlayerSlopeState>();
                 return;
             }
         }
@@ -325,14 +388,6 @@ public class PlayerMoveState : PlayerStateBase
             //float slopeAngle = Vector3.Angle(Vector3.up, getTerrainNormal());
             //Debug.Log(slopeAngle);
         }
-    }
-
-    private void FixedUpdate()
-    {
-        mRotationHandler.FixedUpdate();
-
-        //Transform trLeftHand = mController.Animator.Animator.GetBoneTransform(HumanBodyBones.LeftHand);
-        //Debug.Log($"Left hand Height: {trLeftHand.position.y}");
     }
 
     public void EnterToIdle()
@@ -516,7 +571,8 @@ public class PlayerMoveState : PlayerStateBase
                 if (ladderCollider.tag == "LadderTop")
                     continue;
 
-                PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder) as PlayerLadderState;
+                // PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder) as PlayerLadderState;
+                PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase<PlayerLadderState>();
                 LadderHandler ladderHandler = ladderCollider.GetComponent<LadderHandler>();
 
                 // Top에서 위 키 입력했을 때 사다리 타는 걸 방지하기 위함
@@ -525,7 +581,8 @@ public class PlayerMoveState : PlayerStateBase
 
                 ladderStateBase.SetLadder(ladderHandler, startFromBottom: true);
 
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Ladder);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Ladder);
+                mController.StateMachine.SwitchState<PlayerLadderState>();
                 return true;
             }
             // Top
@@ -534,11 +591,13 @@ public class PlayerMoveState : PlayerStateBase
                 if (ladderCollider.tag != "LadderTop")
                     continue;
 
-                PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder) as PlayerLadderState;
+                // PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder) as PlayerLadderState;
+                PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase<PlayerLadderState>();
                 LadderHandler ladderHandler = ladderCollider.GetComponentInParent<LadderHandler>();
                 ladderStateBase.SetLadder(ladderHandler, startFromBottom: false);
 
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Ladder);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Ladder);
+                mController.StateMachine.SwitchState<PlayerLadderState>();
                 return true;
             }
         }
@@ -634,7 +693,8 @@ public class PlayerMoveState : PlayerStateBase
                 mController.Movement.SetVelocity(velocity);
             }
 
-            PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
+            // PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
+            PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase<PlayerPushPullState>();
 
             // PushPull Front
             if (interactableObject.Pushable && distanceToEdge < _interactableDistance && mController.InputHandler.IsInteracting)
@@ -643,7 +703,8 @@ public class PlayerMoveState : PlayerStateBase
                 pushPullState.SetPushPullObject(interactableObject as PushPullObject);
                 pushPullState.SetType(1);
                 pushPullState.SetPushPoint(hitInfo.point);
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.PushPull);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.PushPull);
+                mController.StateMachine.SwitchState<PlayerPushPullState>();
             }
 
             // PushPull Front (Auto Push)
@@ -654,17 +715,20 @@ public class PlayerMoveState : PlayerStateBase
                 pushPullState.SetPushPullObject(interactableObject as PushPullObject);
                 pushPullState.SetType(2);
                 pushPullState.SetPushPoint(hitInfo.point);
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.PushPull);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.PushPull);
+                mController.StateMachine.SwitchState<PlayerPushPullState>();
 
             }
 
             // Climb Object Up
             if (interactableObject.CanClimb && distanceToEdge < _interactableDistance && mController.InputHandler.MoveInput.y > .1f)
             {
-                PlayerClimbObjectState climbObjectState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbObject) as PlayerClimbObjectState;
+                // PlayerClimbObjectState climbObjectState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbObject) as PlayerClimbObjectState;
+                PlayerClimbObjectState climbObjectState = mController.StateMachine.GetStateBase<PlayerClimbObjectState>();
                 climbObjectState.SetClimbObject(interactableObject, climbUp: true);
                 climbObjectState.SetHitPoint(hitInfo.point);
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbObject);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbObject);
+                mController.StateMachine.SwitchState<PlayerClimbObjectState>();
             }
 
             // Ladder
@@ -682,10 +746,12 @@ public class PlayerMoveState : PlayerStateBase
             // Interact
             if (distanceToEdge < interactableObject.InteractionDistance && mController.InputHandler.IsInteracting)
             {
-                PlayerInteractState interactState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Interact) as PlayerInteractState;
+                // PlayerInteractState interactState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Interact) as PlayerInteractState;
+                PlayerInteractState interactState = mController.StateMachine.GetStateBase<PlayerInteractState>();
 
                 interactState.SetInteractableObject(interactableObject);
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Interact);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Interact);
+                mController.StateMachine.SwitchState<PlayerInteractState>();
             }
 
         }
@@ -702,18 +768,22 @@ public class PlayerMoveState : PlayerStateBase
             // PushPull Object
             if (interactableObject.Pushable && mController.InputHandler.IsInteracting)
             {
-                PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
+                // PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
+                PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase<PlayerPushPullState>();
                 pushPullState.SetPushPullObject(interactableObject as PushPullObject);
                 pushPullState.SetType(0);
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.PushPull);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.PushPull);
+                mController.StateMachine.SwitchState<PlayerPushPullState>();
             }
 
             // Climb Object Up
             if (interactableObject.CanClimb && mController.InputHandler.MoveInput.y > .1f)
             {
-                PlayerClimbObjectState climbObjectState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbObject) as PlayerClimbObjectState;
+                // PlayerClimbObjectState climbObjectState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbObject) as PlayerClimbObjectState;
+                PlayerClimbObjectState climbObjectState = mController.StateMachine.GetStateBase<PlayerClimbObjectState>();
                 climbObjectState.SetClimbObject(interactableObject, climbUp: true);
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbObject);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbObject);
+                mController.StateMachine.SwitchState<PlayerClimbObjectState>();
             }
 
             // Ladder
@@ -735,9 +805,11 @@ public class PlayerMoveState : PlayerStateBase
             {
                 var interactableObject = hitInfo.collider.GetComponent<InteractableObject>();
 
-                PlayerClimbObjectState climbObjectState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbObject) as PlayerClimbObjectState;
+                // PlayerClimbObjectState climbObjectState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbObject) as PlayerClimbObjectState;
+                PlayerClimbObjectState climbObjectState = mController.StateMachine.GetStateBase<PlayerClimbObjectState>();
                 climbObjectState.SetClimbObject(interactableObject, climbUp: false);
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbObject);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbObject);
+                mController.StateMachine.SwitchState<PlayerClimbObjectState>();
             }
 
             // Debug.Log(hitInfo.collider.name);

@@ -26,14 +26,17 @@ public class PlayerJumpState : PlayerStateBase
     {
         mController.Movement.JumpUp();
 
-        mController.Animator.SetJump();
+        mController.Animator.Play(AnimState.IdleJump);
+        // mController.Animator.CrossFadeJump(false);
+        mController.Animator.SetJump(true);
+        //mController.Animator.SetIndex(0);
 
         mController.CharacterSound.PlayRandomClothSound();
     }
 
     public override void ExitState()
     {
-        // mController.Animator.SetLanding();
+        mController.Animator.SetJump(false);
         mController.Animator.SetVertical(0f);
     }
 
@@ -46,7 +49,7 @@ public class PlayerJumpState : PlayerStateBase
             float normalizedVelocityY = 1f - ((mController.Movement.Velocity.y + 4f) / 8f);
             mController.Animator.SetVertical(normalizedVelocityY);
 
-            Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {normalizedVelocityY}");
+            // Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {normalizedVelocityY}");
         }
 
         mController.Movement.UpdateRotation(Time.deltaTime * 20f);
@@ -66,7 +69,9 @@ public class PlayerJumpState : PlayerStateBase
                 }
             }
 
-            mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+            // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+            // mController.StateMachine.SwitchState<PlayerMoveState>();
+            mController.StateMachine.SwitchState<PlayerIdleState>();
             return;
         }
 
@@ -76,7 +81,8 @@ public class PlayerJumpState : PlayerStateBase
             // var climbLedgeState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbLedge) as PlayerClimbLedgeState;
             // _climbLedgeState.SetLedge(hitInfo.collider.bounds);
             _climbLedgeState.SetInfo(climbLedgeInfo);
-            mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbLedge);
+            // mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbLedge);
+            mController.StateMachine.SwitchState<PlayerClimbLedgeState>();
             return;
         }
     }

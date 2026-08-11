@@ -16,6 +16,7 @@ public class PlayerInputHandler : MonoBehaviour
     public bool MoveInputYPressed { get; private set; }
     public bool MoveInputYHeld { get; private set; }
     public bool MoveInputXOppositePressed { get; private set; }
+    public float AxisSensitivity => _axisSensitivity;
 
     [SerializeField] private float _axisSensitivity = 0.1f;
     [SerializeField] private float _axisDeadZone = 0.3f;        // Copilot¿Ã √ﬂ√µ«ÿ¡‡º≠ ¿œ¥‹ ≥ˆµ“
@@ -38,8 +39,6 @@ public class PlayerInputHandler : MonoBehaviour
     {
         MoveInput = Vector2.zero;
         // Input.ResetInputAxes();
-
-        Debug.Log($"[{Time.frameCount}] ResetMoveInput");
     }
 
     public void ResetMoveInputXOppositePressed()
@@ -60,6 +59,11 @@ public class PlayerInputHandler : MonoBehaviour
         return new Vector2(Mathf.Abs(MoveInput.x), Mathf.Abs(MoveInput.y));
     }
 
+    public Vector2 GetInputRawMagnitude()
+    {
+        return new Vector2(Mathf.Abs(MoveInputRaw.x), Mathf.Abs(MoveInputRaw.y));
+    }
+
     // Update is called once per frame
     void Update()
     {
@@ -77,7 +81,7 @@ public class PlayerInputHandler : MonoBehaviour
                 newMoveInput.x = 0f;
                 MoveInputXOppositePressed = true;
 
-                Debug.Log("OppositePressed True");
+                // Debug.Log("OppositePressed True");
             }
 
             newMoveInput.x += Time.deltaTime * _axisSensitivity;
@@ -91,7 +95,7 @@ public class PlayerInputHandler : MonoBehaviour
                 newMoveInput.x = 0f;
                 MoveInputXOppositePressed = true;
 
-                Debug.Log("OppositePressed True");
+                // Debug.Log("OppositePressed True");
             }
 
             newMoveInput.x -= Time.deltaTime * _axisSensitivity;
@@ -130,7 +134,7 @@ public class PlayerInputHandler : MonoBehaviour
 
         calculateInput();
 
-        Debug.Log($"[{Time.frameCount}] Horizontal: {Input.GetAxis("Horizontal")}, MoveInput: {MoveInput}, MoveInputRaw: {MoveInputRaw}");
+        // Debug.Log($"[{Time.frameCount}] Horizontal: {Input.GetAxis("Horizontal")}, MoveInput: {MoveInput}, MoveInputRaw: {MoveInputRaw}");
     }
 
     private void calculateInput()

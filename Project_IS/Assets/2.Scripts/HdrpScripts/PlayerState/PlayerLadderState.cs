@@ -116,7 +116,8 @@ public class PlayerLadderState : PlayerStateBase
         mController.Movement.SetColliderTrigger(false);
         mController.Animator.SetLadderTop(false);
 
-        PlayerMoveState moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+        // PlayerMoveState moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+        PlayerMoveState moveState = mController.StateMachine.GetStateBase<PlayerMoveState>();
         moveState.EnterToIdle();
 
         mbLadderTop = false;
@@ -147,7 +148,8 @@ public class PlayerLadderState : PlayerStateBase
                     mbClimbLoop = false;
 
                     mController.Movement.SetDirection(PlayerMovement.EDirection.Left);
-                    mController.StateMachine.SwitchState(PlayerStateMachine.EState.RunJump);
+                    // mController.StateMachine.SwitchState(PlayerStateMachine.EState.RunJump);
+                    mController.StateMachine.SwitchState<PlayerRunJumpState>();
 
                     mController.InputHandler.ResetJump();
                 }
@@ -162,7 +164,8 @@ public class PlayerLadderState : PlayerStateBase
                     mbClimbLoop = false;
 
                     mController.Movement.SetDirection(PlayerMovement.EDirection.Right);
-                    mController.StateMachine.SwitchState(PlayerStateMachine.EState.RunJump);
+                    // mController.StateMachine.SwitchState(PlayerStateMachine.EState.RunJump);
+                    mController.StateMachine.SwitchState<PlayerRunJumpState>();
 
                     mController.InputHandler.ResetJump();
                 }
@@ -324,7 +327,8 @@ public class PlayerLadderState : PlayerStateBase
 
         mbLadderTop = false;
 
-        PlayerMoveState moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+        // PlayerMoveState moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+        PlayerMoveState moveState = mController.StateMachine.GetStateBase<PlayerMoveState>();
 
         if (Mathf.Abs(mController.InputHandler.MoveInput.x) > .1f)
         {
@@ -335,7 +339,8 @@ public class PlayerLadderState : PlayerStateBase
             // moveState.EnterToIdle();
         }
 
-        mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+        // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+        mController.StateMachine.SwitchState<PlayerMoveState>();
     }
 
     private void playFootStepSound(float volume)
@@ -623,7 +628,8 @@ public class PlayerLadderState : PlayerStateBase
 
         transform.position = targetPos;
 
-        mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+        // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+        mController.StateMachine.SwitchState<PlayerMoveState>();
     }
 
     private IEnumerator eEndToPlatform()

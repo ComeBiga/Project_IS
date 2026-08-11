@@ -5,6 +5,8 @@ using static PlayerMovement;
 
 public class PlayerFallState : PlayerStateBase
 {
+    public enum EFallType { FromRun, FromJump }
+
     [SerializeField] 
     private PlayerClimbLedgeState _climbLedgeState;
     [SerializeField]
@@ -26,6 +28,9 @@ public class PlayerFallState : PlayerStateBase
     private float mMinVelocityY = 0f;
     private float mStartMoveInputX = 0f;
     private int mFallIndex = 0;
+    private EFallType mFallType;
+    private float mRotationTimer = 0f;
+    private float mRotationDuration = .2f;
 
     // Ladder
     private float mPathZPosition;
@@ -51,48 +56,20 @@ public class PlayerFallState : PlayerStateBase
         mStartMoveInputX = 0f;
 
         mController.Animator.SetIndex(mFallIndex);
-        mController.Animator.SetFall();
+        mController.Animator.SetFall(true);
         // mController.Animator.ResetLanding();
         mController.Animator.SetLanding(false);
         // mController.Animator.SetInputXMagnitude(0f);
+        // mController.Animator.CrossFadeFall(mFallType == EFallType.FromJump ? true : false);
+        mController.Animator.Play(mFallType == EFallType.FromJump ? AnimState.Fall_FromJump : AnimState.Fall_FromRun);
 
-        var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+        var moveState = mController.StateMachine.GetStateBase<PlayerMoveState>();
         mPathZPosition = moveState.PathZPosition;
         mInteractableMaxDistance = moveState.InteractableMaxDistance;
         mInteractableOffsetY = moveState.InteractableOffsetY;
         mInteractableDistance = moveState.InteractableDistance;
         mFrontWallCheckDistance = moveState.FrontWallCheckDistance;
         mFrontWallCheckLayer = moveState.FrontWallCheckLayer;
-
-        //StartCoroutine(eFixedUpdate());
-        //mController.Animator.onAnimatorMove += TestOnAnimatorMove;
-        //mController.Animator.onAnimationIK += TestOnAnimatorIK;
-
-        // Debug.Log($"[{Time.frameCount}] FallState EnterState - MoveInput: {mController.InputHandler.MoveInput}, Velocity: {mController.Movement.Velocity}");
-    }
-
-    private void TestOnAnimatorMove()
-    {
-        Debug.Log($"[{Time.frameCount}] FallState OnAnimatorMove - MoveInput: {mController.InputHandler.MoveInput}, Velocity: {mController.Movement.Velocity}");
-
-        if(mController.Movement.IsGrounded)
-        {
-            // mController.Movement.SetVelocity(Vector3.one * 100f);
-        }
-    }
-
-    private void TestOnAnimatorIK()
-    {
-        Debug.Log($"[{Time.frameCount}] FallState OnAnimatorIK - MoveInput: {mController.InputHandler.MoveInput}, Velocity: {mController.Movement.Velocity}");
-    }
-
-    private IEnumerator eFixedUpdate()
-    {
-        while (true)
-        {
-            Debug.Log($"[{Time.frameCount}] FallState FixedUpdate - MoveInput: {mController.InputHandler.MoveInput}, Velocity: {mController.Movement.Velocity}");
-            yield return new WaitForFixedUpdate();
-        }
     }
 
     public override void ExitState()
@@ -100,7 +77,8 @@ public class PlayerFallState : PlayerStateBase
         mbLanding = false;
 
         mController.Animator.SetIndex(0);
-        mController.Animator.ResetFall();
+        // mController.Animator.ResetFall();
+        mController.Animator.SetFall(false);
         // mController.Animator.SetInputXMagnitude(0f);
         // mController.Animator.SetLanding(false);
 
@@ -109,14 +87,10 @@ public class PlayerFallState : PlayerStateBase
             StopCoroutine(mLandingRoutine);
             mLandingRoutine = null;
         }
-
-        // Debug.Log($"[{Time.frameCount}] FallState ExitState - MoveInput: {mController.InputHandler.MoveInput}, Velocity: {mController.Movement.Velocity}");
     }
 
     public override void FixedTick()
     {
-        Debug.Log($"[{Time.frameCount}] FallState FixedTick");
-
         float inputXMagnitude = Mathf.Abs(mController.InputHandler.MoveInput.x);
 
         if (mController.Movement.IsGrounded)
@@ -127,13 +101,19 @@ public class PlayerFallState : PlayerStateBase
             // Heavy Landing
             if (mMinVelocityY < _heavyLandingVelocityY)
             {
-                mController.Movement.SetVelocity(Vector3.zero);
-                // mController.Animator.SetHeavyLanding();
-                mController.Animator.SetLanding(true);
-                mController.Animator.SetIndex(2);
+                //mController.Movement.SetVelocity(Vector3.zero);
+                //// mController.Animator.SetHeavyLanding();
+                //mController.Animator.SetLanding(true);
+                //mController.Animator.SetIndex(2);
 
-                PlayerMoveState moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
-                moveState.EnterToIdle();
+                //// PlayerMoveState moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+                //PlayerMoveState moveState = mController.StateMachine.GetStateBase<PlayerMoveState>();
+                //moveState.EnterToIdle();
+
+                mController.StateMachine.SwitchState<PlayerLandingState>((landingState) =>
+                {
+                    landingState.SetLandingType(PlayerLandingState.ELandingType.Heavy);
+                });
             }
             // Medium Landing
             else if (mMinVelocityY < _mediumLandingVelocityY)
@@ -143,23 +123,33 @@ public class PlayerFallState : PlayerStateBase
                 // Idle Landing
                 if (inputXMagnitude < .1f)
                 {
-                    // mController.Movement.SetVelocity(Vector3.zero);
-                    // mController.Animator.SetLanding();
-                    mController.Animator.SetLanding(true);
-                    // mController.Animator.PlayIdleLanding(landingType: 1, 0f);
+                    //// mController.Movement.SetVelocity(Vector3.zero);
+                    //// mController.Animator.SetLanding();
+                    //mController.Animator.SetLanding(true);
+                    //// mController.Animator.PlayIdleLanding(landingType: 1, 0f);
 
-                    mLandingRoutine = StartCoroutine(eIdleLanding());
+                    //mLandingRoutine = StartCoroutine(eIdleLanding());
+
+                    mController.StateMachine.SwitchState<PlayerLandingState>((landingState) =>
+                    {
+                        landingState.SetLandingType(PlayerLandingState.ELandingType.Medium);
+                    });
                 }
                 // Running Landing
                 else
                 {
-                    // mController.Movement.SetVelocity(Vector3.zero);
-                    // mController.Animator.SetLanding();
-                    mController.Animator.SetLanding(true);
-                    // mController.Animator.CrossFadeRunningLanding(landingType: 1, .1f);
-                    mStartMoveInputX = 1f;
+                    //// mController.Movement.SetVelocity(Vector3.zero);
+                    //// mController.Animator.SetLanding();
+                    //mController.Animator.SetLanding(true);
+                    //// mController.Animator.CrossFadeRunningLanding(landingType: 1, .1f);
+                    //mStartMoveInputX = 1f;
 
-                    mLandingRoutine = StartCoroutine(eRunningLanding());
+                    //mLandingRoutine = StartCoroutine(eRunningLanding());
+
+                    mController.StateMachine.SwitchState<PlayerLandingState>((landingState) =>
+                    {
+                        landingState.SetLandingType(PlayerLandingState.ELandingType.Medium);
+                    });
                 }
             }
             // Soft Landing
@@ -170,28 +160,38 @@ public class PlayerFallState : PlayerStateBase
                 // Idle Landing
                 if (inputXMagnitude < .1f)
                 {
-                    mController.Movement.SetVelocity(Vector3.zero);
-                    // mController.Animator.SetLanding();
-                    mController.Animator.SetLanding(true);
-                    // mController.Animator.PlayIdleLanding(landingType: 0, 0f);
-                    // mController.Animator.CrossFadeIdleLanding(landingType: 0, .05f);
-                    // mController.Animator.CrossFadeIdleLanding(landingType: 0, 0f);
+                    //mController.Movement.SetVelocity(Vector3.zero);
+                    //// mController.Animator.SetLanding();
+                    //mController.Animator.SetLanding(true);
+                    //// mController.Animator.PlayIdleLanding(landingType: 0, 0f);
+                    //// mController.Animator.CrossFadeIdleLanding(landingType: 0, .05f);
+                    //// mController.Animator.CrossFadeIdleLanding(landingType: 0, 0f);
 
-                    mLandingRoutine = StartCoroutine(eIdleLanding());
-                    // EndLanding();
+                    //mLandingRoutine = StartCoroutine(eIdleLanding());
+                    //// EndLanding();
+
+                    mController.StateMachine.SwitchState<PlayerLandingState>((landingState) =>
+                    {
+                        landingState.SetLandingType(PlayerLandingState.ELandingType.Soft);
+                    });
                 }
                 // Running Landing
                 else
                 {
-                    Debug.Log($"[{Time.frameCount}] Soft Running Landing - Velocity: {mController.Movement.Velocity}");
-                    // mController.Movement.SetVelocity(Vector3.zero);
-                    // mController.Animator.SetLanding();
-                    mController.Animator.SetLanding(true);
-                    // mController.Animator.CrossFadeRunningLanding(landingType: 0, 0f);
-                    mStartMoveInputX = 1f;
+                    //// Debug.Log($"[{Time.frameCount}] Soft Running Landing - Velocity: {mController.Movement.Velocity}");
+                    //// mController.Movement.SetVelocity(Vector3.zero);
+                    //// mController.Animator.SetLanding();
+                    //mController.Animator.SetLanding(true);
+                    //// mController.Animator.CrossFadeRunningLanding(landingType: 0, 0f);
+                    //mStartMoveInputX = 1f;
 
-                    // mLandingRoutine = StartCoroutine(eRunningLanding());
-                    EndLanding();
+                    //// mLandingRoutine = StartCoroutine(eRunningLanding());
+                    //EndLanding();
+
+                    mController.StateMachine.SwitchState<PlayerLandingState>((landingState) =>
+                    {
+                        landingState.SetLandingType(PlayerLandingState.ELandingType.Soft);
+                    });
                 }
             }
 
@@ -262,17 +262,25 @@ public class PlayerFallState : PlayerStateBase
         // mController.Movement.Move(mController.InputHandler.MoveInput);
         // Debug.Log($"[{Time.frameCount}] FallState - MoveInput: {mController.InputHandler.MoveInput}, Velocity: {mController.Movement.Velocity}, fallVelocity: {fallVelocity}");
 
+        //float t = mRotationTimer / mRotationDuration;
+        //mRotationTimer += Time.deltaTime;
+        //mController.Movement.UpdateRotation(t);
+        mController.Movement.UpdateRotation();
+
         // Terrain Normal
         if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hitInfo, .1f, LayerMask.GetMask("Ground")))
         {
             float slopeAngle = Vector3.Angle(Vector3.up, hitInfo.normal);
             // Debug.Log(slopeAngle);
 
-            var slopeState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Slope) as PlayerSlopeState;
+            // var slopeState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Slope) as PlayerSlopeState;
+            var slopeState = mController.StateMachine.GetStateBase<PlayerSlopeState>();
 
             if (slopeAngle > slopeState.SlopeAngle)
             {
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Slope);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Slope);
+                mController.StateMachine.SwitchState<PlayerSlopeState>();
+
                 return;
             }
         }
@@ -292,7 +300,8 @@ public class PlayerFallState : PlayerStateBase
                 {
                     // Die
                     mbLanding = false;
-                    mController.StateMachine.SwitchState(PlayerStateMachine.EState.Die);
+                    // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Die);
+                    mController.StateMachine.SwitchState<PlayerDieState>();
 
                     return;
                 }
@@ -400,17 +409,15 @@ public class PlayerFallState : PlayerStateBase
                 // ground.PlayFootStepBigSound(volume:.5f);
             }
 
-            Debug.Log($"LandingVelocityY:{mMinVelocityY}");
-
             // if (mMinVelocityY < _mediumLandingVelocityY)
             if (mMinVelocityY < -5f)
             {
-                Debug.Log($"EnterFromFall, ground({ground != null})");
                 _climbLedgeState.EnterFromFall(ground);
             }
 
             _climbLedgeState.SetInfo(climbLedgeInfo);
-            mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbLedge);
+            // mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbLedge);
+            mController.StateMachine.SwitchState<PlayerClimbLedgeState>();
             return;
         }
 
@@ -427,6 +434,11 @@ public class PlayerFallState : PlayerStateBase
         mFallIndex = index;
     }
 
+    public void SetFallType(PlayerFallState.EFallType fallType)
+    {
+        mFallType = fallType;
+    }
+
     public void EndLanding()
     {
         if (!mbLanding)
@@ -434,7 +446,8 @@ public class PlayerFallState : PlayerStateBase
 
         mbLanding = false;
 
-        var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+        // var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
+        var moveState = mController.StateMachine.GetStateBase<PlayerMoveState>();
 
         if (Mathf.Abs(mStartMoveInputX) > .1f)
         {
@@ -447,7 +460,10 @@ public class PlayerFallState : PlayerStateBase
             moveState.EnterToIdle();
         }
 
-        mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+        Debug.Log($"[{Time.frameCount}] EndLanding");
+
+        // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
+        mController.StateMachine.SwitchState<PlayerMoveState>();
     }
 
     public bool CheckFall()
@@ -665,7 +681,8 @@ public class PlayerFallState : PlayerStateBase
                 if (ladderCollider.tag == "LadderTop")
                     continue;
 
-                PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder) as PlayerLadderState;
+                // PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder) as PlayerLadderState;
+                PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase<PlayerLadderState>();
                 LadderHandler ladderHandler = ladderCollider.GetComponent<LadderHandler>();
 
                 // Top에서 위 키 입력했을 때 사다리 타는 걸 방지하기 위함
@@ -678,7 +695,8 @@ public class PlayerFallState : PlayerStateBase
                 if (!bClimbLadder)
                     return false;
 
-                mController.StateMachine.SwitchState(PlayerStateMachine.EState.Ladder);
+                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Ladder);
+                mController.StateMachine.SwitchState<PlayerLadderState>();
                 return true;
             }
         }

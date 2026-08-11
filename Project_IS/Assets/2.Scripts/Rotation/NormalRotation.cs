@@ -11,7 +11,7 @@ public class NormalRotation : RotationBase
     private Vector3 mStartEulerAngles;
     private float mTargetYEulerAngle;
     private float mDeltaAngle;
-
+    private PlayerTurnState.ETurnType mTurnType;
     private const float FIXED_ROTATION_ANGLE = -180f;
 
     public NormalRotation(RotationHandler rotationHandler) : base(rotationHandler)
@@ -33,18 +33,17 @@ public class NormalRotation : RotationBase
     {
         mPlayerController.Movement.SetDirection(mPlayerController.Movement.OppositeDirection);
 
-
         // if(mTimer >= mDuration)
-        {
-            if (mPlayerController.Movement.Velocity.x < .1f && mPlayerController.Movement.Velocity.x > -.1f)
-            {
-                mDuration = mIdleTurnDuration;
-            }
-            else
-            {
-                mDuration = mRunTurnDuration;
-            }
-        }
+        //{
+        //    if (mPlayerController.Movement.Velocity.x < .1f && mPlayerController.Movement.Velocity.x > -.1f)
+        //    {
+        //        mDuration = mIdleTurnDuration;
+        //    }
+        //    else
+        //    {
+        //        mDuration = mRunTurnDuration;
+        //    }
+        //}
 
         mTimer = 0f;
 
@@ -61,13 +60,23 @@ public class NormalRotation : RotationBase
 
         if(mDeltaAngle < 0f)
         {
+            mRotationHandler.SetRotationDirection(RotationHandler.ERotationDirection.Left);
+
             mPlayerController.Animator.TurnL(true);
             mPlayerController.Animator.TurnR(false);
+
+            mPlayerController.Animator.Play(mTurnType == PlayerTurnState.ETurnType.Run ? AnimState.RunTurn : AnimState.IdleTurn);
+            // mPlayerController.Animator.CrossFadeTurn(mTurnType == PlayerTurnState.ETurnType.Run ? true : false, true);
         }
         else
         {
+            mRotationHandler.SetRotationDirection(RotationHandler.ERotationDirection.Right);
+
             mPlayerController.Animator.TurnL(false);
             mPlayerController.Animator.TurnR(true);
+
+            mPlayerController.Animator.Play(mTurnType == PlayerTurnState.ETurnType.Run ? AnimState.RunTurn_R : AnimState.IdleTurn_R);
+            // mPlayerController.Animator.CrossFadeTurn(mTurnType == PlayerTurnState.ETurnType.Run ? true : false, false);
         }
     }
 
@@ -95,8 +104,8 @@ public class NormalRotation : RotationBase
 
     public override void OnBeforeAnimatorMove()
     {
-        mPlayerAnimator.TurnL(false);
-        mPlayerAnimator.TurnR(false);
+        //mPlayerAnimator.TurnL(false);
+        //mPlayerAnimator.TurnR(false);
     }
 
     public override void OnAnimatorMove()
@@ -105,7 +114,7 @@ public class NormalRotation : RotationBase
         {
             mPlayerController.transform.rotation = Quaternion.Euler(mStartEulerAngles.x, mTargetYEulerAngle, mStartEulerAngles.z);
             mRotationHandler.EndRotation();
-            Debug.Log($"[{Time.frameCount}] Rotation completed. Final EulerAngles: {mPlayerController.transform.rotation.eulerAngles}");
+            // Debug.Log($"[{Time.frameCount}] Rotation completed. Final EulerAngles: {mPlayerController.transform.rotation.eulerAngles}");
             return;
         }
 
@@ -116,7 +125,7 @@ public class NormalRotation : RotationBase
 
         mTimer += Time.fixedDeltaTime;
 
-        Debug.Log($"[{Time.frameCount}] Entered NormalRotation.OnAnimatorMove, Timer: {mTimer}, Duration: {mDuration}, StartEulerAngles: {mStartEulerAngles}, TargetYEulerAngle: {mTargetYEulerAngle}, NewYEulerAngle: {newYEulerAngle}, DeltaAngle: {mDeltaAngle}");
+        // Debug.Log($"[{Time.frameCount}] Entered NormalRotation.OnAnimatorMove, Timer: {mTimer}, Duration: {mDuration}, StartEulerAngles: {mStartEulerAngles}, TargetYEulerAngle: {mTargetYEulerAngle}, NewYEulerAngle: {newYEulerAngle}, DeltaAngle: {mDeltaAngle}");
     }
 
     public override void Update()
@@ -126,8 +135,28 @@ public class NormalRotation : RotationBase
 
     public override void OnEndRotation()
     {
-        mPlayerAnimator.TurnL(false);
-        mPlayerAnimator.TurnR(false);
+        //mPlayerAnimator.TurnL(false);
+        //mPlayerAnimator.TurnR(false);
+    }
+
+    public void SetTurnType(PlayerTurnState.ETurnType turnType)
+    {
+        mTurnType = turnType;
+
+        switch (turnType)
+        {
+            case PlayerTurnState.ETurnType.Idle:
+                mDuration = mIdleTurnDuration;
+                break;
+            case PlayerTurnState.ETurnType.Run:
+                mDuration = mRunTurnDuration;
+                break;
+            default:
+                mDuration = mIdleTurnDuration;
+                break;
+        }
+
+        // Debug.Log($"[{Time.frameCount}] SetTurnType: {turnType}, Duration: {mDuration}");
     }
 
     private float lerpFixedAngle(float a, float b, float t)

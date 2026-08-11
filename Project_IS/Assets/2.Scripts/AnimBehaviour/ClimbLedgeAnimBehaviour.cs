@@ -19,7 +19,8 @@ public class ClimbLedgeAnimBehaviour : StateMachineBehaviour
     // OnStateExit is called when a transition ends and the state machine finishes evaluating this state
     override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
-        var climbLedgeState = animator.GetComponentInParent<PlayerClimbLedgeState>();
+        // var climbLedgeState = animator.GetComponentInParent<PlayerClimbLedgeState>();
+        var climbLedgeState = animator.GetComponentInParent<PlayerStateMachine>().GetStateBase<PlayerClimbLedgeState>();
         climbLedgeState.EndClimbLedge();
     }
 

@@ -1,0 +1,295 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 7eb2437744f4c7e44923a998f112ba19, type: 3}
+  m_Name: TransitionTable
+  m_EditorClassIdentifier: 
+  transitions:
+  - name: Idle -> IdleToRun
+    anyFrom: 0
+    from: 1
+    to: 46
+    fixedDuration: 0
+    duration: 0
+    offset: 0
+  - name: Any -> Idle
+    anyFrom: 1
+    from: 0
+    to: 1
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: IdleToRun -> Run
+    anyFrom: 0
+    from: 46
+    to: 45
+    fixedDuration: 0
+    duration: 0.05
+    offset: 0.18
+  - name: Run -> RunToIdle_R
+    anyFrom: 0
+    from: 45
+    to: 48
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
+  - name: RunToIdle_R -> Idle
+    anyFrom: 0
+    from: 48
+    to: 1
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
+  - name: Any -> Run
+    anyFrom: 1
+    from: 0
+    to: 45
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: IdleTurn -> Run
+    anyFrom: 0
+    from: 38
+    to: 45
+    fixedDuration: 0
+    duration: 0
+    offset: 0.65
+  - name: IdleTurn_R -> Run
+    anyFrom: 0
+    from: 39
+    to: 45
+    fixedDuration: 0
+    duration: 0
+    offset: 0.65
+  - name: RunTurn -> Run
+    anyFrom: 0
+    from: 35
+    to: 45
+    fixedDuration: 1
+    duration: 0
+    offset: 0.16
+  - name: RunTurn_R -> Run
+    anyFrom: 0
+    from: 36
+    to: 45
+    fixedDuration: 1
+    duration: 0
+    offset: 0.68
+  - name: Landing_Idle_Soft -> Run
+    anyFrom: 0
+    from: 28
+    to: 45
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: Landing_Idle_Medium -> Run
+    anyFrom: 0
+    from: 29
+    to: 45
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: Landing_Idle_Heavy -> Run
+    anyFrom: 0
+    from: 30
+    to: 45
+    fixedDuration: 0
+    duration: 0.05
+    offset: 0
+  - name: Landing_Running_Soft -> Run
+    anyFrom: 0
+    from: 31
+    to: 45
+    fixedDuration: 0
+    duration: 0.05
+    offset: 0
+  - name: Landing_Running_Medium -> Run
+    anyFrom: 0
+    from: 32
+    to: 45
+    fixedDuration: 0
+    duration: 0.05
+    offset: 0.35
+  - name: Landing_Running_Heavy -> Run
+    anyFrom: 0
+    from: 33
+    to: 45
+    fixedDuration: 0
+    duration: 0.25
+    offset: 0
+  - name: Run -> RunJump_Blend_Tree
+    anyFrom: 0
+    from: 45
+    to: 23
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
+  - name: Idle -> IdleJump
+    anyFrom: 0
+    from: 1
+    to: 21
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
+  - name: Any -> RunJump_Blend_Tree
+    anyFrom: 1
+    from: 0
+    to: 23
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
+  - name: Any -> IdleJump
+    anyFrom: 1
+    from: 0
+    to: 21
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
+  - name: RunJump_Blend_Tree -> Fall_FromRun
+    anyFrom: 0
+    from: 23
+    to: 25
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: RunJump_Blend_Tree -> Fall_FromJump
+    anyFrom: 0
+    from: 23
+    to: 26
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
+  - name: Any -> Fall_FromRun
+    anyFrom: 1
+    from: 0
+    to: 25
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: Any -> ClimbLedge_Directly_Critical
+    anyFrom: 1
+    from: 0
+    to: 15
+    fixedDuration: 1
+    duration: 0.2
+    offset: 0
+  - name: Any -> ClimbLedge_OverHead_Hanging
+    anyFrom: 1
+    from: 0
+    to: 16
+    fixedDuration: 1
+    duration: 0.2
+    offset: 0
+  - name: Any -> ClimbLedge_Directly_OverHead
+    anyFrom: 1
+    from: 0
+    to: 17
+    fixedDuration: 1
+    duration: 0.2
+    offset: 0
+  - name: Any -> ClimbLedgeToIdle
+    anyFrom: 1
+    from: 0
+    to: 19
+    fixedDuration: 0
+    duration: 0.05
+    offset: 0
+  - name: Any -> ClimbLedgeToRun
+    anyFrom: 1
+    from: 0
+    to: 20
+    fixedDuration: 0
+    duration: 0.05
+    offset: 0
+  - name: Any -> Landing_Idle_Soft
+    anyFrom: 1
+    from: 0
+    to: 28
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
+  - name: Any -> Landing_Idle_Medium
+    anyFrom: 1
+    from: 0
+    to: 29
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
+  - name: Any -> Landing_Idle_Heavy
+    anyFrom: 1
+    from: 0
+    to: 30
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
+  - name: Any -> Landing_Running_Soft
+    anyFrom: 1
+    from: 0
+    to: 31
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
+  - name: Any -> Landing_Running_Medium
+    anyFrom: 1
+    from: 0
+    to: 32
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
+  - name: Any -> Landing_Running_Heavy
+    anyFrom: 1
+    from: 0
+    to: 33
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
+  - name: Any -> IdleTurn
+    anyFrom: 1
+    from: 0
+    to: 38
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
+  - name: Any -> IdleTurn_R
+    anyFrom: 1
+    from: 0
+    to: 39
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
+  - name: Any -> RunTurn
+    anyFrom: 1
+    from: 0
+    to: 35
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
+  - name: Any -> RunTurn_R
+    anyFrom: 1
+    from: 0
+    to: 36
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
+  - name: Any -> RunToIdle_R
+    anyFrom: 1
+    from: 0
+    to: 48
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
+  - name: Any -> IdleToRun
+    anyFrom: 1
+    from: 0
+    to: 46
+    fixedDuration: 1
+    duration: 0.05
+    offset: 0
