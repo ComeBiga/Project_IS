@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.InputSystem.XR;
 
@@ -11,17 +12,20 @@ public class PlayerMovement : MonoBehaviour
     public bool Jumping => mbJumping;
     public bool IsGrounded => mbIsGrounded;
     public Vector3 Position => transform.position;
+    public Quaternion Rotation => transform.rotation;
     public EDirection Direction => mDirection;
     public EDirection OppositeDirection => (mDirection == EDirection.Left) ? EDirection.Right : EDirection.Left;
     public float Height => mCapsuleCollider.height;
     public LayerMask GroundLayer => _groundLayer;
     public float GroundCheckRadius => _groundCheckRadius;
     public Ground Ground => mGround;
+    public float StepOffset => _stepOffset;
 
     public enum EDirection { Left, Right, Forward, Neutral = 100 };
 
     [Header("Debug")]
     [SerializeField] private bool _drawStepRay = false;
+    [SerializeField] private bool _drawGroundCheckRay = false;
     [SerializeField] private bool _drawSlideDirectionRay = true;
     [SerializeField] private Vector2 _slideDirection = Vector2.right;
     [SerializeField] private float _slideSpeed = 1f;
@@ -30,11 +34,16 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private float _moveSpeed = 5f;
     [SerializeField] private float _rotateSpeed = 10f;
     [SerializeField] private float _stepOffset = .1f;
+    [SerializeField] private int _stepCheckRaycastCount = 5;
     [SerializeField] private float _stepCheckDistance = .3f;
+    [SerializeField] private float _stepCheckDistanceMultiplier = 1f;
 
     [Header("Jump")]
     [SerializeField] private float _jumpForce = 5f;
     [SerializeField] private float _minJumpVelocityX = 2f;
+
+    [Header("GroundCheck")]
+    [SerializeField] private int _groundCheckRaycastCount = 5;
     [SerializeField] private Transform _trGroundCheck;
     [SerializeField] private Vector3 _groundCheckPosOffset;
     [SerializeField] private float _groundCheckRadius = .1f;
@@ -70,13 +79,27 @@ public class PlayerMovement : MonoBehaviour
         mRigidbody.MoveRotation(DirectionToRotation(mDirection));
     }
 
+    public void SetPosition(Vector3 position)
+    {
+        mRigidbody.MovePosition(position);
+    }
+
+    public void AddPosition(Vector3 position)
+    {
+        Vector3 newPosition = Position + position;
+        mRigidbody.MovePosition(newPosition);
+    }
+
+    public void SetRotation(Quaternion rotation)
+    {
+        mRigidbody.MoveRotation(rotation);
+    }
+
     public void Move(Vector2 moveInput)
     {
         Vector3 velocity = mRigidbody.velocity;
         velocity.x = moveInput.x * _moveSpeed;
         mRigidbody.velocity = velocity;
-
-        // Debug.Log($"[{Time.frameCount}] MoveInput: {moveInput}, Velocity: {mRigidbody.velocity}");
 
         checkStep();
     }
@@ -372,7 +395,7 @@ public class PlayerMovement : MonoBehaviour
         //characterOrigin.y += _interactableOffsetY;
 
         // 현재 캐릭터 발을 기준으로 한 위치
-        Vector3 characterFeetOrigin = transform.position;
+        Vector3 characterFeetOrigin = Position;
 
         bool bUnderCasted = Physics.Raycast(characterFeetOrigin,
                                     Vector3.down,
@@ -388,7 +411,7 @@ public class PlayerMovement : MonoBehaviour
 
     public bool CheckInteractableByOverlap(out Collider[] hitColliders)
     {
-        hitColliders = Physics.OverlapSphere(transform.position, 0.1f, LayerMask.GetMask("Interactable"));
+        hitColliders = Physics.OverlapSphere(Position, 0.1f, LayerMask.GetMask("Interactable"));
 
         if (hitColliders.Length > 0)
             return true;
@@ -426,7 +449,10 @@ public class PlayerMovement : MonoBehaviour
     {
         _animator.SetVelocityY(mRigidbody.velocity.y);
 
-        
+        GameDebug.Log($"Velocity: {Velocity}",
+                        tag: "Velocity",
+                        category: GameDebug.LogCategory.Movement,
+                        level: GameDebug.LogLevel.Verbose);
 
         // mRigidbody.AddForce(_slideDirection * _slideSpeed, ForceMode.Acceleration);
         //Vector3 deltaVel = _slideDirection * _slideSpeed * Time.fixedDeltaTime;
@@ -444,6 +470,18 @@ public class PlayerMovement : MonoBehaviour
     //    // checkGround();
     //    calculateGrounded();
     //}
+
+    private void OnCollisionStay(Collision collision)
+    {
+        if(collision.collider != null)
+        {
+            if(((1 << collision.collider.gameObject.layer) & _groundLayer) != 0)
+            {
+                GameDebug.Log($"Collision Stay, Collider Name: {collision.collider.gameObject.name}",
+                    tag: "OnCollisionStay");
+            }
+        }
+    }
 
     private void checkGround()
     {
@@ -492,35 +530,72 @@ public class PlayerMovement : MonoBehaviour
             mbIsGroundedEnter = false;
 
             float deltaPositionX = mGroundedVelocity.x * Time.fixedDeltaTime;
-            float currentFrameXpos = transform.position.x + deltaPositionX;
-            float nextFrameXpos = currentFrameXpos + deltaPositionX;
+            float posX = Position.x;
+            float currentFrameXpos = Position.x + deltaPositionX;
+            // float nextFrameXpos = currentFrameXpos + deltaPositionX;
             float yPos = mGroundHitInfo.Value.point.y;
-            transform.position = new Vector3(currentFrameXpos, yPos, transform.position.z);
+            // transform.position = new Vector3(currentFrameXpos, yPos, Position.z);
+            SetPosition(new Vector3(currentFrameXpos, yPos, Position.z));
 
             mGroundHitInfo = null;
+
+            GameDebug.Log($"Grounded Velocity: {mGroundedVelocity}, lastPosX: {posX}, resultPosX: {currentFrameXpos}, gap: {currentFrameXpos - posX}",
+                tag: "GroundedEnter Pos",
+                category: GameDebug.LogCategory.Movement);
         }
 
-        if (Physics.Raycast(transform.position + Vector3.up * .01f, Vector3.down, out RaycastHit hitInfo, 5f, _groundLayer, QueryTriggerInteraction.Ignore))
+        // Vector3 pos = transform.position + Vector3.up * .01f;
+        Vector3 pos = Position + Vector3.up * mCapsuleCollider.radius;
+        float spacing = mCapsuleCollider.radius * 2f / (_groundCheckRaycastCount - 1);
+
+        Vector3 startPos = pos + DirectionToVector() * mCapsuleCollider.radius;
+        bool bGrounded = false;
+        RaycastHit hitInfo = new();
+
+        for(int i = 0; i < _groundCheckRaycastCount; ++i)
         {
-            float deltaPositionY = Velocity.y * Time.fixedDeltaTime;
-            float currentFrameYpos = transform.position.y + deltaPositionY;
-            float nextFrameYpos = currentFrameYpos + deltaPositionY;
+            Vector3 origin = startPos + DirectionToVector(OppositeDirection) * spacing * i;
 
-            if(nextFrameYpos < hitInfo.point.y || transform.position.y < hitInfo.point.y + .01f)
+            if (Physics.Raycast(origin, Vector3.down, out hitInfo, 5f, _groundLayer, QueryTriggerInteraction.Ignore))
             {
-                if(mbIsGrounded == false)
+                float deltaPositionY = Velocity.y * Time.fixedDeltaTime;
+                float currentFrameYpos = Position.y + deltaPositionY;
+                float nextFrameYpos = currentFrameYpos + deltaPositionY;
+
+                if (nextFrameYpos < hitInfo.point.y || Position.y < hitInfo.point.y + _stepOffset)
                 {
-                    mbIsGroundedEnter = true;
-                    mbIsGrounded = true;
-                    mbJumping = false;
+                    
 
-                    mGroundHitInfo = hitInfo;
-                    mGroundedVelocity = Velocity;
+                    bGrounded = true;
+
+                    GameDebug.Log($"Grounded, index: {i}",
+                        tag: "GroundedTrue",
+                        category: GameDebug.LogCategory.Movement,
+                        level: GameDebug.LogLevel.Info);
+
+                    break;
                 }
+                //else
+                //{
+                //    mbIsGrounded = false;
+                //}
             }
-            else
+            //else
+            //{
+            //    mbIsGrounded = false;
+            //}
+        }
+
+        if(bGrounded)
+        {
+            if (mbIsGrounded == false)
             {
-                mbIsGrounded = false;
+                mbIsGroundedEnter = true;
+                mbIsGrounded = true;
+                mbJumping = false;
+
+                mGroundHitInfo = hitInfo;
+                mGroundedVelocity = Velocity;
             }
         }
         else
@@ -533,14 +608,37 @@ public class PlayerMovement : MonoBehaviour
 
     private void checkStep()
     {
-        Vector3 origin = transform.position;
-        // origin.y += _stepOffset;
+        float radius = mCapsuleCollider.radius;
+        Vector3 startPos = Position + Vector3.up * radius;
+        int raycastCount = _stepCheckRaycastCount;
+        // float spacing = radius / (raycastCount - 1);
+        float deltaAngle = Number.DEG_90 / (raycastCount - 1);
+        float startAngle = Number.DEG_0;
+        
+        bool bCheck = false;
+        RaycastHit hit = new RaycastHit();
+        int checkIndex = -1;
+        float deltaY = 0;
 
-        bool bCheck = Physics.Raycast(origin,
-                                        DirectionToVector(),
-                                        out RaycastHit hit,
-                                        _stepCheckDistance,
-                                        _groundLayer);
+        for(int i = 0; i < raycastCount; ++i)
+        {
+            float angle = startAngle + deltaAngle * i;
+            float distance = radius * Mathf.Cos(angle * Mathf.Deg2Rad);
+            deltaY = radius * Mathf.Sin(angle * Mathf.Deg2Rad);
+            Vector3 origin = startPos + Vector3.down * deltaY;
+            // origin.y += _stepOffset;
+
+            bCheck = Physics.Raycast(origin,
+                                    DirectionToVector(),
+                                    out hit,
+                                    distance * _stepCheckDistanceMultiplier,
+                                    _groundLayer);
+
+            checkIndex = i;
+
+            if (bCheck)
+                break;
+        }
 
         if (!bCheck)
             return;
@@ -548,53 +646,86 @@ public class PlayerMovement : MonoBehaviour
         Vector3 hitPoint = hit.point;
         Bounds bounds = hit.collider.bounds;
 
-        if (bounds.max.y < transform.position.y + _stepOffset)
+        if (bounds.max.y < Position.y + _stepOffset)
         {
-            Vector3 newPosition = transform.position;
+            Vector3 newPosition = Position;
             newPosition.y = bounds.max.y;
-            transform.position = newPosition;
-        }
-    }
+            // transform.position = newPosition;
+            SetPosition(newPosition);
 
-    private void OnCollisionStay(Collision collision)
-    {
-        if(collision.collider != null)
-        {
-            if (((1 << collision.collider.gameObject.layer) & _groundLayer) != 0)
-            {
-                mTerrain = collision.collider.GetComponent<Terrain>();
-            }
+            GameDebug.Log($"Step Checked", tag: "Step Checked");
         }
     }
 
     private void OnDrawGizmosSelected()
     {
-        Gizmos.color = Color.blue;
-        Gizmos.DrawWireSphere(_trGroundCheck.position + _groundCheckPosOffset, _groundCheckRadius);
+        //Gizmos.color = Color.blue;
+        //Gizmos.DrawWireSphere(_trGroundCheck.position + _groundCheckPosOffset, _groundCheckRadius);
 
-        if(_drawStepRay)
+        // if(_drawStepRay)
+        GameDebug.DrawGizmos(GameDebug.GizmosInfo.normal, () =>
         {
-            Vector3 origin = transform.position;
-            origin.y += _stepOffset;
+            //Vector3 origin = transform.position;
+            //origin.y += _stepOffset;
 
+            //Gizmos.color = Color.red;
+            //Gizmos.DrawRay(origin, DirectionToVector() * _stepCheckDistance);
+
+            float radius = mCapsuleCollider.radius;
+            Vector3 startPos = Position + Vector3.up * radius;
+            int raycastCount = _stepCheckRaycastCount;
+            float deltaAngle = Number.DEG_90 / (raycastCount - 1);
+            float startAngle = Number.DEG_0;
+
+            for (int i = 0; i < raycastCount; ++i)
+            {
+                float angle = startAngle + deltaAngle * i;
+                float distance = radius * Mathf.Cos(angle * Mathf.Deg2Rad);
+                float deltaY = radius * Mathf.Sin(angle * Mathf.Deg2Rad);
+                Vector3 origin = startPos + Vector3.down * deltaY;
+                // origin.y += _stepOffset;
+
+                Gizmos.color = Color.red;
+                // Gizmos.DrawRay(origin, DirectionToVector() * distance * _stepCheckDistanceMultiplier);
+                GameDebug.DrawRay(origin, DirectionToVector() * distance * _stepCheckDistanceMultiplier, GameDebug.GizmosInfo.normal);
+            }
+        });
+
+        // if(_drawGroundCheckRay)
+        GameDebug.DrawGizmos(GameDebug.GizmosInfo.normal, () =>
+        {
+            Vector3 offsetY = Vector3.up * mCapsuleCollider.radius;
+            Vector3 pos = Position + offsetY;
+            float spacing = mCapsuleCollider.radius * 2f / (_groundCheckRaycastCount - 1);
+            Vector3 startPos = pos + DirectionToVector() * mCapsuleCollider.radius;
+
+            for (int i = 0; i < _groundCheckRaycastCount; ++i)
+            {
+                Vector3 origin = startPos + DirectionToVector(OppositeDirection) * spacing * i;
+                Gizmos.color = Color.blue;
+                Gizmos.DrawRay(origin, Vector3.down * 5f);
+            }
+
+            Vector3 groundCheckLinePos = Position + DirectionToVector() * mCapsuleCollider.radius + Vector3.down * _stepOffset;
             Gizmos.color = Color.red;
-            Gizmos.DrawRay(origin, DirectionToVector() * _stepCheckDistance);
-        }
+            Gizmos.DrawRay(groundCheckLinePos, DirectionToVector(OppositeDirection) * mCapsuleCollider.radius * 2f);
+        });
 
-        if (_drawSlideDirectionRay)
+        // if (_drawSlideDirectionRay)
+        GameDebug.DrawGizmos(GameDebug.GizmosInfo.normal, () =>
         {
             Gizmos.color = Color.yellow;
-            Vector3 origin = transform.position;
+            Vector3 origin = Position;
             // origin.y += 1f;
             Gizmos.DrawRay(origin, new Vector3(_slideDirection.x, _slideDirection.y, 0f).normalized * 2f);
-        }
+        });
 
         if (mTerrain == null)
             return;
 
         TerrainData terrainData = mTerrain.terrainData;
 
-        Vector3 terrainLocalPos = transform.position - mTerrain.transform.position;
+        Vector3 terrainLocalPos = Position - mTerrain.transform.position;
 
         float normalizedX = Mathf.InverseLerp(0f, terrainData.size.x, terrainLocalPos.x);
         float normalizedZ = Mathf.InverseLerp(0f, terrainData.size.z, terrainLocalPos.z);
@@ -602,7 +733,7 @@ public class PlayerMovement : MonoBehaviour
         Vector3 normal = terrainData.GetInterpolatedNormal(normalizedX, normalizedZ);
         float height = terrainData.GetInterpolatedHeight(normalizedX, normalizedZ);
 
-        Vector3 point = transform.position;
+        Vector3 point = Position;
         point.y = height;
 
         Gizmos.color = Color.red;

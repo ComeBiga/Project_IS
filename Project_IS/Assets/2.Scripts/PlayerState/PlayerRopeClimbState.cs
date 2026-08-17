@@ -137,7 +137,7 @@ public class PlayerRopeClimbState : PlayerStateBase
                 // PlayerRunJumpState runJumpState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.RunJump) as PlayerRunJumpState;
                 PlayerRunJumpState runJumpState = mController.StateMachine.GetStateBase<PlayerRunJumpState>();
                 // runJumpState.jumpUpward = false;
-                runJumpState.SetDefaultHeight(transform.position.y);
+                runJumpState.SetDefaultHeight(mCharacterPosition.y);
 
                 // mController.StateMachine.SwitchState(PlayerStateMachine.EState.RunJump);
                 mController.StateMachine.SwitchState<PlayerRunJumpState>();
@@ -351,7 +351,7 @@ public class PlayerRopeClimbState : PlayerStateBase
 
         if (_showWireSphere)
         {
-            Vector3 origin = mController.transform.position + Vector3.up * _offsetY;
+            Vector3 origin = mCharacterPosition + Vector3.up * _offsetY;
             Gizmos.color = Color.yellow;
             Gizmos.DrawWireSphere(origin, _detectionRadius);
         }
@@ -368,8 +368,10 @@ public class PlayerRopeClimbState : PlayerStateBase
         Vector3 handTarget = trJointPoint.position - dirToCenter * mDistanceFromJoint;// + newForward.normalized * _startDistanceToForward;
         Vector3 toTarget = handTarget - handPos;
 
-        transform.position += toTarget;
-        transform.rotation = Quaternion.LookRotation(newForward, trJointPoint.up);
+        // transform.position += toTarget;
+        mController.Movement.AddPosition(toTarget);
+        // transform.rotation = Quaternion.LookRotation(newForward, trJointPoint.up);
+        mController.Movement.SetRotation(Quaternion.LookRotation(newForward, trJointPoint.up));
     }
 
     private IEnumerator eStartClimb()

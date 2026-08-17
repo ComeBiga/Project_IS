@@ -61,7 +61,7 @@ public class AnimationCurveRotation : RotationBase
     public override void OnDirectionchanged()
     {
         mPlayerController.Movement.SetDirection(mPlayerController.Movement.OppositeDirection);
-        mPivotPosition = mPlayerController.transform.position;
+        mPivotPosition = mPlayerController.Movement.Position;
         mPreviousPosition = mPivotPosition;
         // mMoveDistance = 0f;
         mbPositionCurve = true;
@@ -71,10 +71,10 @@ public class AnimationCurveRotation : RotationBase
         // 180도 일 때 SignedAngle 부호가 부정확하므로 반시계 방향으로 약간의 오차를 주어서 계산
         // -1도 이상 차이를 둬야 계산이 제대로 됨
         // Vector3 currentForward = Quaternion.AngleAxis(-1f, Vector3.up) * mPlayerController.transform.forward;
-        Vector3 currentForward = rotateVector(mPlayerController.transform.forward, .01f);
+        Vector3 currentForward = rotateVector(mPlayerController.Movement.transform.forward, .01f);
         Vector3 targetDirection = mPlayerController.Movement.DirectionToVector();
         mRemainAngles = Vector3.SignedAngle(currentForward, targetDirection, Vector3.up);
-        mPreviousEulerAngles = mPlayerController.transform.eulerAngles;
+        mPreviousEulerAngles = mPlayerController.Movement.transform.eulerAngles;
         Debug.Log($"Current Forward: {currentForward}, targetDirection: {targetDirection}, Signed Angle: {mRemainAngles}");
         // mRemainAngles = (mRemainAngles + Number.DEG_360) % Number.DEG_360;
         // mRemainAngles = Mathf.Abs(mRemainAngles);
@@ -125,12 +125,12 @@ public class AnimationCurveRotation : RotationBase
             float currentPosition = positionValue * mRunTurnMoveSpeed;
 
             // float velocity = positionValue * mPlayerController.Movement.MoveSpeed * mRunTurnMoveSpeed;
-            mPreviousPosition = mPlayerController.transform.position;
+            mPreviousPosition = mPlayerController.Movement.Position;
 
             Vector3 moveDirection = mPlayerController.Movement.DirectionToVector();
             // mPlayerController.transform.position = mPivotPosition + moveDirection * currentPosition;
 
-            Debug.Log($"Curve Time: {t}, Position Value: {positionValue}, currentPosition: {currentPosition}, moveDirection: {moveDirection}, PivotPosition: {mPivotPosition}, newPosition: {mPlayerController.transform.position}");
+            Debug.Log($"Curve Time: {t}, Position Value: {positionValue}, currentPosition: {currentPosition}, moveDirection: {moveDirection}, PivotPosition: {mPivotPosition}, newPosition: {mPlayerController.Movement.Position}");
 
             // if (mAnimator.IsInTransition(0) && !mbTransitionToTurn)
             if (positionValue > .99f)
@@ -139,7 +139,7 @@ public class AnimationCurveRotation : RotationBase
                 // mRotationHandler.EndRotation();
                 mbPositionCurve = false;
 
-                float velocityX = (mPlayerController.transform.position.x - mPreviousPosition.x) / Time.fixedDeltaTime;
+                float velocityX = (mPlayerController.Movement.Position.x - mPreviousPosition.x) / Time.fixedDeltaTime;
 
                 Vector2 moveInput = mPlayerController.InputHandler.MoveInput;
                 moveInput.x = velocityX / mPlayerController.Movement.MoveSpeed;
@@ -171,7 +171,7 @@ public class AnimationCurveRotation : RotationBase
             Debug.Log($"Animation Curve Time: {t}, Remain Angles: {mRemainAngles}, rotationValue: {rotationValue}, currentAngles: {currentAngles}, PreviousEnlerAngles: {mPreviousEulerAngles}, newEulerAngles: {newEulerAngles}");
 
             Quaternion targetRotation = Quaternion.Euler(newEulerAngles);
-            mPlayerController.transform.rotation = targetRotation;
+            mPlayerController.Movement.transform.rotation = targetRotation;
 
             // Debug.Log($"normalizedTime: {currentStateInfo.normalizedTime}, velocity: {mController.Movement.Velocity},  currentAngles: {currentAngles}, targetAngles: {newEulerAngles.y}");
 

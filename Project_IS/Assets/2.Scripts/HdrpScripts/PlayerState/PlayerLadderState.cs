@@ -9,7 +9,6 @@ public class PlayerLadderState : PlayerStateBase
     // Idle은 현재 사용되지 않음
     private enum EClimbType { Idle, ClimbUp, ClimbDown }
 
-    private int TopStepIndex => mStepPositions.Count - 1;
 
     [Header("Start Climb Up")]
     [SerializeField] private float _startHeight = .2f;
@@ -24,6 +23,8 @@ public class PlayerLadderState : PlayerStateBase
     [SerializeField] private float _startClimbDownXSpeed = 2f;
     [SerializeField] private float _startClimbDownYSpeed = 1.5f;
     [SerializeField] private float _rotationSpeed = 2f;
+
+    private int TopStepIndex => mStepPositions.Count - 1;
 
     private Animator mAnimator;
     private LadderHandler mLadderHandler;
@@ -85,11 +86,13 @@ public class PlayerLadderState : PlayerStateBase
         mStartMoveInputX = 0f;
 
         mbActiveIK = true;
+
+        mController.Animator.Play(AnimState.Traversal_Ladder_Climb_Up_Loop);
         mController.Animator.SetClimbLadder();
         mController.Animator.SetInputXMagnitude(0f);
 
-        mController.Animator.onAnimationIK -= updateAnimatorIK;
-        mController.Animator.onAnimationIK += updateAnimatorIK;
+        mController.Animator.onAnimatorIK -= updateAnimatorIK;
+        mController.Animator.onAnimatorIK += updateAnimatorIK;
 
         mController.CharacterSound.enableFootStep = false;
         mController.CharacterSound.enableHandTouch = false;
@@ -123,7 +126,7 @@ public class PlayerLadderState : PlayerStateBase
         mbLadderTop = false;
 
         mbActiveIK = false;
-        mController.Animator.onAnimationIK -= updateAnimatorIK;
+        mController.Animator.onAnimatorIK -= updateAnimatorIK;
         mController.Animator.SetVertical(0f);
 
         mController.CharacterSound.enableFootStep = true;
@@ -186,7 +189,7 @@ public class PlayerLadderState : PlayerStateBase
         Vector3 minStepPos = stepPositions[0];
         Vector3 maxStepPos = stepPositions[maxStepIndex];
 
-        if(transform.position.y > minStepPos.y && transform.position.y < maxStepPos.y)
+        if(mCharacterPosition.y > minStepPos.y && mCharacterPosition.y < maxStepPos.y)
         {
             return true;
         }
@@ -204,7 +207,7 @@ public class PlayerLadderState : PlayerStateBase
         // Vector3 minStepPos = stepPositions[0];
         Vector3 maxStepPos = stepPositions[maxStepIndex];
 
-        if(transform.position.y > maxStepPos.y)
+        if(mCharacterPosition.y > maxStepPos.y)
         {
             return true;
         }
@@ -288,7 +291,7 @@ public class PlayerLadderState : PlayerStateBase
         // Step
         for(int i = 0; i < mStepPositions.Count; i++)
         {
-            if(transform.position.y < mStepPositions[i].y)
+            if(mCharacterPosition.y < mStepPositions[i].y)
             {
                 mCurrentStepIndex = i - 1;
 
@@ -360,6 +363,8 @@ public class PlayerLadderState : PlayerStateBase
 
     private IEnumerator eClimb()
     {
+        GameDebug.Log($"eClimb() called", tag: "LadderState Call");
+
         // Climb Up 애니메이션이 아니면 아래를 계산하지 않음
         while(true)
         {
@@ -510,11 +515,15 @@ public class PlayerLadderState : PlayerStateBase
                 mController.Animator.SetVertical(mClimbMultiplier);
 
                 // 현재 위치가 다음 Step 위치가 되기 전까지 deltaPosition 처리
-                if ((mClimbType == EClimbType.ClimbUp && transform.position.y < mStepPositions[mCurrentStepIndex].y)
-                 || (mClimbType == EClimbType.ClimbDown && transform.position.y > mStepPositions[mCurrentStepIndex].y))
+                if ((mClimbType == EClimbType.ClimbUp && mCharacterPosition.y < mStepPositions[mCurrentStepIndex].y)
+                 || (mClimbType == EClimbType.ClimbDown && mCharacterPosition.y > mStepPositions[mCurrentStepIndex].y))
                 {
-                    transform.position += mController.Animator.Animator.deltaPosition;
+                    // transform.position += mController.Animator.Animator.deltaPosition;
+                    mController.Movement.AddPosition(mController.Animator.Animator.deltaPosition);
                 }
+
+                GameDebug.Log($"Climb Multiplier: {mClimbMultiplier}, deltaPosition: {mController.Animator.Animator.deltaPosition}",
+                    tag: "Ladder Climbing");
 
                 // Hand IK Weight를 자연스럽게 0부터 1까지 계산
                 if (mClimbType == EClimbType.ClimbUp)
@@ -558,6 +567,8 @@ public class PlayerLadderState : PlayerStateBase
 
     private IEnumerator eStartClimbUp()
     {
+        GameDebug.Log($"eStartClimbUp() called", tag: "LadderState Call");
+
         // Start Climb Up 애니메이션 없이 시작하기 때문에 위치 즉시 설정
         // 자연스러움을 위해서는 Lerp 처리하던지 해야함
         Vector3 targetPosition = mController.Movement.Position;
@@ -588,12 +599,13 @@ public class PlayerLadderState : PlayerStateBase
 
         float timer = 0f;
         float lerpDuration = _startClimbUpDuration;
-        Vector3 startPosition = transform.position;
+        Vector3 startPosition = mCharacterPosition;
 
         while (timer < lerpDuration)
         {
             float t = timer / lerpDuration;
-            transform.position = Vector3.Lerp(startPosition, targetPosition, t);
+            // transform.position = Vector3.Lerp(startPosition, targetPosition, t);
+            mController.Movement.SetPosition(Vector3.Lerp(startPosition, targetPosition, t));
 
             mLeftHandIKWeight = Mathf.Lerp(0f, 1f, t);
             mRightHandIKWeight = Mathf.Lerp(0f, 1f, t);
@@ -602,14 +614,15 @@ public class PlayerLadderState : PlayerStateBase
             yield return null;
         }
 
-        transform.position = targetPosition;
+        // transform.position = targetPosition;
+        mController.Movement.SetPosition(targetPosition);
 
         StartCoroutine(eClimb());
     }
 
     private IEnumerator eEndToGround()
     {
-        Vector3 startPos = transform.position;
+        Vector3 startPos = mCharacterPosition;
         Vector3 targetPos = startPos;
         targetPos.y = mLadderHandler.Bottom.y;
 
@@ -618,15 +631,15 @@ public class PlayerLadderState : PlayerStateBase
 
         while (timer < duration)
         {
-            Vector3 currentPos = transform.position;
+            Vector3 currentPos = mCharacterPosition;
             currentPos.y = Mathf.Lerp(startPos.y, targetPos.y, timer / duration);
-            transform.position = currentPos;
+            mController.Movement.SetPosition(currentPos);
 
             timer += Time.deltaTime;
             yield return null;
         }
 
-        transform.position = targetPos;
+        mController.Movement.SetPosition(targetPos);
 
         // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
         mController.StateMachine.SwitchState<PlayerMoveState>();
@@ -648,9 +661,10 @@ public class PlayerLadderState : PlayerStateBase
                 mController.Animator.SetVertical(mClimbMultiplier);
 
                 // 현재 위치가 다음 Step 위치가 되기 전까지 deltaPosition 처리
-                if (mClimbType == EClimbType.ClimbUp && transform.position.y < mStepPositions[mCurrentStepIndex].y)
+                if (mClimbType == EClimbType.ClimbUp && mCharacterPosition.y < mStepPositions[mCurrentStepIndex].y)
                 {
-                    transform.position += mController.Animator.Animator.deltaPosition;
+                    // transform.position += mController.Animator.Animator.deltaPosition;
+                    mController.Movement.AddPosition(mController.Animator.Animator.deltaPosition);
                 }
 
                 // Hand IK Weight를 자연스럽게 0부터 1까지 계산
@@ -690,25 +704,26 @@ public class PlayerLadderState : PlayerStateBase
             if(mLadderDirection == PlayerMovement.EDirection.Forward)
             {
                 if (animatorStateInfo.normalizedTime > _endToPlatformTopTime)
-                    deltaPosition.z *= (transform.position.z < mStepPositions[TopStepIndex].z + .5f) ? _endToPlatformXSpeed : 0f;
+                    deltaPosition.z *= (mCharacterPosition.z < mStepPositions[TopStepIndex].z + .5f) ? _endToPlatformXSpeed : 0f;
                 // deltaPosition.y *= (transform.position.y < mStepPositions[TopStepIndex].y) ? 1.2f : 0f;
                 deltaPosition.x = 0f;
             }
             else
             {
                 if (animatorStateInfo.normalizedTime > _endToPlatformTopTime)
-                    deltaPosition.x *= (transform.position.x < mStepPositions[TopStepIndex].x + .5f) ? _endToPlatformXSpeed : 0f;
+                    deltaPosition.x *= (mCharacterPosition.x < mStepPositions[TopStepIndex].x + .5f) ? _endToPlatformXSpeed : 0f;
                 // deltaPosition.y *= (transform.position.y < mStepPositions[TopStepIndex].y) ? 1.2f : 0f;
                 deltaPosition.z = 0f;
             }
 
-            transform.position += deltaPosition;
+            // transform.position += deltaPosition;
+            mController.Movement.AddPosition(deltaPosition);
 
             if (animatorStateInfo.normalizedTime > _endToPlatformTopTime)
             {
-                Vector3 newPosition = transform.position;
-                newPosition.y = Mathf.Lerp(transform.position.y, mStepPositions[TopStepIndex].y, Time.deltaTime);
-                transform.position = newPosition;
+                Vector3 newPosition = mCharacterPosition;
+                newPosition.y = Mathf.Lerp(mCharacterPosition.y, mStepPositions[TopStepIndex].y, Time.deltaTime);
+                mController.Movement.SetPosition(newPosition);
             }
 
             mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
@@ -755,14 +770,14 @@ public class PlayerLadderState : PlayerStateBase
             // x
             if(mLadderDirection == PlayerMovement.EDirection.Right)
             {
-                deltaPosition.x *= (transform.position.x > mStepPositions[mCurrentStepIndex].x - _distanceToCharacter) ? _startClimbDownXSpeed : 0f;
+                deltaPosition.x *= (mCharacterPosition.x > mStepPositions[mCurrentStepIndex].x - _distanceToCharacter) ? _startClimbDownXSpeed : 0f;
 
                 if (mbIsSameDirectionStart)
                     deltaPosition.x *= -1f;
             }
             else
             {
-                deltaPosition.x *= (transform.position.x < mStepPositions[mCurrentStepIndex].x + _distanceToCharacter) ? _startClimbDownXSpeed : 0f;
+                deltaPosition.x *= (mCharacterPosition.x < mStepPositions[mCurrentStepIndex].x + _distanceToCharacter) ? _startClimbDownXSpeed : 0f;
 
                 if (mbIsSameDirectionStart)
                     deltaPosition.x *= -1f;
@@ -770,12 +785,12 @@ public class PlayerLadderState : PlayerStateBase
 
             // y
             if (animatorStateInfo.normalizedTime > .6f)
-                deltaPosition.y *= (transform.position.y > mStepPositions[mCurrentStepIndex].y) ? _startClimbDownYSpeed : 0f;
+                deltaPosition.y *= (mCharacterPosition.y > mStepPositions[mCurrentStepIndex].y) ? _startClimbDownYSpeed : 0f;
 
             // z
             deltaPosition.z = 0f;
-            // Debug.Log($"origin: {mController.Animator.Animator.deltaPosition}, result: {deltaPosition}");
-            transform.position += deltaPosition;
+            // transform.position += deltaPosition;
+            mController.Movement.AddPosition(deltaPosition);
 
             // deltaRotation
             if(mPreviousDirection != mLadderDirection)

@@ -50,8 +50,6 @@ public class PlayerInputHandler : MonoBehaviour
     public void SetMoveInput(Vector2 value)
     {
         MoveInput = value;
-
-        Debug.Log($"[{Time.frameCount}] SetMoveInput: {value}");
     }
 
     public Vector2 GetInputMagnitude()
@@ -135,6 +133,10 @@ public class PlayerInputHandler : MonoBehaviour
         calculateInput();
 
         // Debug.Log($"[{Time.frameCount}] Horizontal: {Input.GetAxis("Horizontal")}, MoveInput: {MoveInput}, MoveInputRaw: {MoveInputRaw}");
+        GameDebug.Log($"MoveInput: {MoveInput}", 
+                        tag: "MoveInput", 
+                        category: GameDebug.LogCategory.Input, 
+                        level: GameDebug.LogLevel.Verbose);
     }
 
     private void calculateInput()

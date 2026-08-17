@@ -15,6 +15,8 @@ public class AnimatorHashGenerator : EditorWindow
         "Assets/2.Scripts/Animation/AnimStateHash.cs";
     private const string AnimStatePath =
         "Assets/2.Scripts/Animation/AnimState.cs";
+    private const string AnimStateNameLookUpPath =
+        "Assets/2.Scripts/Animation/AnimStateNameLookUp.cs";
 
     [MenuItem("Tools/Animation/Generate State Hashes")]
     private static void Open()
@@ -46,6 +48,11 @@ public class AnimatorHashGenerator : EditorWindow
         {
             Generate(controller);
         }
+
+        if (GUILayout.Button("Generate Name LookUp"))
+        {
+            GenerateAnimStateNameLookUp(controller);
+        }
     }
 
     private static void GenerateAnimState(AnimatorController controller)
@@ -62,6 +69,22 @@ public class AnimatorHashGenerator : EditorWindow
         AssetDatabase.Refresh();
 
         Debug.Log($"Generated {states.Count} animator state enum.");
+    }
+
+    private static void GenerateAnimStateNameLookUp(AnimatorController controller)
+    {
+        var states = new List<StateData>();
+
+        foreach (var layer in controller.layers)
+        {
+            CollectStates(layer.stateMachine, layer.name, states);
+        }
+
+        GenerateAnimStateNameLookUpFile(states);
+
+        AssetDatabase.Refresh();
+
+        Debug.Log($"Generated {states.Count} animator state name table.");
     }
 
     private static void Generate(AnimatorController controller)
@@ -132,6 +155,43 @@ public class AnimatorHashGenerator : EditorWindow
         builder.AppendLine("}");
 
         File.WriteAllText(AnimStatePath, builder.ToString(), Encoding.UTF8);
+    }
+
+    private static void GenerateAnimStateNameLookUpFile(List<StateData> states)
+    {
+        string directory = Path.GetDirectoryName(AnimStateNameLookUpPath);
+
+        if (!Directory.Exists(directory))
+            Directory.CreateDirectory(directory);
+
+        var builder = new StringBuilder();
+
+        builder.AppendLine("// Auto-generated. Do not edit manually.");
+        builder.AppendLine("using System.Collections.Generic;");
+        builder.AppendLine("using UnityEngine;");
+        builder.AppendLine();
+        builder.AppendLine("public static class AnimStateNameLookUp");
+        builder.AppendLine("{");
+
+        builder.AppendLine($"   public static Dictionary<int, string> names = new()");
+        builder.AppendLine("   {");
+
+        var usedNames = new HashSet<string>();
+
+        foreach (var state in states)
+        {
+            string variableName = CreateVariableName(state.name);
+
+            builder.Append("      { ");
+            builder.Append($"Animator.StringToHash(\"{state.fullPath}\"), \"{variableName}\"");
+            builder.AppendLine(" },");
+        }
+
+        builder.AppendLine("   };");
+
+        builder.AppendLine("}");
+
+        File.WriteAllText(AnimStateNameLookUpPath, builder.ToString(), Encoding.UTF8);
     }
 
     private static void GenerateFile(List<StateData> states)

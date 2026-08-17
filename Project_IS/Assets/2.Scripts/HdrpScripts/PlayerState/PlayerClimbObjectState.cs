@@ -47,8 +47,8 @@ public class PlayerClimbObjectState : PlayerStateBase
         mController.Movement.SetColliderActive(false);
         mbClimbing = true;
 
-        mController.Animator.onAnimationIK -= updateAnimatorIK;
-        mController.Animator.onAnimationIK += updateAnimatorIK;
+        mController.Animator.onAnimatorIK -= updateAnimatorIK;
+        mController.Animator.onAnimatorIK += updateAnimatorIK;
 
         if (mbClimbUp)
         {
@@ -70,7 +70,7 @@ public class PlayerClimbObjectState : PlayerStateBase
         // 오르기 인지 내리기 인지 AnimatorController에서 체크는 아래 parameter로 한다.
         mController.Animator.SetVertical(0f);
 
-        mController.Animator.onAnimationIK -= updateAnimatorIK;
+        mController.Animator.onAnimatorIK -= updateAnimatorIK;
 
         if (mClimbUpRoutine != null)
         {
@@ -141,7 +141,7 @@ public class PlayerClimbObjectState : PlayerStateBase
     {
         // 애니메이션 시작할 때 y를 보정해주는 위치
         Bounds ppoBounds = mInteractableObject.BoxCollider.bounds;
-        Vector3 targetPos = transform.position;
+        Vector3 targetPos = mCharacterPosition;
         targetPos.y = ppoBounds.max.y;
 
         Quaternion targetRotation;
@@ -152,13 +152,13 @@ public class PlayerClimbObjectState : PlayerStateBase
         }
         else
         {
-            targetRotation = transform.rotation;
+            targetRotation = mCharacterRotation;
         }
 
         mController.Animator.SetVelocityY(0f);
 
         // IK Hand
-        mTargetIKPos = transform.position;
+        mTargetIKPos = mCharacterPosition;
         mTargetIKPos.y = ppoBounds.max.y;
         mTargetIKPos.z = ppoBounds.min.z;
         mHandIKWeight = .5f;
@@ -167,9 +167,9 @@ public class PlayerClimbObjectState : PlayerStateBase
         float timer = 0f;
         float lerpDuration = _lerpRotationDuration;
 
-        Vector3 startPos = transform.position;
+        Vector3 startPos = mCharacterPosition;
         // Vector3 startPos = targetPos;
-        Quaternion startRot = transform.rotation;
+        Quaternion startRot = mCharacterRotation;
 
         //while (timer < lerpDuration)
         //{
@@ -185,7 +185,8 @@ public class PlayerClimbObjectState : PlayerStateBase
         //}
 
         //transform.position = targetPos;
-        transform.rotation = targetRotation;
+        // transform.rotation = targetRotation;
+        mController.Movement.SetRotation(targetRotation);
         mController.Animator.SetVelocityY(1f);
 
         mbActiveIK = false;
@@ -224,7 +225,7 @@ public class PlayerClimbObjectState : PlayerStateBase
             {
                 deltaPosition.x = 0f;
 
-                if(transform.position.y < ppoBounds.max.y)
+                if(mCharacterPosition.y < ppoBounds.max.y)
                     deltaPosition.y *= _climbUpYSpeed;
                 else
                     deltaPosition.y = 0f;
@@ -236,7 +237,7 @@ public class PlayerClimbObjectState : PlayerStateBase
                 if (animatorStateInfo.normalizedTime > _climbUpZDelay)
                 {
                     // deltaPosition.z *= (transform.position.z < 0f) ? _climbUpZSpeed : 0f;
-                    deltaPosition.z *= (transform.position.z < moveState.PathZPosition) ? _climbUpZSpeed : 0f;
+                    deltaPosition.z *= (mCharacterPosition.z < moveState.PathZPosition) ? _climbUpZSpeed : 0f;
                     mController.Movement.UpdateRotation();
                 }
                 else
@@ -250,7 +251,7 @@ public class PlayerClimbObjectState : PlayerStateBase
                 if (animatorStateInfo.normalizedTime > _climbUpZDelay)
                 {
                     // deltaPosition.x *= (transform.position.x < ppoBounds.min.x + .35f) ? _climbUpZSpeed : 0f;
-                    deltaPosition.x *= (transform.position.x < mHitPoint.x + .35f) ? _climbUpZSpeed : 0f;
+                    deltaPosition.x *= (mCharacterPosition.x < mHitPoint.x + .35f) ? _climbUpZSpeed : 0f;
                     mController.Movement.UpdateRotation();
                 }
                 else
@@ -258,7 +259,7 @@ public class PlayerClimbObjectState : PlayerStateBase
                     deltaPosition.x = 0f;
                 }
 
-                if(transform.position.y < ppoBounds.max.y)
+                if(mCharacterPosition.y < ppoBounds.max.y)
                     deltaPosition.y *= _climbUpYSpeed;
                 else
                     deltaPosition.y = 0f;
@@ -266,13 +267,16 @@ public class PlayerClimbObjectState : PlayerStateBase
                 deltaPosition.z = 0f;
             }
 
-            transform.position += deltaPosition;
+            // transform.position += deltaPosition;
+            mController.Movement.AddPosition(deltaPosition);
 
-            if(transform.position.y > ppoBounds.max.y)
+
+            if(mCharacterPosition.y > ppoBounds.max.y)
             {
-                targetPos = transform.position;
+                targetPos = mCharacterPosition;
                 targetPos.y = ppoBounds.max.y;
-                transform.position = targetPos;
+                // transform.position = targetPos;
+                mController.Movement.SetPosition(targetPos);
             }
 
             yield return null;
@@ -283,7 +287,7 @@ public class PlayerClimbObjectState : PlayerStateBase
     {
         // 애니메이션 시작할 때 z를 보정해주는 위치
         Bounds ppoBounds = mInteractableObject.BoxCollider.bounds;
-        Vector3 targetPos = transform.position;
+        Vector3 targetPos = mCharacterPosition;
         targetPos.z = ppoBounds.min.z;
 
         float timer = 0f;
@@ -292,7 +296,8 @@ public class PlayerClimbObjectState : PlayerStateBase
         // ClimbUp이랑 다르게 애니메이션 태그 확인 코드를 안해줘서 이렇게 작성된 걸로 추측함
         while (timer < _lerpZPosDuration)
         {
-            transform.position = Vector3.Lerp(transform.position, targetPos, timer / _lerpZPosDuration);
+            // transform.position = Vector3.Lerp(mCharacterPosition, targetPos, timer / _lerpZPosDuration);
+            mController.Movement.SetPosition(Vector3.Lerp(mCharacterPosition, targetPos, timer / _lerpZPosDuration));
 
             timer += Time.deltaTime;
             yield return null;
@@ -312,13 +317,14 @@ public class PlayerClimbObjectState : PlayerStateBase
             deltaPosition.y *= (deltaPosition.y < 0f) ? _climbDownYSpeed : 1f;
             deltaPosition.z *= (deltaPosition.z < 0f) ? _climbDownZSpeed : 1f;
 
-            if (transform.position.y < 0f)
+            if (mCharacterPosition.y < 0f)
                 deltaPosition.y = 0f;
 
-            if (transform.position.z < -.6f)
+            if (mCharacterPosition.z < -.6f)
                 deltaPosition.z = 0f;
 
-            transform.position += deltaPosition;
+            // transform.position += deltaPosition;
+            mController.Movement.AddPosition(deltaPosition);
 
             // deltaRotation
             Vector3 deltaEulerAngles = mAnimator.deltaRotation.eulerAngles;
@@ -344,7 +350,8 @@ public class PlayerClimbObjectState : PlayerStateBase
                 }
                 else
                 {
-                    transform.rotation = Quaternion.Euler(Vector3.zero);
+                    // transform.rotation = Quaternion.Euler(Vector3.zero);
+                    mController.Movement.SetRotation(Quaternion.Euler(Vector3.zero));
                 }
             }
 

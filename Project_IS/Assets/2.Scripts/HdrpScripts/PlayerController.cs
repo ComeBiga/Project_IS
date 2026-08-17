@@ -64,13 +64,25 @@ public class PlayerController : MonoBehaviour
         mStateMachine.CurrentStateBase.FixedTick();
     }
 
+    private void OnAnimatorMove()
+    {
+        mStateMachine.CurrentStateBase.AnimatorMoveTick();
+    }
+
+    private void OnAnimatorIK(int layerIndex)
+    {
+        mStateMachine.CurrentStateBase.AnimatorIKTick();
+    }
+
     private IEnumerator eLateFixedUpdate()
     {
         while(true)
         {
+            yield return new WaitForFixedUpdate();
+
             mMovement.LateFixedTick();
 
-            yield return new WaitForFixedUpdate();
+            mStateMachine.CurrentStateBase.LateFixedTick();
         }
     }
 
@@ -80,5 +92,7 @@ public class PlayerController : MonoBehaviour
         mStateMachine.CurrentStateBase.Tick();
 
         mMovement.Tick();
+
+        mStateMachine.UpdateStandbyStates();
     }
 }

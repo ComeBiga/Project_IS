@@ -268,7 +268,7 @@ public class PlayerFallState : PlayerStateBase
         mController.Movement.UpdateRotation();
 
         // Terrain Normal
-        if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hitInfo, .1f, LayerMask.GetMask("Ground")))
+        if (Physics.Raycast(mCharacterPosition, Vector3.down, out RaycastHit hitInfo, .1f, LayerMask.GetMask("Ground")))
         {
             float slopeAngle = Vector3.Angle(Vector3.up, hitInfo.normal);
             // Debug.Log(slopeAngle);
@@ -616,7 +616,7 @@ public class PlayerFallState : PlayerStateBase
     private int checkInteractableObject(out RaycastHit hitInfo)
     {
         // z가 0일 때의 위치
-        Vector3 pathOrigin = transform.position;
+        Vector3 pathOrigin = mCharacterPosition;
         pathOrigin.y += mInteractableOffsetY;
         // pathOrigin.z = 0f;
         pathOrigin.z = mPathZPosition;
@@ -641,7 +641,7 @@ public class PlayerFallState : PlayerStateBase
             var interactableObject = hitInfo.collider.GetComponentInParent<InteractableObject>();
             // Bounds bounds = interactableObject.BoxCollider.bounds;
             Bounds bounds = hitInfo.collider.bounds;
-            Vector3 characterPos = transform.position;
+            Vector3 characterPos = mCharacterPosition;
 
             // 현재 캐릭터 위치와 오브젝트의 가까운 모서리까지의 거리
             float distanceToMin = Mathf.Abs(characterPos.x - bounds.min.x);
@@ -707,16 +707,16 @@ public class PlayerFallState : PlayerStateBase
     private bool checkWallForMove(out Vector2 resultMoveInput)
     {
         // z가 0일 때의 위치
-        Vector3 pathOrigin = transform.position;
+        Vector3 pathOrigin = mCharacterPosition;
         pathOrigin.y += mInteractableOffsetY;
         pathOrigin.z = 0f;
 
         // 현재 캐릭터의 위치
-        Vector3 characterOrigin = transform.position;
+        Vector3 characterOrigin = mCharacterPosition;
         characterOrigin.y += mInteractableOffsetY;
 
         // 현재 캐릭터 발을 기준으로 한 위치
-        Vector3 characterFeetOrigin = transform.position;
+        Vector3 characterFeetOrigin = mCharacterPosition;
 
         bool bFrontCasted = Physics.Raycast(pathOrigin,
                                         mController.Movement.DirectionToVector(),
@@ -756,7 +756,7 @@ public class PlayerFallState : PlayerStateBase
         //characterOrigin.y += mInteractableOffsetY;
 
         // 현재 캐릭터 발을 기준으로 한 위치
-        Vector3 characterFeetOrigin = transform.position;
+        Vector3 characterFeetOrigin = mCharacterPosition;
 
         bool bUnderCasted = Physics.Raycast(characterFeetOrigin,
                                         Vector3.down,

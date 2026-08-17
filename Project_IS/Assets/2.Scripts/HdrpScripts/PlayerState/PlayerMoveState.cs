@@ -80,7 +80,7 @@ public class PlayerMoveState : PlayerStateBase
 
         mController.Animator.SetRunning(true);
 
-        mDefaultHeight = transform.position.y;
+        mDefaultHeight = mCharacterPosition.y;
 
         mbLeftFootIK = false;
         mbLeftFootIKFullWeight = false;
@@ -92,8 +92,8 @@ public class PlayerMoveState : PlayerStateBase
         //mController.Animator.onAnimatorMove -= updateAnimatorMove;
         //mController.Animator.onAnimatorMove += updateAnimatorMove;
 
-        mController.Animator.onAnimationIK -= updateAnimatorIK;
-        mController.Animator.onAnimationIK += updateAnimatorIK;
+        mController.Animator.onAnimatorIK -= updateAnimatorIK;
+        mController.Animator.onAnimatorIK += updateAnimatorIK;
 
         mController.Animator.AnimationEventReceiver.onFrontFoot += updateFrontFoot;
 
@@ -109,7 +109,7 @@ public class PlayerMoveState : PlayerStateBase
         mController.Animator.SetRunning(false);
 
         mController.Animator.onAnimatorMove -= updateAnimatorMove;
-        mController.Animator.onAnimationIK -= updateAnimatorIK;
+        mController.Animator.onAnimatorIK -= updateAnimatorIK;
         _leftLegIKConstraint.weight = 0f;
         _rightLegIKConstraint.weight = 0f;
 
@@ -183,7 +183,8 @@ public class PlayerMoveState : PlayerStateBase
             var deltaPosition = mController.Animator.Animator.deltaPosition;
             // deltaPosition.x *= 2f;
             deltaPosition.z = 0f;
-            transform.position += deltaPosition;
+            // transform.position += deltaPosition;
+            mController.Movement.AddPosition(deltaPosition);
             // Debug.Log($"deltaPosition: {deltaPosition}, resultPosition: {transform.position}");
         }
         else
@@ -361,7 +362,7 @@ public class PlayerMoveState : PlayerStateBase
         updateInteractable(bHitDirection, interactableHitInfo);
 
         // Terrain Normal
-        if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hitInfo, .1f, LayerMask.GetMask("Ground")))
+        if (Physics.Raycast(mCharacterPosition, Vector3.down, out RaycastHit hitInfo, .1f, LayerMask.GetMask("Ground")))
         {
             mGroundNormal = hitInfo.normal;
             float slopeAngle = Vector3.Angle(Vector3.up, hitInfo.normal);
@@ -406,7 +407,7 @@ public class PlayerMoveState : PlayerStateBase
 
     private void Start()
     {
-        mPathZPosition = transform.position.z;
+        mPathZPosition = mCharacterPosition.z;
     }
 
     private void onFootStep()
@@ -471,17 +472,17 @@ public class PlayerMoveState : PlayerStateBase
     private bool checkGround(out Ground ground)
     {
         // z가 0일 때의 위치
-        Vector3 pathOrigin = transform.position;
+        Vector3 pathOrigin = mCharacterPosition;
         // pathOrigin.y += _interactableOffsetY;
         // pathOrigin.z = 0f;
         pathOrigin.z = mPathZPosition;
 
         // 현재 캐릭터의 위치
-        Vector3 characterOrigin = transform.position;
+        Vector3 characterOrigin = mCharacterPosition;
         characterOrigin.y += _interactableOffsetY;
 
         // 현재 캐릭터 발을 기준으로 한 위치
-        Vector3 characterFeetOrigin = transform.position;
+        Vector3 characterFeetOrigin = mCharacterPosition;
 
         bool bCasted = Physics.Raycast(pathOrigin,
                                         Vector3.down,
@@ -504,17 +505,17 @@ public class PlayerMoveState : PlayerStateBase
     private bool checkWallForMove(out Vector2 resultMoveInput)
     {
         // z가 0일 때의 위치
-        Vector3 pathOrigin = transform.position;
+        Vector3 pathOrigin = mCharacterPosition;
         pathOrigin.y += _interactableOffsetY;
         // pathOrigin.z = 0f;
         pathOrigin.z = mPathZPosition;
 
         // 현재 캐릭터의 위치
-        Vector3 characterOrigin = transform.position;
+        Vector3 characterOrigin = mCharacterPosition;
         characterOrigin.y += _interactableOffsetY;
 
         // 현재 캐릭터 발을 기준으로 한 위치
-        Vector3 characterFeetOrigin = transform.position;
+        Vector3 characterFeetOrigin = mCharacterPosition;
 
         bool bFrontCasted = Physics.Raycast(pathOrigin,
                                         mController.Movement.DirectionToVector(),
@@ -548,7 +549,7 @@ public class PlayerMoveState : PlayerStateBase
 
     private bool checkLadderObject(out Collider[] collider)
     {
-        Collider[] ladderColliders = Physics.OverlapSphere(transform.position, _ladderRadius, LayerMask.GetMask("Ladder"));
+        Collider[] ladderColliders = Physics.OverlapSphere(mCharacterPosition, _ladderRadius, LayerMask.GetMask("Ladder"));
 
         if (ladderColliders.Length > 0)
         {
@@ -562,6 +563,9 @@ public class PlayerMoveState : PlayerStateBase
 
     private bool switchToLadderState(Collider[] ladderColliders)
     {
+        GameDebug.Log($"In switchToLadderState(), ladderColliders.Length: {ladderColliders.Length}",
+            tag: "switchToLadderState");
+
         foreach (Collider ladderCollider in ladderColliders)
         {
             // Bottom
@@ -608,17 +612,17 @@ public class PlayerMoveState : PlayerStateBase
     private int checkInteractableObject(out RaycastHit hitInfo)
     {
         // z가 0일 때의 위치
-        Vector3 pathOrigin = transform.position;
+        Vector3 pathOrigin = mCharacterPosition;
         pathOrigin.y += _interactableOffsetY;
         // pathOrigin.z = 0f;
         pathOrigin.z = mPathZPosition;
 
         // 현재 캐릭터의 위치
-        Vector3 characterOrigin = transform.position;
+        Vector3 characterOrigin = mCharacterPosition;
         characterOrigin.y += _interactableOffsetY;
 
         // 현재 캐릭터 발을 기준으로 한 위치
-        Vector3 characterFeetOrigin = transform.position;
+        Vector3 characterFeetOrigin = mCharacterPosition;
 
         bool bFrontCasted = Physics.Raycast(pathOrigin,
                                         mController.Movement.DirectionToVector(),
@@ -667,7 +671,7 @@ public class PlayerMoveState : PlayerStateBase
             var interactableObject = hitInfo.collider.GetComponentInParent<InteractableObject>();
             // Bounds bounds = interactableObject.BoxCollider.bounds;
             Bounds bounds = hitInfo.collider.bounds;
-            Vector3 characterPos = transform.position;
+            Vector3 characterPos = mCharacterPosition;
 
             // 현재 캐릭터 위치와 오브젝트의 가까운 모서리까지의 거리
             float distanceToMin = Mathf.Abs(characterPos.x - bounds.min.x);
@@ -819,7 +823,7 @@ public class PlayerMoveState : PlayerStateBase
         {
             var interactableObject = hitInfo.collider.GetComponentInParent<InteractableObject>();
             Bounds bounds = interactableObject.BoxCollider.bounds;
-            Vector3 characterPos = transform.position;
+            Vector3 characterPos = mCharacterPosition;
 
             // 현재 캐릭터 위치와 오브젝트의 가까운 모서리까지의 거리
             float distanceToMin = Mathf.Abs(characterPos.x - bounds.min.x);
@@ -1156,7 +1160,8 @@ public class PlayerMoveState : PlayerStateBase
         deltaPosition.y = 0f; 
         deltaPosition.z = 0f;
 
-        transform.position += deltaPosition;
+        // transform.position += deltaPosition;
+        mController.Movement.AddPosition(deltaPosition);
     }
 
     private Vector3 mLeftFootPosition;
@@ -1198,7 +1203,7 @@ public class PlayerMoveState : PlayerStateBase
     {
         TerrainData terrainData = mTerrain.terrainData;
 
-        Vector3 terrainLocalPos = transform.position - mTerrain.transform.position;
+        Vector3 terrainLocalPos = mCharacterPosition - mTerrain.transform.position;
 
         float normalizedX = Mathf.InverseLerp(0f, terrainData.size.x, terrainLocalPos.x);
         float normalizedZ = Mathf.InverseLerp(0f, terrainData.size.z, terrainLocalPos.z);
@@ -1237,15 +1242,15 @@ public class PlayerMoveState : PlayerStateBase
 
         if (_drawInteractableRay)
         {
-            Vector3 pathOrigin = transform.position;
+            Vector3 pathOrigin = mCharacterPosition;
             pathOrigin.y += _interactableOffsetY;
             // pathOrigin.z = 0f;
             pathOrigin.z = mPathZPosition;
 
-            Vector3 characterOrigin = transform.position;
+            Vector3 characterOrigin = mCharacterPosition;
             characterOrigin.y += _interactableOffsetY;
 
-            Vector3 characterFeetOrigin = transform.position;
+            Vector3 characterFeetOrigin = mCharacterPosition;
 
             // front
             Gizmos.color = Color.red;
@@ -1263,7 +1268,7 @@ public class PlayerMoveState : PlayerStateBase
         if(_drawFrontWallCheckRay)
         {
             // z가 0일 때의 위치
-            Vector3 pathOrigin = transform.position;
+            Vector3 pathOrigin = mCharacterPosition;
             pathOrigin.y += _interactableOffsetY;
             // pathOrigin.z = 0f;
             pathOrigin.z = mPathZPosition;
@@ -1279,10 +1284,10 @@ public class PlayerMoveState : PlayerStateBase
         if(_drawGroundNormal)
         {
             Gizmos.color = Color.green;
-            Gizmos.DrawRay(transform.position, Vector3.down * .1f);
+            Gizmos.DrawRay(mCharacterPosition, Vector3.down * .1f);
 
             Gizmos.color = Color.yellow;
-            Gizmos.DrawRay(transform.position, mGroundNormal * 5f);
+            Gizmos.DrawRay(mCharacterPosition, mGroundNormal * 5f);
         }
     }
 }

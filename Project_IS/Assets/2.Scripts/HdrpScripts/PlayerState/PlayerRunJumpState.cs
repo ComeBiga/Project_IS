@@ -236,7 +236,7 @@ public class PlayerRunJumpState : PlayerStateBase
         float gapToLedgeRatio = Mathf.Clamp01(gapToLedge / maxGapToLedge);
         float weight = 1 - gapToLedgeRatio;
 
-        float ledgeHeightFromFeet = mLedgePoint.y - transform.position.y;
+        float ledgeHeightFromFeet = mLedgePoint.y - mCharacterPosition.y;
         float lerpHeightRange = .6f;
         float minLerpHeight = .5f;
         float maxLerpHeight = minLerpHeight + lerpHeightRange;
@@ -288,7 +288,7 @@ public class PlayerRunJumpState : PlayerStateBase
     private int checkInteractableObject(out RaycastHit hitInfo)
     {
         // z가 0일 때의 위치
-        Vector3 pathOrigin = transform.position;
+        Vector3 pathOrigin = mCharacterPosition;
         pathOrigin.y += mInteractableOffsetY;
         // pathOrigin.z = 0f;
         pathOrigin.z = mPathZPosition;
@@ -298,7 +298,7 @@ public class PlayerRunJumpState : PlayerStateBase
         //characterOrigin.y += _interactableOffsetY;
 
         // 현재 캐릭터 발을 기준으로 한 위치
-        Vector3 characterFeetOrigin = transform.position;
+        Vector3 characterFeetOrigin = mCharacterPosition;
 
         bool bFrontCasted = Physics.Raycast(pathOrigin,
                                         mController.Movement.DirectionToVector(),
@@ -338,7 +338,7 @@ public class PlayerRunJumpState : PlayerStateBase
             var interactableObject = hitInfo.collider.GetComponentInParent<InteractableObject>();
             // Bounds bounds = interactableObject.BoxCollider.bounds;
             Bounds bounds = hitInfo.collider.bounds;
-            Vector3 characterPos = transform.position;
+            Vector3 characterPos = mCharacterPosition;
 
             // 현재 캐릭터 위치와 오브젝트의 가까운 모서리까지의 거리
             float distanceToMin = Mathf.Abs(characterPos.x - bounds.min.x);
@@ -385,7 +385,7 @@ public class PlayerRunJumpState : PlayerStateBase
         {
             var interactableObject = hitInfo.collider.GetComponentInParent<InteractableObject>();
             Bounds bounds = interactableObject.BoxCollider.bounds;
-            Vector3 characterPos = transform.position;
+            Vector3 characterPos = mCharacterPosition;
 
             // 현재 캐릭터 위치와 오브젝트의 가까운 모서리까지의 거리
             float distanceToMin = Mathf.Abs(characterPos.x - bounds.min.x);

@@ -65,6 +65,7 @@ public class PlayerRunToIdleState : PlayerStateBase
         }
 
         mController.Movement.Move(mController.InputHandler.MoveInput);
+        mController.Movement.UpdateRotation();
 
         // To Idle
         if (Mathf.Abs(mController.Movement.Velocity.x) < .01f)

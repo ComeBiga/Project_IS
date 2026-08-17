@@ -36,10 +36,10 @@ public class RootMotionRotation : RotationBase
         mDeltaRotatedAngle = Number.DEG_0;
         mRootMotionVelocity = 0f;
 
-        Vector3 currentForward = rotateVector(mPlayerController.transform.forward, .01f);
+        Vector3 currentForward = rotateVector(mPlayerController.Movement.transform.forward, .01f);
         Vector3 targetDirection = mPlayerController.Movement.DirectionToVector();
         mRemainAngles = Vector3.SignedAngle(currentForward, targetDirection, Vector3.up);
-        mPreviousEulerAngles = mPlayerController.transform.eulerAngles;
+        mPreviousEulerAngles = mPlayerController.Movement.transform.eulerAngles;
         // Debug.Log($"Current Forward: {currentForward}, targetDirection: {targetDirection}, Signed Angle: {mRemainAngles}");
 
         if (mRemainAngles < 0f)
@@ -126,7 +126,7 @@ public class RootMotionRotation : RotationBase
 
         if(Mathf.Abs(mDeltaRotatedAngle) < Mathf.Abs(mRemainAngles))
         {
-            mPlayerController.transform.rotation *= finalDeltaRotation;
+            mPlayerController.Movement.transform.rotation *= finalDeltaRotation;
         }
 
 

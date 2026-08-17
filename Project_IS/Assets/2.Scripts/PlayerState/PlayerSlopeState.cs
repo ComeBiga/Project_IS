@@ -39,7 +39,7 @@ public class PlayerSlopeState : PlayerStateBase
             return;
 
         // Terrain Normal
-        if (Physics.Raycast(transform.position, Vector3.down, out RaycastHit hitInfo, .1f, LayerMask.GetMask("Ground")))
+        if (Physics.Raycast(mCharacterPosition, Vector3.down, out RaycastHit hitInfo, .1f, LayerMask.GetMask("Ground")))
         {
             float slopeAngle = Vector3.Angle(Vector3.up, hitInfo.normal);
             Debug.Log(slopeAngle);
@@ -90,7 +90,8 @@ public class PlayerSlopeState : PlayerStateBase
             deltaPosition.y = 0f;
             deltaPosition.z = 0f;
 
-            transform.position += deltaPosition;
+            // transform.position += deltaPosition;
+            mController.Movement.AddPosition(deltaPosition);
 
             mController.Movement.SetVelocity(Vector3.zero);
 

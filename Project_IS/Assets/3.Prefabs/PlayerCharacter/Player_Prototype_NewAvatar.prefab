@@ -647,8 +647,8 @@ Transform:
   m_Children:
   - {fileID: 7777189897026555898}
   - {fileID: 1143384708875221451}
-  - {fileID: 8838928588174012713}
   - {fileID: 52744396167585818}
+  - {fileID: 8838928588174012713}
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
 --- !u!136 &8557470614282152319
@@ -743,15 +743,19 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _drawStepRay: 0
+  _drawGroundCheckRay: 0
   _drawSlideDirectionRay: 0
   _slideDirection: {x: 0.77, y: -0.67}
   _slideSpeed: 1
   _moveSpeed: 4
   _rotateSpeed: 10
   _stepOffset: 0.2
-  _stepCheckDistance: 0.4
+  _stepCheckRaycastCount: 5
+  _stepCheckDistance: 0.2
+  _stepCheckDistanceMultiplier: 1.5
   _jumpForce: 4
   _minJumpVelocityX: 2
+  _groundCheckRaycastCount: 5
   _trGroundCheck: {fileID: 806837071997424628}
   _groundCheckPosOffset: {x: 0, y: -0.1, z: 0}
   _groundCheckRadius: 0.1
@@ -1927,6 +1931,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   key: 0
+  _leftLegIKConstraint: {fileID: 8456819523988581298}
+  _rightLegIKConstraint: {fileID: 6097892496326333288}
 --- !u!114 &708676819646830923
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4407,6 +4413,7 @@ GameObject:
   - component: {fileID: 1811900998791484272}
   - component: {fileID: 1127131457171146942}
   - component: {fileID: 5288294051519845295}
+  - component: {fileID: 4547399076283863507}
   - component: {fileID: 3807939278740036891}
   - component: {fileID: 5410093583013658036}
   - component: {fileID: 5589464362807472529}
@@ -4519,11 +4526,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   key: 7
-  _drawRay: 1
+  _drawRay: 0
   _deltaPositionYSpeed: 1
   _animationType: 0
   _hangingCriticalDuration: 0.85
-  _hangingClimbLedgeDuration: 1
+  _hangingClimbLedgeDuration: 1.3
   _criticalDuration: 0.333
   _ClimbLedgeDuration: 0.5
   _lerpXOffset: -0.2
@@ -4555,6 +4562,19 @@ MonoBehaviour:
   _handIKTargetOffsetX: 0.1
   _handIKTargetOffsetY: 0.02
   _handIKTargetOffsetZ: 0.2
+--- !u!114 &4547399076283863507
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 2646665094262961264}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 46e2e940412044e4db449a4049c96455, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  key: 0
 --- !u!114 &3807939278740036891
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11856,7 +11876,7 @@ Animator:
   m_GameObject: {fileID: 6801644471159435578}
   m_Enabled: 1
   m_Avatar: {fileID: 9000000, guid: ab2d899bbc111c249bd4f8cfab6dec58, type: 3}
-  m_Controller: {fileID: 9100000, guid: dfc4fd90046568c4986fb87e8002e832, type: 2}
+  m_Controller: {fileID: 9100000, guid: 43ab94e31d20adc49977a4d6895b7f8f, type: 2}
   m_CullingMode: 0
   m_UpdateMode: 1
   m_ApplyRootMotion: 0
@@ -12000,8 +12020,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _animationEventReceiver: {fileID: 1833744259983486528}
-  _trasitionLog: 1
-  _transitionTable: {fileID: 0}
+  _trasitionLog: 0
+  _transitionTable: {fileID: 11400000, guid: bd3910708ed5ca44697d3e019d99b49d, type: 2}
 --- !u!114 &1833744259983486528
 MonoBehaviour:
   m_ObjectHideFlags: 0

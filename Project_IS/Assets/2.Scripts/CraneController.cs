@@ -34,15 +34,15 @@ public class CraneController : InteractableObject
     {
         mPlayerAnimator = playerController.Animator.Animator;
 
-        playerController.Animator.onAnimationIK -= updateAnimatorIK;
-        playerController.Animator.onAnimationIK += updateAnimatorIK;
+        playerController.Animator.onAnimatorIK -= updateAnimatorIK;
+        playerController.Animator.onAnimatorIK += updateAnimatorIK;
     }
 
     public override void Exit(PlayerController playerController)
     {
         setCraneMoving(false);
 
-        playerController.Animator.onAnimationIK -= updateAnimatorIK;
+        playerController.Animator.onAnimatorIK -= updateAnimatorIK;
     }
 
     override public void Tick(PlayerController playerController)

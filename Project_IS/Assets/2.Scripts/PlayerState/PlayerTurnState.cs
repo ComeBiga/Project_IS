@@ -24,6 +24,7 @@ public class PlayerTurnState : PlayerStateBase
 
     private ETurnType mTurnType = ETurnType.None;
     private RotationHandler mRotationHandler = new RotationHandler();
+    private bool mbEnableTimer = false;
     private float mTimer = 0f;
     private float mTurnDuration = 0f;
 
@@ -38,6 +39,8 @@ public class PlayerTurnState : PlayerStateBase
 
     public override void EnterState()
     {
+        mbEnableTimer = false;
+
         mRotationHandler.SetTurnState(RotationHandler.EState.DirectionChanged);
 
         mController.InputHandler.ResetMoveInput();
@@ -57,24 +60,47 @@ public class PlayerTurnState : PlayerStateBase
         }
 
         mTimer = 0f;
+
+        mController.Animator.onEndTransition -= startTimer;
+        mController.Animator.onEndTransition += startTimer;
+
+        //mController.Animator.onAnimatorStateChanged -= startTimer;
+        //mController.Animator.onAnimatorStateChanged += startTimer;
     }
 
     public override void ExitState()
     {
+        mbEnableTimer = false;
+
         mRotationHandler.SetTurnState(RotationHandler.EState.StandBy);
 
         mController.Animator.SetTurn(false);
+
+        mController.Animator.onEndTransition -= startTimer;
+
+        // mController.Animator.onAnimatorStateChanged -= startTimer;
     }
 
     public override void FixedTick()
     {
         mRotationHandler.FixedUpdate();
 
-        if(mTurnType == ETurnType.Run && mTimer > mTurnDuration)
+        if(mController.InputHandler.GetInputRawMagnitude().x < .1f)
+        {
+            // To RunToIdle
+            mController.StateMachine.SwitchState<PlayerRunToIdleState>();
+            return;
+        }
+
+        var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
+
+        // if(mTurnType == ETurnType.Run && mTimer > mTurnDuration)
+        if(mTimer > mTurnDuration || Mathf.Approximately(mTimer, mTurnDuration))
         {
             // To Move
             if (mController.InputHandler.GetInputRawMagnitude().x > .1f)
             {
+                // GameDebug.LogAndPause($"To Move - timer/duration: {mTimer.ToString("G9")}/{mTurnDuration}, {mTimer.CompareTo(mTurnDuration)}, normalized time: {currentStateInfo.normalizedTime}", GameDebug.LogCategory.State, GameDebug.LogLevel.Info);
                 switchToMoveState();
                 return;
             }
@@ -84,7 +110,11 @@ public class PlayerTurnState : PlayerStateBase
             return;
         }
 
-        mTimer += Time.fixedDeltaTime;
+        GameDebug.Log($"timer/duration: {mTimer.ToString("G9")}/{mTurnDuration}, {mTimer.CompareTo(mTurnDuration)}, normalized time: {currentStateInfo.normalizedTime}", 
+            category: GameDebug.LogCategory.State, level: GameDebug.LogLevel.Verbose);
+
+        if(mbEnableTimer)
+            mTimer += Time.fixedDeltaTime;
     }
 
     public override void Tick()
@@ -107,20 +137,20 @@ public class PlayerTurnState : PlayerStateBase
             return;
         }
 
-        // Rotation End
-        if (mTurnType == ETurnType.Idle && mRotationHandler.State == RotationHandler.EState.StandBy)
-        {
-            // To Move
-            if (mController.InputHandler.GetInputRawMagnitude().x > .1f)
-            {
-                switchToMoveState();
-                return;
-            }
+        //// Rotation End
+        //if (mTurnType == ETurnType.Idle && mRotationHandler.State == RotationHandler.EState.StandBy)
+        //{
+        //    // To Move
+        //    if (mController.InputHandler.GetInputRawMagnitude().x > .1f)
+        //    {
+        //        switchToMoveState();
+        //        return;
+        //    }
 
-            // To RunToIdle
-            mController.StateMachine.SwitchState<PlayerRunToIdleState>();
-            return;
-        }
+        //    // To RunToIdle
+        //    mController.StateMachine.SwitchState<PlayerRunToIdleState>();
+        //    return;
+        //}
 
         mController.Movement.Move(mController.InputHandler.MoveInput);
         mRotationHandler.UpdateTurnState();
@@ -138,6 +168,11 @@ public class PlayerTurnState : PlayerStateBase
         }
     }
 
+    public override void Standby()
+    {
+        mRotationHandler.Standby();
+    }
+
     public void SetTurnType(ETurnType type)
     {
         mTurnType = type;
@@ -148,5 +183,30 @@ public class PlayerTurnState : PlayerStateBase
     private void switchToMoveState()
     {
         mController.StateMachine.SwitchState<PlayerMoveState>();
+    }
+
+    private void startTimer()
+    {
+        mbEnableTimer = true;
+
+        var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
+
+        mTimer = mTurnDuration * currentStateInfo.normalizedTime;
+
+        GameDebug.Log($"Turn Timer(G9): {mTimer.ToString("G9")}, Turn Animator Normalized Time: {currentStateInfo.normalizedTime}",
+                    category: GameDebug.LogCategory.State);
+    }
+
+    private void startTimer(bool selfTransition)
+    {
+        mbEnableTimer = true;
+
+        var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
+
+        mTimer = mTurnDuration * currentStateInfo.normalizedTime;
+
+        GameDebug.Log($"Turn Timer(G9): {mTimer.ToString("G9")}, Turn Animator Normalized Time: {currentStateInfo.normalizedTime}", 
+            category: GameDebug.LogCategory.State);
+        // GameDebug.Log($"TurnState.onEndTransition", GameDebug.LogCategory.State, GameDebug.LogLevel.Info);
     }
 }

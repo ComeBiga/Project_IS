@@ -31,15 +31,15 @@ MonoBehaviour:
     anyFrom: 0
     from: 46
     to: 45
-    fixedDuration: 0
-    duration: 0.05
+    fixedDuration: 1
+    duration: 0.25
     offset: 0.18
   - name: Run -> RunToIdle_R
     anyFrom: 0
     from: 45
     to: 48
     fixedDuration: 1
-    duration: 0.05
+    duration: 0.25
     offset: 0
   - name: RunToIdle_R -> Idle
     anyFrom: 0
@@ -60,28 +60,28 @@ MonoBehaviour:
     from: 38
     to: 45
     fixedDuration: 0
-    duration: 0
-    offset: 0.65
+    duration: 0.05
+    offset: 0.625
   - name: IdleTurn_R -> Run
     anyFrom: 0
     from: 39
     to: 45
     fixedDuration: 0
-    duration: 0
-    offset: 0.65
+    duration: 0.05
+    offset: 0.625
   - name: RunTurn -> Run
     anyFrom: 0
     from: 35
     to: 45
-    fixedDuration: 1
-    duration: 0
-    offset: 0.16
+    fixedDuration: 0
+    duration: 0.05
+    offset: 0.19
   - name: RunTurn_R -> Run
     anyFrom: 0
     from: 36
     to: 45
-    fixedDuration: 1
-    duration: 0
+    fixedDuration: 0
+    duration: 0.05
     offset: 0.68
   - name: Landing_Idle_Soft -> Run
     anyFrom: 0
@@ -284,12 +284,61 @@ MonoBehaviour:
     from: 0
     to: 48
     fixedDuration: 1
-    duration: 0.05
+    duration: 0.25
     offset: 0
   - name: Any -> IdleToRun
     anyFrom: 1
     from: 0
     to: 46
     fixedDuration: 1
-    duration: 0.05
+    duration: 0.25
+    offset: 0
+  - name: Landing_Idle_Medium -> IdleTurn
+    anyFrom: 0
+    from: 29
+    to: 38
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: Landing_Idle_Medium -> IdleTurn_R
+    anyFrom: 0
+    from: 29
+    to: 39
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: ClimbLedge_Directly_OverHead -> RunTurn
+    anyFrom: 0
+    from: 17
+    to: 35
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: ClimbLedge_Directly_OverHead -> RunTurn_R
+    anyFrom: 0
+    from: 17
+    to: 36
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: ClimbLedge_Directly_Critical -> RunTurn
+    anyFrom: 0
+    from: 15
+    to: 35
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: ClimbLedge_Directly_Critical -> RunTurn_R
+    anyFrom: 0
+    from: 15
+    to: 36
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: Any -> Traversal_Ladder_Climb_Up_Loop
+    anyFrom: 1
+    from: 0
+    to: 3
+    fixedDuration: 1
+    duration: 0.25
     offset: 0

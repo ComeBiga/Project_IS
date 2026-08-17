@@ -111,7 +111,7 @@ public class PlayerJumpState : PlayerStateBase
 
     private Vector3 getOrigin()
     {
-        Vector3 origin = transform.position;
+        Vector3 origin = mCharacterPosition;
         origin.y += mController.Movement.Height;
         return origin;
     }

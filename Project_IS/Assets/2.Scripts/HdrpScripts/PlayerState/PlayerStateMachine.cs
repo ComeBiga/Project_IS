@@ -77,13 +77,13 @@ public class PlayerStateMachine : MonoBehaviour
 
     public void SwitchState(PlayerStateBase nextState)
     {
+        var lastState = mCurrentStateBase;
+
         mCurrentStateBase?.ExitState();
         mCurrentStateBase = nextState;
         mCurrentStateBase.EnterState();
 
-        // mController.Animator.SetState((int)state);
-
-        // DebugUtility.Log("Switch Timing", $"SwitchState to: {nextState.GetType().Name}");
+        GameDebug.Log($"SwitchState from: {lastState?.GetType().Name}, to: {nextState.GetType().Name}", category: GameDebug.LogCategory.State);
     }
 
     public void SwitchState<T>(Action<T> onBeforeEnter = null) where T : PlayerStateBase
@@ -93,6 +93,18 @@ public class PlayerStateMachine : MonoBehaviour
         onBeforeEnter?.Invoke(nextState);
 
         SwitchState(nextState);
+    }
+
+    public void UpdateStandbyStates()
+    {
+        foreach(KeyValuePair<Type, PlayerStateBase> pair in mStateDicByType)
+        {
+            if (pair.Key == mCurrentStateBase.GetType())
+                continue;
+
+            PlayerStateBase standbyState = pair.Value;
+            standbyState.Standby();
+        }
     }
 
     private void Awake()

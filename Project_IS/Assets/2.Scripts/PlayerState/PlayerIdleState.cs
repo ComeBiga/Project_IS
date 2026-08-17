@@ -1,9 +1,15 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Animations.Rigging;
 
 public class PlayerIdleState : PlayerStateBase
 {
+    [SerializeField]
+    private TwoBoneIKConstraint _leftLegIKConstraint;
+    [SerializeField]
+    private TwoBoneIKConstraint _rightLegIKConstraint;
+
     private float mDefaultHeight;
 
     public override void Initialize(PlayerController controller)
@@ -13,7 +19,7 @@ public class PlayerIdleState : PlayerStateBase
 
     public override void EnterState()
     {
-        mDefaultHeight = transform.position.y;
+        mDefaultHeight = mCharacterPosition.y;
 
         mController.Movement.SetVelocity(Vector3.zero);
 
@@ -25,10 +31,26 @@ public class PlayerIdleState : PlayerStateBase
 
     public override void ExitState()
     {
-        
+
     }
 
     public override void FixedTick()
+    {
+        _leftLegIKConstraint.weight = 0f;
+        _rightLegIKConstraint.weight = 0f;
+    }
+
+    public override void AnimatorMoveTick()
+    {
+        
+    }
+
+    public override void AnimatorIKTick()
+    {
+        
+    }
+
+    public override void LateFixedTick()
     {
         
     }
@@ -78,5 +100,7 @@ public class PlayerIdleState : PlayerStateBase
         }
 
         // To Fall
+
+        mController.Movement.UpdateRotation();
     }
 }

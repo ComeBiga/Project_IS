@@ -6,6 +6,9 @@ public abstract class PlayerStateBase : MonoBehaviour
 {
     public PlayerStateMachine.EState key;
 
+    protected Vector3 mCharacterPosition => mController.Movement.Position;
+    protected Quaternion mCharacterRotation => mController.Movement.Rotation;
+
     protected PlayerController mController;
 
     public virtual void Initialize(PlayerController controller)
@@ -20,4 +23,12 @@ public abstract class PlayerStateBase : MonoBehaviour
     public virtual void Tick() { }
 
     public virtual void FixedTick() { }
+
+    public virtual void LateFixedTick() { }
+
+    public virtual void AnimatorMoveTick() { }
+
+    public virtual void AnimatorIKTick() { }
+
+    public virtual void Standby() { }
 }

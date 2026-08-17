@@ -1,0 +1,32 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d212b5f851ef9864da1043a92ba4b941, type: 3}
+  m_Name: GameDebugLogSettings
+  m_EditorClassIdentifier: 
+  enabled: 1
+  frameCount: 1
+  showCategory: 1
+  showLevel: 1
+  showTag: 1
+  showClass: 1
+  categories: -1
+  level: -1
+  disabledTags:
+  - OnCollisionStay
+  - GroundedTrue0
+  - MoveInput
+  - Velocity
+  disabledSources:
+  - AnimatorLogger
+  - PlayerAnimator
+  - PlayerTurnState
+  - PlayerStateMachine0

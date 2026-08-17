@@ -104,8 +104,6 @@ public class RotationHandler
 
     public void FixedUpdate()
     {
-        // Debug.Log($"[{Time.frameCount}] Entered RotationHandler.FixedUpdate, State: {mState}");
-
         if (mState != EState.Rotating)
             return;
 
@@ -120,8 +118,6 @@ public class RotationHandler
 
     public void Update()
     {
-        // Debug.Log($"[{Time.frameCount}] Entered RotationHandler.Update, State: {mState}");
-
         mInputTimer += Time.deltaTime;
 
         if (mInputTimer > mInputInterval && checkOppositeInputX())
@@ -157,6 +153,14 @@ public class RotationHandler
                 rotate();
                 break;
         }
+    }
+
+    public void Standby()
+    {
+        if (mState != EState.StandBy)
+            return;
+
+        standBy();
     }
 
     public void SetTurnState(EState state)

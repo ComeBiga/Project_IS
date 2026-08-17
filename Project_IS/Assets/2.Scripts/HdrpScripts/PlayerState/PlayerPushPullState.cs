@@ -51,15 +51,17 @@ public class PlayerPushPullState : PlayerStateBase
 
             if (mController.Movement.Direction == PlayerMovement.EDirection.Right)
             {
-                Vector3 newPosition = transform.position;
+                Vector3 newPosition = mCharacterPosition;
                 newPosition.x = mPushPoint.x - mFrontPushPullDistance;
-                transform.position = newPosition;
+                // transform.position = newPosition;
+                mController.Movement.SetPosition(newPosition);
             }
             else if(mController.Movement.Direction == PlayerMovement.EDirection.Left)
             {
-                Vector3 newPosition = transform.position;
+                Vector3 newPosition = mCharacterPosition;
                 newPosition.x = mPushPoint.x + mFrontPushPullDistance;
-                transform.position = newPosition;
+                // transform.position = newPosition;
+                mController.Movement.SetPosition(newPosition);
             }
         }
 
@@ -180,16 +182,17 @@ public class PlayerPushPullState : PlayerStateBase
         mbPushPull = mPushPullObject.PushPull(mController, pushPullMultiplier * Vector3.right * .8f);
         mController.Animator.SetHorizontal(mPushPullObject.GetVelocityXRatio());
 
-        Vector3 newPosition = transform.position;
+        Vector3 newPosition = mCharacterPosition;
         newPosition.x = mPushPullObject.transform.position.x - mDistanceToObject;
-        transform.position = newPosition;
+        // transform.position = newPosition;
+        mController.Movement.SetPosition(newPosition);
     }
 
     public void SetPushPullObject(PushPullObject pushPullObject)
     {
         mPushPullObject = pushPullObject;
 
-        mDistanceToObject = mPushPullObject.transform.position.x - transform.position.x;
+        mDistanceToObject = mPushPullObject.transform.position.x - mCharacterPosition.x;
     }
 
     /// <summary>
@@ -209,7 +212,7 @@ public class PlayerPushPullState : PlayerStateBase
     private int checkInteractableObject(out RaycastHit hitInfo)
     {
         // z가 0일 때의 위치
-        Vector3 pathOrigin = transform.position;
+        Vector3 pathOrigin = mCharacterPosition;
         pathOrigin.y += 1f;
         // pathOrigin.z = 0f;
         pathOrigin.z = 0f;

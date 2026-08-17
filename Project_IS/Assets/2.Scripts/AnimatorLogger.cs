@@ -17,7 +17,8 @@ public class AnimatorLogger : StateMachineBehaviour
     override public void OnStateEnter(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
         if (_enable && _showEnterLog)
-            Debug.Log($"Enter State: {_stateName}");
+            GameDebug.Log($"Enter State: {_stateName}", tag: "StateMachine Event", category: GameDebug.LogCategory.Animation);
+            // Debug.Log($"Enter State: {_stateName}");
     }
 
     // OnStateUpdate is called on each Update frame between OnStateEnter and OnStateExit callbacks
@@ -30,7 +31,8 @@ public class AnimatorLogger : StateMachineBehaviour
     override public void OnStateExit(Animator animator, AnimatorStateInfo stateInfo, int layerIndex)
     {
         if (_enable && _showExitLog)
-            Debug.Log($"Exit State: {_stateName}");
+            GameDebug.Log($"Exit State: {_stateName}", category: GameDebug.LogCategory.Animation);
+            // Debug.Log($"Exit State: {_stateName}");
     }
 
     // OnStateMove is called right after Animator.OnAnimatorMove()

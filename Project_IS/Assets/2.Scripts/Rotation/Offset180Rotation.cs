@@ -29,7 +29,7 @@ public class Offset180Rotation : RotationBase
 
     public override void Update()
     {
-        Vector3 currentForward = mPlayerController.transform.forward;
+        Vector3 currentForward = mPlayerController.Movement.transform.forward;
         // 한 프레임 돌아간 각도
         float deltaRotatedAngle = Vector3.SignedAngle(mPreviousForward, currentForward, Vector3.up);
 
