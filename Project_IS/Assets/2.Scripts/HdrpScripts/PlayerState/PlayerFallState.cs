@@ -421,12 +421,27 @@ public class PlayerFallState : PlayerStateBase
             return;
         }
 
-        // Interactable
-        int bHitDirection = checkInteractableObject(out RaycastHit interactableHitInfo);
+        // Ladder
+        var ladderState = mStateMachine.GetStateBase<PlayerLadderState>();
 
-        updateInteractable(bHitDirection, interactableHitInfo);
+        if (ladderState.CheckLadder(out PlayerLadderState.LadderInfo ladderInfo))
+        {
+            // if (ladderInfo.part == PlayerLadderState.LadderPart.Bottom && mInputHandler.IsKeyPressed(PlayerInputHandler.PressKey.Up))
+            if (ladderState.IsValidStartInMiddle(ladderInfo))
+            {
+                mStateMachine.SwitchState<PlayerLadderState>((state) =>
+                {
+                    state.SetLadderInMiddle(ladderInfo);
+                });
 
-        // Debug.Log($"[{Time.frameCount}] FallState EndTick - MoveInput: {mController.InputHandler.MoveInput}, Velocity: {mController.Movement.Velocity}, fallVelocity: {fallVelocity}");
+                return;
+            }
+        }
+
+        //// Interactable
+        //int bHitDirection = checkInteractableObject(out RaycastHit interactableHitInfo);
+
+        //updateInteractable(bHitDirection, interactableHitInfo);
     }
 
     public void SetFallIndex(int index)
@@ -446,7 +461,6 @@ public class PlayerFallState : PlayerStateBase
 
         mbLanding = false;
 
-        // var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
         var moveState = mController.StateMachine.GetStateBase<PlayerMoveState>();
 
         if (Mathf.Abs(mStartMoveInputX) > .1f)
@@ -460,9 +474,6 @@ public class PlayerFallState : PlayerStateBase
             moveState.EnterToIdle();
         }
 
-        Debug.Log($"[{Time.frameCount}] EndLanding");
-
-        // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
         mController.StateMachine.SwitchState<PlayerMoveState>();
     }
 
@@ -648,17 +659,17 @@ public class PlayerFallState : PlayerStateBase
             float distanceToMax = Mathf.Abs(characterPos.x - bounds.max.x);
             float distanceToEdge = Mathf.Min(distanceToMin, distanceToMax);
 
-            // Ladder
-            if ((interactableObject.CompareTag("Ladder"))
-                && distanceToEdge < mInteractableDistance)
-            {
-                Collider[] ladderCollider = new Collider[1];
-                ladderCollider[0] = hitInfo.collider;
-                bool bSwitched = switchToLadderState(ladderCollider);
+            //// Ladder
+            //if ((interactableObject.CompareTag("Ladder"))
+            //    && distanceToEdge < mInteractableDistance)
+            //{
+            //    Collider[] ladderCollider = new Collider[1];
+            //    ladderCollider[0] = hitInfo.collider;
+            //    bool bSwitched = switchToLadderState(ladderCollider);
 
-                if (bSwitched)
-                    return;
-            }
+            //    if (bSwitched)
+            //        return;
+            //}
         }
         // none
         else

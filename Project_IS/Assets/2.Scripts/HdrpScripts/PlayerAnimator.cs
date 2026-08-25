@@ -66,6 +66,8 @@ public class PlayerAnimator : MonoBehaviour
     private readonly int IdleToRunHash = Animator.StringToHash("IdleToRun");
     private readonly int RunToIdleHash = Animator.StringToHash("RunToIdle");
     private readonly int ActivateHash = Animator.StringToHash("Activate");
+    private readonly int MotionTimeHash = Animator.StringToHash("MotionTime");
+    private readonly int MultiplierHash = Animator.StringToHash("Multiplier");
 
     //// Animation State Name Hashes
     //private readonly int IdleLandingHash = Animator.StringToHash("IdleLanding");
@@ -103,6 +105,16 @@ public class PlayerAnimator : MonoBehaviour
 
     private Animator mAnimator;
 
+    public void SetMultiplier(float value)
+    {
+        mAnimator.SetFloat(MultiplierHash, value);
+    }
+
+    public void SetMotionTime(float value)
+    {
+        mAnimator.SetFloat(MotionTimeHash, value);
+    }
+
     public float GetVertical()
     {
         return mAnimator.GetFloat(VerticalHash);
@@ -121,6 +133,8 @@ public class PlayerAnimator : MonoBehaviour
     public void SetVertical(float value)
     {
         mAnimator.SetFloat(VerticalHash, value);
+
+        // GameDebug.Log($"Set Vertical: {value}", tag: "Ladder LookBack");
     }
 
     public void SetIsLeftFoot(bool value)
@@ -351,7 +365,7 @@ public class PlayerAnimator : MonoBehaviour
         }
         else
         {
-            Debug.LogError($"stateHash의 transitionData를 찾을 수 없습니다! currentState: {currentState}({stateHash}), nextState: {nextAnimState}({nextStateHash})");
+            Debug.LogError($"Enforced Transition Error - stateHash의 transitionData를 찾을 수 없습니다! currentState: {currentState}({stateHash}), nextState: {nextAnimState}({nextStateHash})");
             return false;
         }
     }
@@ -558,7 +572,7 @@ public class PlayerAnimator : MonoBehaviour
             mbWasInTransition = true;
 
             GameDebug.Log($"Animator In Transition from [{currentStateName}] to [{nextStateName}], transition normalized time: {transitionInfo.normalizedTime}, duration: {transitionInfo.duration}",
-                category: GameDebug.LogCategory.Animation, level: GameDebug.LogLevel.Verbose);
+                tag: "Animation Transition", category: GameDebug.LogCategory.Animation, level: GameDebug.LogLevel.Verbose);
         }
         else
         {

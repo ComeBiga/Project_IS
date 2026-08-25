@@ -39,6 +39,13 @@ public static class GameDebug
         public static string Transition = nameof(Transition);
     }
 
+    [System.Serializable]
+    public struct ToggleString
+    {
+        public string value;
+        public bool active;
+    }
+
     public struct GizmosInfo
     {
         public bool drawOnlyPlaying;
@@ -100,21 +107,22 @@ public static class GameDebug
         }
     }
 
-    public static HashSet<string> disabledTags_Log = new();
-    public static HashSet<string> disabledClasses_Log = new();
+    // public static HashSet<string> disabledTags_Log = new();
+    //public static HashSet<string> disabledClasses_Log = new();
 
-    public static HashSet<string> disabledTags_Gizmos = new();
-    public static HashSet<string> disabledClasses_Gizmos = new();
+    //public static HashSet<string> disabledTags_Gizmos = new();
+    //public static HashSet<string> disabledClasses_Gizmos = new();
 
     public static void Initialize(GameDebugLogSettings logSettings, GameDebugGizmosSettings gizmosSettings)
     {
         GameDebug.logSettings = logSettings;
-        GameDebug.disabledTags_Log = new HashSet<string>(logSettings.disabledTags);
-        GameDebug.disabledClasses_Log = new HashSet<string>(logSettings.disabledSources);
+        // GameDebug.disabledTags_Log = new HashSet<string>(logSettings.disabledTags);
+        //GameDebug.disabledTags_Log = new HashSet<ToggleString>(logSettings.disabledTags);
+        //GameDebug.disabledClasses_Log = new HashSet<string>(logSettings.disabledSources);
 
         GameDebug.gizmosSettings = gizmosSettings;
-        GameDebug.disabledTags_Gizmos = new HashSet<string>(gizmosSettings.disabledTags);
-        GameDebug.disabledClasses_Gizmos = new HashSet<string>(gizmosSettings.disabledSources);
+        //GameDebug.disabledTags_Gizmos = new HashSet<string>(gizmosSettings.disabledTags);
+        //GameDebug.disabledClasses_Gizmos = new HashSet<string>(gizmosSettings.disabledSources);
     }
 
     private static string filePathToClassName(string filePath)
@@ -131,7 +139,10 @@ public static class GameDebug
         if (!LogSettings.enabled)
             return;
 
-        if (disabledTags_Log.Contains(tag))
+        registerTag(tag, logSettings.tags);
+
+        // if (disabledTags_Log.Contains(tag))
+        if(!isEnabledToggleString(tag, logSettings.tags))
             return;
 
         if ((LogSettings.categories & category) == 0)
@@ -142,7 +153,8 @@ public static class GameDebug
 
         string className = filePathToClassName(filePath);
 
-        if (disabledClasses_Log.Contains(className))
+        // if (disabledClasses_Log.Contains(className))
+        if(!isEnabledToggleString(className, logSettings.sources))
             return;
 
         var builder = new StringBuilder();
@@ -175,6 +187,48 @@ public static class GameDebug
         EditorApplication.isPaused = true;
     }
 
+    private static void registerTag(string tag, List<ToggleString> toggleStringList)
+    {
+        if (string.IsNullOrEmpty(tag))
+            return;
+
+        foreach(ToggleString toggleString in toggleStringList)
+        {
+            if (toggleString.value == tag)
+                return;
+        }
+
+        var newTag = new ToggleString();
+        newTag.value = tag;
+        newTag.active = true;
+
+        toggleStringList.Add(newTag);
+    }
+
+    private static bool isEnabledToggleString(string value, List<ToggleString> toggleStringList)
+    {
+        if (string.IsNullOrEmpty(value))
+            return true;
+
+        ToggleString toggleString = new ToggleString();
+        toggleString.active = true;
+        toggleString.value = value;
+
+        // bool bContains = disabledTags_Log.Contains(toggleString);
+        bool bContains = toggleStringList.Contains(toggleString);
+
+        if (bContains)
+            return true;
+
+        toggleString.active = false;
+        bContains = toggleStringList.Contains(toggleString);
+
+        if (bContains)
+            return false;
+
+        return true;
+    }
+
     #region Gizmos
 
     private static bool gizmosFilter(GizmosInfo gizmosInfo, string filePath)
@@ -188,12 +242,14 @@ public static class GameDebug
         if ((gizmosInfo.category & GizmosSettings.categories) == 0)
             return false;
 
-        if(disabledTags_Gizmos.Contains(gizmosInfo.tag))
+        // if(disabledTags_Gizmos.Contains(gizmosInfo.tag))
+        if(!isEnabledToggleString(gizmosInfo.tag, gizmosSettings.tags))
             return false;
 
         string className = filePathToClassName(filePath);
 
-        if (disabledClasses_Gizmos.Contains(className))
+        // if (disabledClasses_Gizmos.Contains(className))
+        if(!isEnabledToggleString(className, gizmosSettings.sources))
             return false;
 
         return true;

@@ -20,13 +20,27 @@ MonoBehaviour:
   showClass: 1
   categories: -1
   level: -1
-  disabledTags:
-  - OnCollisionStay
-  - GroundedTrue0
-  - MoveInput
-  - Velocity
-  disabledSources:
-  - AnimatorLogger
-  - PlayerAnimator
-  - PlayerTurnState
-  - PlayerStateMachine0
+  tags:
+  - value: GroundedTrue
+    active: 0
+  - value: OnCollisionStay
+    active: 0
+  - value: MoveInput
+    active: 0
+  - value: Velocity
+    active: 0
+  - value: KeyPressed
+    active: 0
+  - value: Ladder Climbing
+    active: 0
+  - value: IsKeyPressed
+    active: 0
+  - value: LadderStepNum
+    active: 0
+  - value: ClimbLedge ClimbState
+    active: 0
+  - value: Ladder StartFromTop
+    active: 0
+  sources:
+  - value: PlayerAnimator
+    active: 1

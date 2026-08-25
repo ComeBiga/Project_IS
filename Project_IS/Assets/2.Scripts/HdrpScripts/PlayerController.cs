@@ -11,12 +11,14 @@ public class PlayerController : MonoBehaviour
     public PlayerStateMachine StateMachine => mStateMachine;
     public PlayerAnimator Animator => _animator;
     public PlayerCharacterSound CharacterSound => mCharacterSound;
+    public PlayerInteractable Interactable => mInteractable;
 
     [SerializeField] private PlayerAnimator _animator;
 
     private PlayerInputHandler mInputHandler;
     private PlayerMovement mMovement;
     private PlayerStateMachine mStateMachine;
+    private PlayerInteractable mInteractable;
     private PlayerCharacterSound mCharacterSound;
 
     public bool CheckOppositeInputX()
@@ -45,13 +47,16 @@ public class PlayerController : MonoBehaviour
         mMovement = GetComponent<PlayerMovement>();
 
         mStateMachine = GetComponent<PlayerStateMachine>();
+        mInteractable = GetComponent<PlayerInteractable>();
         mCharacterSound = GetComponent<PlayerCharacterSound>();
     }
 
     private void Start()
     {
+        mInputHandler.Initialize();
         mMovement.Initialize();
         mStateMachine.Initialize();
+        mInteractable.Initialize(this);
         mCharacterSound.Initialize(this);
 
         StartCoroutine(eLateFixedUpdate());
@@ -94,5 +99,7 @@ public class PlayerController : MonoBehaviour
         mMovement.Tick();
 
         mStateMachine.UpdateStandbyStates();
+
+        mInteractable.Tick();
     }
 }

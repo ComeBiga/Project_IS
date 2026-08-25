@@ -14,7 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enabled: 1
   categories: -1
-  disabledTags: []
-  disabledSources:
-  - PlayerMovement0
-  - PlayerClimbLedgeState
+  tags: []
+  sources:
+  - value: PlayerClimbLedgeState
+    active: 0

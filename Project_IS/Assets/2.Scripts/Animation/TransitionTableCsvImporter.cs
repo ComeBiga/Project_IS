@@ -8,6 +8,27 @@ using static TransitionTable;
 
 public class TransitionTableCsvImporter : EditorWindow
 {
+    private TransitionTableCsvImporterData importerData;
+    public TransitionTableCsvImporterData ImporterData
+    {
+        get
+        {
+            if(importerData == null)
+            {
+                string[] guids = AssetDatabase.FindAssets("t:TransitionTableCsvImporterData");
+
+                if (guids.Length > 0)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+
+                    importerData = AssetDatabase.LoadAssetAtPath<TransitionTableCsvImporterData>(path);
+                }
+            }
+
+            return importerData;
+        }
+    }
+
     private TextAsset csvFile;
     private TransitionTable transitionTable;
 
@@ -15,6 +36,12 @@ public class TransitionTableCsvImporter : EditorWindow
     private static void Open()
     {
         GetWindow<TransitionTableCsvImporter>("Transition CSV Importer");
+    }
+
+    private void OnEnable()
+    {
+        csvFile = ImporterData.csvFile;
+        transitionTable = ImporterData.transitionTable;
     }
 
     private void OnGUI()

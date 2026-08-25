@@ -86,7 +86,8 @@ public class PlayerMovement : MonoBehaviour
 
     public void AddPosition(Vector3 position)
     {
-        Vector3 newPosition = Position + position;
+        Vector3 lastPosition = Position;
+        Vector3 newPosition = lastPosition + position;
         mRigidbody.MovePosition(newPosition);
     }
 
@@ -201,6 +202,33 @@ public class PlayerMovement : MonoBehaviour
     {
         UpdateRotation(direction, Time.deltaTime * _rotateSpeed);
     }
+
+    public void UpdateRotation(EDirection direction, bool cw, float t)
+    {
+        Quaternion targetRotation = DirectionToRotation(direction);
+
+        float startAngle = transform.rotation.eulerAngles.y;
+        float targetAngle = targetRotation.eulerAngles.y;
+        float delta = Mathf.DeltaAngle(startAngle, targetAngle);
+
+        float deltaT = Mathf.Abs(delta) * Mathf.Clamp01(t);
+        float angle;
+
+        if (cw)
+            angle = startAngle + deltaT;
+        else
+            angle = startAngle - deltaT;
+
+        mRigidbody.MoveRotation(Quaternion.Euler(transform.rotation.x, angle, transform.rotation.z));
+
+        // GameDebug.Log($"cw: {cw}, Start Angle: {startAngle}, Target Angle: {targetAngle}, delta: {delta}, t: {t}, delta-t: {deltaT}, Result Angle: {angle}");
+    }
+
+    public void UpdateRotation(bool cw, float t)
+    {
+        UpdateRotation(mDirection, cw, t);
+    }
+
     public Quaternion DirectionToRotation()
     {
         return DirectionToRotation(mDirection);
@@ -552,41 +580,44 @@ public class PlayerMovement : MonoBehaviour
         bool bGrounded = false;
         RaycastHit hitInfo = new();
 
-        for(int i = 0; i < _groundCheckRaycastCount; ++i)
+        if (mRigidbody.useGravity)
         {
-            Vector3 origin = startPos + DirectionToVector(OppositeDirection) * spacing * i;
-
-            if (Physics.Raycast(origin, Vector3.down, out hitInfo, 5f, _groundLayer, QueryTriggerInteraction.Ignore))
+            for (int i = 0; i < _groundCheckRaycastCount; ++i)
             {
-                float deltaPositionY = Velocity.y * Time.fixedDeltaTime;
-                float currentFrameYpos = Position.y + deltaPositionY;
-                float nextFrameYpos = currentFrameYpos + deltaPositionY;
+                Vector3 origin = startPos + DirectionToVector(OppositeDirection) * spacing * i;
 
-                if (nextFrameYpos < hitInfo.point.y || Position.y < hitInfo.point.y + _stepOffset)
+                if (Physics.Raycast(origin, Vector3.down, out hitInfo, 5f, _groundLayer, QueryTriggerInteraction.Ignore))
                 {
-                    
+                    float deltaPositionY = Velocity.y * Time.fixedDeltaTime;
+                    float currentFrameYpos = Position.y + deltaPositionY;
+                    float nextFrameYpos = currentFrameYpos + deltaPositionY;
 
-                    bGrounded = true;
+                    if (nextFrameYpos < hitInfo.point.y || Position.y < hitInfo.point.y + _stepOffset)
+                    {
 
-                    GameDebug.Log($"Grounded, index: {i}",
-                        tag: "GroundedTrue",
-                        category: GameDebug.LogCategory.Movement,
-                        level: GameDebug.LogLevel.Info);
 
-                    break;
+                        bGrounded = true;
+
+                        GameDebug.Log($"Grounded, index: {i}",
+                            tag: "GroundedTrue",
+                            category: GameDebug.LogCategory.Movement,
+                            level: GameDebug.LogLevel.Info);
+
+                        break;
+                    }
+                    //else
+                    //{
+                    //    mbIsGrounded = false;
+                    //}
                 }
                 //else
                 //{
                 //    mbIsGrounded = false;
                 //}
             }
-            //else
-            //{
-            //    mbIsGrounded = false;
-            //}
         }
 
-        if(bGrounded)
+        if (bGrounded)
         {
             if (mbIsGrounded == false)
             {

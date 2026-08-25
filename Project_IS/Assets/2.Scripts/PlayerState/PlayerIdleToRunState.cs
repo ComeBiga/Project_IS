@@ -46,8 +46,24 @@ public class PlayerIdleToRunState : PlayerStateBase
             return;
         }
 
+        // To Ladder
+        var ladderState = mStateMachine.GetStateBase<PlayerLadderState>();
+
+        if (ladderState.CheckLadder(out PlayerLadderState.LadderInfo ladderInfo))
+        {
+            if (ladderInfo.part == PlayerLadderState.LadderPart.Bottom && mInputHandler.IsKeyPressed(PlayerInputHandler.PressKey.Up))
+            {
+                mStateMachine.SwitchState<PlayerLadderState>((state) =>
+                {
+                    state.SetLadder(ladderInfo);
+                });
+
+                return;
+            }
+        }
+
         // To RunToIdle
-        if(mController.InputHandler.GetInputRawMagnitude().x < .1f)
+        if (mController.InputHandler.GetInputRawMagnitude().x < .1f)
         {
             mController.StateMachine.SwitchState<PlayerRunToIdleState>();
             return;

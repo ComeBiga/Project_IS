@@ -92,8 +92,8 @@ SubShader
             return c;
         }
 
-    ENDCG
-}
+        ENDCG
+    }
 }
 FallBack "Diffuse"
 }

@@ -11,27 +11,24 @@ public class PlayerIdleState : PlayerStateBase
     private TwoBoneIKConstraint _rightLegIKConstraint;
 
     private float mDefaultHeight;
-
-    public override void Initialize(PlayerController controller)
-    {
-        base.Initialize(controller);
-    }
+    private bool mbEnterWithoutAnimation = false;
 
     public override void EnterState()
     {
         mDefaultHeight = mCharacterPosition.y;
 
-        mController.Movement.SetVelocity(Vector3.zero);
+        mMovement.SetVelocity(Vector3.zero);
 
-        mController.Animator.Play(AnimState.Idle);
+        if(!mbEnterWithoutAnimation)
+            mAnimator.Play(AnimState.Idle);
         // mController.Animator.CrossFadeIdle();
-        mController.Animator.SetInputX(false);
-        mController.Animator.SetInputXMagnitude(0f);
+        mAnimator.SetInputX(false);
+        mAnimator.SetInputXMagnitude(0f);
     }
 
     public override void ExitState()
     {
-
+        mbEnterWithoutAnimation = false;
     }
 
     public override void FixedTick()
@@ -58,9 +55,9 @@ public class PlayerIdleState : PlayerStateBase
     public override void Tick()
     {
         // To Turn
-        if(mController.CheckOppositeInputX())
+        if (mController.CheckOppositeInputX())
         {
-            mController.StateMachine.SwitchState<PlayerTurnState>((turnState) =>
+            mStateMachine.SwitchState<PlayerTurnState>((turnState) =>
             {
                 turnState.SetTurnType(PlayerTurnState.ETurnType.Idle);
             });
@@ -69,31 +66,31 @@ public class PlayerIdleState : PlayerStateBase
         }
 
         // To Move
-        if(mController.InputHandler.GetInputRawMagnitude().x > .1f)
+        if(mInputHandler.GetInputRawMagnitude().x > .1f)
         {
             // mController.StateMachine.SwitchState<PlayerMoveState>();
-            mController.StateMachine.SwitchState<PlayerIdleToRunState>();
+            mStateMachine.SwitchState<PlayerIdleToRunState>();
 
             return;
         }
 
         // To Jump
-        if(mController.InputHandler.JumpPressed)
+        if(mInputHandler.JumpPressed)
         {
-            mController.InputHandler.ResetJump();
+            mInputHandler.ResetJump();
 
-            var climbLedgeState = mController.StateMachine.GetStateBase<PlayerClimbLedgeState>();
+            var climbLedgeState = mStateMachine.GetStateBase<PlayerClimbLedgeState>();
 
             if (climbLedgeState.CheckLedge(out PlayerClimbLedgeState.ClimbLedgeInfo climbLedgeInfo, out Collider detectedCollider) == 1)
             {
                 climbLedgeState.SetInfo(climbLedgeInfo);
-                mController.StateMachine.SwitchState<PlayerClimbLedgeState>();
+                mStateMachine.SwitchState<PlayerClimbLedgeState>();
 
                 return;
             }
             else
             {
-                mController.StateMachine.SwitchState<PlayerJumpState>();
+                mStateMachine.SwitchState<PlayerJumpState>();
 
                 return;
             }
@@ -101,6 +98,37 @@ public class PlayerIdleState : PlayerStateBase
 
         // To Fall
 
-        mController.Movement.UpdateRotation();
+        // To Ladder
+        var ladderState = mStateMachine.GetStateBase<PlayerLadderState>();
+
+        if(ladderState.CheckLadder(out PlayerLadderState.LadderInfo ladderInfo))
+        {
+            if(ladderInfo.part == PlayerLadderState.LadderPart.Bottom && mInputHandler.IsKeyPressed(PlayerInputHandler.PressKey.Up))
+            {
+                mStateMachine.SwitchState<PlayerLadderState>((state) =>
+                {
+                    state.SetLadder(ladderInfo);
+                });
+
+                return;
+            }
+
+            if(ladderInfo.part == PlayerLadderState.LadderPart.Top && mInputHandler.IsKeyPressed(PlayerInputHandler.PressKey.Down))
+            {
+                mStateMachine.SwitchState<PlayerLadderState>((state) =>
+                {
+                    state.SetLadder(ladderInfo);
+                });
+
+                return;
+            }
+        }
+
+        mMovement.UpdateRotation();
+    }
+
+    public void EnterWithoutAnimation()
+    {
+        mbEnterWithoutAnimation = true;
     }
 }

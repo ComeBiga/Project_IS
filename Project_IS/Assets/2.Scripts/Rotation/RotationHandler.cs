@@ -54,6 +54,11 @@ public class RotationHandler
         mInputTimer = mInputInterval;
     }
 
+    public T GetRotationBase<T>() where T : RotationBase
+    {
+        return mCurrentRotation as T;
+    }
+
     public void SetType(EType type)
     {
         mType = type;

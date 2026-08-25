@@ -625,6 +625,7 @@ GameObject:
   - component: {fileID: 4080451917298411629}
   - component: {fileID: 6822098587272501032}
   - component: {fileID: 1757535740773381968}
+  - component: {fileID: 9090240054166379781}
   m_Layer: 20
   m_Name: Player_Prototype_NewAvatar
   m_TagString: Player
@@ -804,6 +805,25 @@ MonoBehaviour:
   - {fileID: 0}
   - {fileID: 0}
   mCurrentStateBase: {fileID: 0}
+--- !u!114 &9090240054166379781
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 447995265844539448}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ed8999de23e15804d84b43873b9f9220, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  _layer:
+    serializedVersion: 2
+    m_Bits: 1024
+  _raycastDistance: 5
+  _offsetY: 1
+  _interactableDistance: 0.5
+  _sidePassZDistance: 0.75
 --- !u!1 &470228129526495797
 GameObject:
   m_ObjectHideFlags: 0

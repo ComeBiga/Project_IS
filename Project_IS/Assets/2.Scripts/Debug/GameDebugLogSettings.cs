@@ -18,7 +18,7 @@ public class GameDebugLogSettings : ScriptableObject
     public LogCategory categories;
     public LogLevel level;
 
-    public List<string> disabledTags;
+    public List<ToggleString> tags;
 
-    public List<string> disabledSources;
+    public List<ToggleString> sources;
 }

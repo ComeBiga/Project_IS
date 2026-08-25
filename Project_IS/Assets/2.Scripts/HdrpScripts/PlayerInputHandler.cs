@@ -4,10 +4,22 @@ using UnityEngine;
 
 public class PlayerInputHandler : MonoBehaviour
 {
+    public enum PressKey
+    {
+        None = 0,
+        Up = 1 << 1,
+        Down = 1 << 2,
+        Left = 1 << 3,
+        Right = 1 << 4,
+
+        All = ~0
+    }
+
     public Vector2 MoveInput { get ; private set; }
     public Vector2 MoveInputRaw { get ; private set; }
     public bool JumpPressed { get; private set; }
     public bool IsInteracting { get; private set; }
+    public PressKey PressedKeys { get; private set; }
     public bool DownPressed { get; private set; }
     public bool MoveInputXTapped { get; private set; }
     public bool MoveInputXPressed { get; private set; }
@@ -20,10 +32,16 @@ public class PlayerInputHandler : MonoBehaviour
 
     [SerializeField] private float _axisSensitivity = 0.1f;
     [SerializeField] private float _axisDeadZone = 0.3f;        // CopilotÀÌ ÃßÃµÇØÁà¼­ ÀÏ´Ü ³öµÒ
+    [SerializeField] private float _inputThreshold = .1f;
     [SerializeField] private float _heldThreshold = 0.15f;
 
     private float mInputXDuration = 0f;
     private float mInputYDuration = 0f;
+
+    public void Initialize()
+    {
+        PressedKeys = PressKey.None;
+    }
 
     public void ResetJump()
     {
@@ -60,6 +78,13 @@ public class PlayerInputHandler : MonoBehaviour
     public Vector2 GetInputRawMagnitude()
     {
         return new Vector2(Mathf.Abs(MoveInputRaw.x), Mathf.Abs(MoveInputRaw.y));
+    }
+
+    public bool IsKeyPressed(PressKey key)
+    {
+        bool bResult = (PressedKeys & key) != 0;
+        GameDebug.Log($"{key} pressed: {bResult}", tag: "IsKeyPressed", category: GameDebug.LogCategory.Input, level: GameDebug.LogLevel.Verbose);
+        return bResult;
     }
 
     // Update is called once per frame
@@ -125,6 +150,8 @@ public class PlayerInputHandler : MonoBehaviour
         JumpPressed = Input.GetButtonDown("Jump");
         IsInteracting = Input.GetButton("Fire1");
 
+        updatePressedKeys(MoveInputRaw);
+
         if(Input.GetAxis("Vertical") < -.01f)
         {
             DownPressed = true;
@@ -133,10 +160,41 @@ public class PlayerInputHandler : MonoBehaviour
         calculateInput();
 
         // Debug.Log($"[{Time.frameCount}] Horizontal: {Input.GetAxis("Horizontal")}, MoveInput: {MoveInput}, MoveInputRaw: {MoveInputRaw}");
-        GameDebug.Log($"MoveInput: {MoveInput}", 
+        GameDebug.Log($"MoveInput: {MoveInput}, Raw: {MoveInputRaw}", 
                         tag: "MoveInput", 
                         category: GameDebug.LogCategory.Input, 
                         level: GameDebug.LogLevel.Verbose);
+    }
+
+    private void updatePressedKeys(Vector2 moveInputRaw)
+    {
+        if (moveInputRaw.y > _inputThreshold)
+            PressedKeys |= PressKey.Up;
+        else
+            PressedKeys &= ~PressKey.Up;
+
+        if (moveInputRaw.y < -_inputThreshold)
+            PressedKeys |= PressKey.Down;
+        else
+            PressedKeys &= ~PressKey.Down;
+
+        if (moveInputRaw.x < -_inputThreshold)
+            PressedKeys |= PressKey.Left;
+        else
+            PressedKeys &= ~PressKey.Left;
+
+        if (moveInputRaw.x > _inputThreshold)
+            PressedKeys |= PressKey.Right;
+        else
+            PressedKeys &= ~PressKey.Right;
+
+        bool bUpPressed = (PressedKeys & PressKey.Up) != 0;
+        bool bDownPressed = (PressedKeys & PressKey.Down) != 0;
+        bool bLeftPressed = (PressedKeys & PressKey.Left) != 0;
+        bool bRightPressed = (PressedKeys & PressKey.Right) != 0;
+
+        GameDebug.Log($"Key Pressed - Up: {bUpPressed}, Down: {bDownPressed}, Left: {bLeftPressed}, Right: {bRightPressed}",
+            tag: "KeyPressed", category: GameDebug.LogCategory.Input, level: GameDebug.LogLevel.Verbose);
     }
 
     private void calculateInput()

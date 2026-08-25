@@ -174,6 +174,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
         mGround = null;
         mbEnterAnimatorMove = false;
         mbStartClimb = false;
+        mbClimbWithoutInput = false;
         mController.Animator.AnimationEventReceiver.onTouchHand -= onFootStepFromFall;
         mController.Animator.onAnimatorMove -= updateAnimatorMove;
         mController.Animator.onAnimatorIK -= onAnimatorIK;
@@ -458,6 +459,11 @@ public class PlayerClimbLedgeState : PlayerStateBase
         mController.StateMachine.SwitchState<PlayerMoveState>();
     }
 
+    public void ClimbWithoutInput()
+    {
+        mbClimbWithoutInput = true;
+    }
+
     public Vector3 GetLeftHandIKTargetPosition(ClimbLedgeInfo climbLedgeInfo)
     {
         Vector3 targetPos = climbLedgeInfo.nearestLedgePoint;
@@ -596,6 +602,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
         if(mClimbState == EClimbState.Hanging)
         {
+            GameDebug.Log($"{mClimbState}", tag: "ClimbLedge ClimbState");
             if (mController.InputHandler.MoveInputRaw.y > .9f)
             {
                 mClimbState = EClimbState.Lerp;
@@ -673,6 +680,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
         if(mClimbState == EClimbState.LerpDelay)
         {
+            GameDebug.Log($"{mClimbState}", tag: "ClimbLedge ClimbState");
             float delayDuration = .1f;
 
             if (mAnimatorMoveTimer < delayDuration)
@@ -715,25 +723,31 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
         if(mClimbState == EClimbState.Lerp)
         {
-            if(mAnimatorMoveTimer < duration)
+            GameDebug.Log($"{mClimbState}", tag: "ClimbLedge ClimbState");
+            if (mAnimatorMoveTimer < duration)
             {
                 float t = mAnimatorMoveTimer / duration;
 
-                Vector3 newPos = mController.transform.position;
+                Vector3 newPos = mCharacterPosition;
                 newPos.x = Mathf.Lerp(mStartPos.x, mTargetX, t);
                 newPos.y = Mathf.Lerp(mStartPos.y, mTargetY, t);
 
-                mController.transform.position = newPos;
+                // mController.transform.position = newPos;
+                mMovement.SetPosition(newPos);
                 // mDeltaPosition = newPos - transform.position;
+
+                GameDebug.Log($"StartPos: {mStartPos}, TargetPos: ({mTargetX}, {mTargetY})",
+                    tag: "ClimbLedge Lerp Pos");
 
                 mAnimatorMoveTimer += Time.fixedDeltaTime;
 
                 if(mAnimatorMoveTimer > duration)
                 {
                     mClimbState = EClimbState.Climb;
-                    Vector3 targetPos = mController.transform.position;
+                    Vector3 targetPos = mCharacterPosition;
                     targetPos.y = mTargetY;
-                    mController.transform.position = targetPos;
+                    // mController.transform.position = targetPos;
+                    mMovement.SetPosition(targetPos);
                     mbLerpPosition = false;
                 }
             }
@@ -741,6 +755,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
         // else
         else if (mClimbState == EClimbState.Climb)
         {
+            GameDebug.Log($"{mClimbState}", tag: "ClimbLedge ClimbState");
             if (mbClimb)
             {
                 // normalizedTime이 일정 비율이 넘으면 상태 전환
@@ -750,7 +765,8 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
                 deltaPosition.z = 0f;
 
-                mController.transform.position += deltaPosition;
+                // mController.transform.position += deltaPosition;
+                mMovement.AddPosition(deltaPosition);
                 // mDeltaPosition = deltaPosition;
             }
         }

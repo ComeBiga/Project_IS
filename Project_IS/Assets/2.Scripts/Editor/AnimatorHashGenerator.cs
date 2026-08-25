@@ -9,6 +9,27 @@ using UnityEngine;
 
 public class AnimatorHashGenerator : EditorWindow
 {
+    private AnimatorHashGeneratorData generatorData;
+    public AnimatorHashGeneratorData GeneratorData
+    {
+        get
+        {
+            if(generatorData == null)
+            {
+                string[] guids = AssetDatabase.FindAssets("t:AnimatorHashGeneratorData");
+
+                if (guids.Length > 0)
+                {
+                    string path = AssetDatabase.GUIDToAssetPath(guids[0]);
+
+                    generatorData = AssetDatabase.LoadAssetAtPath<AnimatorHashGeneratorData>(path);
+                }
+            }
+
+            return generatorData;
+        }
+    }
+
     private AnimatorController controller;
 
     private const string OutputPath =
@@ -23,6 +44,11 @@ public class AnimatorHashGenerator : EditorWindow
     {
         GetWindow<AnimatorHashGenerator>(
             "Animator Hash Generator");
+    }
+
+    private void OnEnable()
+    {
+        controller = GeneratorData.animatorController;
     }
 
     private void OnGUI()
@@ -42,16 +68,35 @@ public class AnimatorHashGenerator : EditorWindow
         if (GUILayout.Button("Generate Enum"))
         {
             GenerateAnimState(controller);
+
+            AssetDatabase.Refresh();
         }
 
         if (GUILayout.Button("Generate Hash"))
         {
             Generate(controller);
+
+            AssetDatabase.Refresh();
         }
 
         if (GUILayout.Button("Generate Name LookUp"))
         {
             GenerateAnimStateNameLookUp(controller);
+
+            AssetDatabase.Refresh();
+        }
+
+        EditorGUILayout.Space();
+
+        if (GUILayout.Button("Generate All"))
+        {
+            GenerateAnimState(controller);
+
+            Generate(controller);
+
+            GenerateAnimStateNameLookUp(controller);
+
+            AssetDatabase.Refresh();
         }
     }
 
@@ -66,7 +111,7 @@ public class AnimatorHashGenerator : EditorWindow
 
         GenerateAnimStateFile(states);
 
-        AssetDatabase.Refresh();
+        // AssetDatabase.Refresh();
 
         Debug.Log($"Generated {states.Count} animator state enum.");
     }
@@ -82,7 +127,7 @@ public class AnimatorHashGenerator : EditorWindow
 
         GenerateAnimStateNameLookUpFile(states);
 
-        AssetDatabase.Refresh();
+        // AssetDatabase.Refresh();
 
         Debug.Log($"Generated {states.Count} animator state name table.");
     }
@@ -98,7 +143,7 @@ public class AnimatorHashGenerator : EditorWindow
 
         GenerateFile(states);
 
-        AssetDatabase.Refresh();
+        // AssetDatabase.Refresh();
 
         Debug.Log($"Generated {states.Count} animator state hashes.");
     }

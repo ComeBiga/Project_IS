@@ -66,6 +66,7 @@ public class PlayerMoveState : PlayerStateBase
     {
         base.Initialize(controller);
 
+        mPathZPosition = mCharacterPosition.z;
         //mRotationHandler.Init(mController);
         //mRotationHandler.SetType(_rotationType);
         //mRotationHandler.AnimationCurveRotation.SetAnimationCurve(_idleTurnPositionCurve, _idleTurnRotationCurve, _runTurnPositionCurve, _runTurnRotationCurve);
@@ -318,43 +319,24 @@ public class PlayerMoveState : PlayerStateBase
         //}
 
         // Ladder
-        if (checkLadderObject(out Collider[] ladderColliders))
+        var ladderState = mStateMachine.GetStateBase<PlayerLadderState>();
+
+        if (ladderState.CheckLadder(out PlayerLadderState.LadderInfo ladderInfo))
         {
-            switchToLadderState(ladderColliders);
-            //foreach (Collider ladderCollider in ladderColliders)
-            //{
-            //    // Bottom
-            //    // Todo: InputHandler.IsUpPressed() 정의하기
-            //    if (mController.InputHandler.MoveInput.y > .1f)
-            //    {
-            //        if (ladderCollider.tag == "LadderTop")
-            //            continue;
+            if (ladderInfo.part == PlayerLadderState.LadderPart.Bottom && mInputHandler.IsKeyPressed(PlayerInputHandler.PressKey.Up))
+            {
+                mStateMachine.SwitchState<PlayerLadderState>((state) =>
+                {
+                    state.SetLadder(ladderInfo);
+                });
 
-            //        PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder) as PlayerLadderState;
-            //        LadderHandler ladderHandler = ladderCollider.GetComponent<LadderHandler>();
-
-            //        // Top에서 위 키 입력했을 때 사다리 타는 걸 방지하기 위함
-            //        if (ladderStateBase.IsOverRange(ladderHandler))
-            //            continue;
-
-            //        ladderStateBase.SetLadder(ladderHandler, startFromBottom: true);
-
-            //        mController.StateMachine.SwitchState(PlayerStateMachine.EState.Ladder);
-            //    }
-            //    // Top
-            //    else if (mController.InputHandler.MoveInput.y < -.1f)
-            //    {
-            //        if (ladderCollider.tag != "LadderTop")
-            //            continue;
-
-            //        PlayerLadderState ladderStateBase = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Ladder) as PlayerLadderState;
-            //        LadderHandler ladderHandler = ladderCollider.GetComponentInParent<LadderHandler>();
-            //        ladderStateBase.SetLadder(ladderHandler, startFromBottom: false);
-
-            //        mController.StateMachine.SwitchState(PlayerStateMachine.EState.Ladder);
-            //    }
-            //}
+                return;
+            }
         }
+        //if (checkLadderObject(out Collider[] ladderColliders))
+        //{
+        //    switchToLadderState(ladderColliders);
+        //}
 
         // Interactable
         int bHitDirection = checkInteractableObject(out RaycastHit interactableHitInfo);
@@ -405,10 +387,10 @@ public class PlayerMoveState : PlayerStateBase
         mController.InputHandler.SetMoveInput(moveInput);
     }
 
-    private void Start()
-    {
-        mPathZPosition = mCharacterPosition.z;
-    }
+    //private void Start()
+    //{
+    //    mPathZPosition = mCharacterPosition.z;
+    //}
 
     private void onFootStep()
     {
@@ -735,17 +717,17 @@ public class PlayerMoveState : PlayerStateBase
                 mController.StateMachine.SwitchState<PlayerClimbObjectState>();
             }
 
-            // Ladder
-            if ((interactableObject.CompareTag("Ladder") || hitInfo.collider.CompareTag("LadderTop"))
-                && distanceToEdge < _interactableDistance)
-            {
-                Collider[] ladderCollider = new Collider[1];
-                ladderCollider[0] = hitInfo.collider;
-                bool bSwitched = switchToLadderState(ladderCollider);
+            //// Ladder
+            //if ((interactableObject.CompareTag("Ladder") || hitInfo.collider.CompareTag("LadderTop"))
+            //    && distanceToEdge < _interactableDistance)
+            //{
+            //    Collider[] ladderCollider = new Collider[1];
+            //    ladderCollider[0] = hitInfo.collider;
+            //    bool bSwitched = switchToLadderState(ladderCollider);
 
-                if (bSwitched)
-                    return;
-            }
+            //    if (bSwitched)
+            //        return;
+            //}
 
             // Interact
             if (distanceToEdge < interactableObject.InteractionDistance && mController.InputHandler.IsInteracting)

@@ -110,8 +110,8 @@ public class PlayerTurnState : PlayerStateBase
             return;
         }
 
-        GameDebug.Log($"timer/duration: {mTimer.ToString("G9")}/{mTurnDuration}, {mTimer.CompareTo(mTurnDuration)}, normalized time: {currentStateInfo.normalizedTime}", 
-            category: GameDebug.LogCategory.State, level: GameDebug.LogLevel.Verbose);
+        //GameDebug.Log($"timer/duration: {mTimer.ToString("G9")}/{mTurnDuration}, {mTimer.CompareTo(mTurnDuration)}, normalized time: {currentStateInfo.normalizedTime}", 
+        //    tag: "", category: GameDebug.LogCategory.State, level: GameDebug.LogLevel.Verbose);
 
         if(mbEnableTimer)
             mTimer += Time.fixedDeltaTime;
@@ -178,6 +178,11 @@ public class PlayerTurnState : PlayerStateBase
         mTurnType = type;
 
         mRotationHandler.SetTurnType(mTurnType);
+    }
+
+    public void StopStanbyRotation()
+    {
+        mRotationHandler.GetRotationBase<NormalRotation>().StopStanbyRotation();
     }
 
     private void switchToMoveState()

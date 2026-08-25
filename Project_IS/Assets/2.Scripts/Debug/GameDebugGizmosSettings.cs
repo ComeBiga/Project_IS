@@ -9,7 +9,7 @@ public class GameDebugGizmosSettings : ScriptableObject
 
     public LogCategory categories;
 
-    public List<string> disabledTags;
+    public List<ToggleString> tags;
 
-    public List<string> disabledSources;
+    public List<ToggleString> sources;
 }

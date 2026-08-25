@@ -10,10 +10,23 @@ public abstract class PlayerStateBase : MonoBehaviour
     protected Quaternion mCharacterRotation => mController.Movement.Rotation;
 
     protected PlayerController mController;
+    protected PlayerInputHandler mInputHandler;
+    protected PlayerMovement mMovement;
+    protected PlayerAnimator mAnimator;
+    protected PlayerStateMachine mStateMachine;
+    protected PlayerInteractable mInteractable;
+    protected PlayerCharacterSound mCharacterSound;
 
     public virtual void Initialize(PlayerController controller)
     {
         mController = controller;
+
+        mInputHandler = controller.InputHandler;
+        mMovement = controller.Movement;
+        mAnimator = controller.Animator;
+        mStateMachine = controller.StateMachine;
+        mInteractable = controller.Interactable;
+        mCharacterSound = controller.CharacterSound;
     }
 
     public virtual void EnterState() { }

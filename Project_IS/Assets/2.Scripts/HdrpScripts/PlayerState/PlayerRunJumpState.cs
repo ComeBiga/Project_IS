@@ -14,6 +14,8 @@ public class PlayerRunJumpState : PlayerStateBase
     private float mMotionTime = 0f;
     private float mRotationTimer = 0f;
     private float mRotationDuration = .2f;
+    private bool mbRotationCW = true;
+    private bool mbEnterWithoutAnimation = false;
 
     // Ladder
     private float mPathZPosition;
@@ -35,7 +37,8 @@ public class PlayerRunJumpState : PlayerStateBase
         if (jumpUpward)
             mController.Movement.JumpFoward();
 
-        mController.Animator.Play(AnimState.RunJump_Blend_Tree);
+        if(!mbEnterWithoutAnimation)
+            mController.Animator.Play(AnimState.RunJump_Blend_Tree);
         // mController.Animator.CrossFadeJump(true);
         // mController.Animator.SetJump(true);
         //mController.Animator.SetIndex(1);
@@ -49,13 +52,18 @@ public class PlayerRunJumpState : PlayerStateBase
         mInteractableDistance = moveState.InteractableDistance;
         mSidePassZDistance = moveState.SidePassZDistance;
 
+        mStateMachine.GetStateBase<PlayerTurnState>().StopStanbyRotation();
+
         mController.CharacterSound.PlayRandomClothSound();
     }
 
     public override void ExitState()
     {
+        mRotationDuration = .2f;
         jumpUpward = true;
         mbLedgeDetected = false;
+        mbRotationCW = true;
+        mbEnterWithoutAnimation = false;
         // mController.Animator.SetJump(false);
 
         // mController.Animator.SetVertical(0f);
@@ -114,6 +122,8 @@ public class PlayerRunJumpState : PlayerStateBase
             // Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {mMotionTime}, Current State NormalizedTime: {currentStateInfo.normalizedTime}");
         }
 
+        GameDebug.Log($"IsRunJump: {currentStateInfo.IsTag("RunJump")}, Motion Time: {mMotionTime}");
+
         // mController.Movement.Move(mMoveInput);
         mController.Movement.UpdateJump(mMoveInput);
         mController.Animator.SetHorizontal(mController.InputHandler.MoveInput.x);
@@ -122,8 +132,9 @@ public class PlayerRunJumpState : PlayerStateBase
         // mController.Movement.UpdateRotation(Time.deltaTime * 20f);
         float t = mRotationTimer / mRotationDuration;
         mRotationTimer += Time.deltaTime;
-        // Debug.Log($"[{Time.frameCount}] Rotation Timer: {mRotationTimer}, t: {t}");
-        mController.Movement.UpdateRotation(t);
+        // GameDebug.Log($"Rotation Timer: {mRotationTimer}, t: {t}");
+        // mController.Movement.UpdateRotation(t);
+        mMovement.UpdateRotation(mbRotationCW, t);
 
         if (!mController.Movement.Jumping)
         {
@@ -199,6 +210,26 @@ public class PlayerRunJumpState : PlayerStateBase
             return;
         }
 
+        // To Ladder
+        var ladderState = mStateMachine.GetStateBase<PlayerLadderState>();
+
+        if (ladderState.CheckLadder(out PlayerLadderState.LadderInfo ladderInfo))
+        {
+            GameDebug.Log($"Ladder Checked", tag: "RunJump LadderCheck");
+            // if (ladderInfo.part == PlayerLadderState.LadderPart.Bottom && mInputHandler.IsKeyPressed(PlayerInputHandler.PressKey.Up))
+            if(ladderState.IsValidStartInMiddle(ladderInfo))
+            {
+                GameDebug.Log($"StartInMiddle Validated", tag: "RunJump IsValidStartInMiddle");
+
+                mStateMachine.SwitchState<PlayerLadderState>((state) =>
+                {
+                    state.SetLadderInMiddle(ladderInfo);
+                });
+
+                return;
+            }
+        }
+
         // Interactable
         int bHitDirection = checkInteractableObject(out RaycastHit interactableHitInfo);
 
@@ -213,6 +244,21 @@ public class PlayerRunJumpState : PlayerStateBase
     public void SetDefaultHeight(float height)
     {
         mDefaultHeight = height;
+    }
+
+    public void SetRotationDuration(float duration)
+    {
+        mRotationDuration = duration;
+    }
+    
+    public void SetRotationCW(bool value)
+    {
+        mbRotationCW = value;
+    }
+
+    public void EnterWithoutAnimation()
+    {
+        mbEnterWithoutAnimation = true;
     }
 
     private void onAnimatorFixedUpdate()
@@ -363,17 +409,17 @@ public class PlayerRunJumpState : PlayerStateBase
                 mController.Movement.SetVelocity(velocity);
             }
 
-            // Ladder
-            if ((interactableObject.CompareTag("Ladder"))
-                && distanceToEdge < mInteractableDistance)
-            {
-                Collider[] ladderCollider = new Collider[1];
-                ladderCollider[0] = hitInfo.collider;
-                bool bSwitched = switchToLadderState(ladderCollider);
+            //// Ladder
+            //if ((interactableObject.CompareTag("Ladder"))
+            //    && distanceToEdge < mInteractableDistance)
+            //{
+            //    Collider[] ladderCollider = new Collider[1];
+            //    ladderCollider[0] = hitInfo.collider;
+            //    bool bSwitched = switchToLadderState(ladderCollider);
 
-                if (bSwitched)
-                    return;
-            }
+            //    if (bSwitched)
+            //        return;
+            //}
         }
         // under
         else if (type == 3)

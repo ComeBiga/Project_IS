@@ -11,9 +11,12 @@ public class LadderHandler : InteractableObject
     public Vector3 Bottom => mLadder.transform.position + mLadder.start;
     public Vector3 Top => mLadder.transform.position + mLadder.end;
     public Ground TopGround => _topGround;
+    public Ground BottomGround => _bottomGround;
 
     [SerializeField]
     private Ground _topGround;
+    [SerializeField]
+    private Ground _bottomGround;
 
     private Ladder mLadder;
 

@@ -11,7 +11,7 @@ public class NormalRotation : RotationBase
     private Vector3 mStartEulerAngles;
     private float mTargetYEulerAngle;
     private float mDeltaAngle;
-    private bool mbRotationFinished = false;
+    private bool mbRotationFinished = true;
     private PlayerTurnState.ETurnType mTurnType;
 
     private const float FIXED_ROTATION_ANGLE = -180f;
@@ -158,6 +158,11 @@ public class NormalRotation : RotationBase
                 mDuration = mIdleTurnDuration;
                 break;
         }
+    }
+
+    public void StopStanbyRotation()
+    {
+        mbRotationFinished = true;
     }
 
     private float lerpFixedAngle(float a, float b, float t)
