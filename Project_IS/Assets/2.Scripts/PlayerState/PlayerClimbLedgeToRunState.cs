@@ -9,7 +9,7 @@ public class PlayerClimbLedgeToRunState : PlayerStateBase
 
     public override void EnterState()
     {
-        mController.Animator.Play(AnimState.ClimbLedgeToRun);
+        mController.Animation.Play(AnimState.ClimbLedgeToRun);
 
         mController.InputHandler.ResetMoveInput();
     }

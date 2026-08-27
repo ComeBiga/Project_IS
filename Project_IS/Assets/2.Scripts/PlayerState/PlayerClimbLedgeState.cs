@@ -120,7 +120,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
     {
         base.Initialize(controller);
 
-        mAnimator = controller.Animator.Animator;
+        mAnimator = controller.Animation.Animator;
     }
 
     public override void EnterState()
@@ -131,28 +131,28 @@ public class PlayerClimbLedgeState : PlayerStateBase
         mController.Movement.SetUseGravity(false);
         mController.Movement.SetColliderActive(false);
 
-        mController.Animator.SetIndex(mClimbLedgeInfo.checkIndex);
+        mController.Animation.SetIndex(mClimbLedgeInfo.checkIndex);
 
         // bool bHanging = mClimbLedgeInfo.checkIndex == 0 || mClimbLedgeInfo.checkIndex == 4 ? true : false;
         bool bHanging = mClimbLedgeInfo.checkIndex == 0 ? true : false;
-        mController.Animator.Play(bHanging ? AnimState.ClimbLedge_OverHead_Hanging : AnimState.ClimbLedge_Directly_Critical);
+        mController.Animation.Play(bHanging ? AnimState.ClimbLedge_OverHead_Hanging : AnimState.ClimbLedge_Directly_Critical);
 
-        mController.Animator.SetInputXMagnitude(0f);
+        mController.Animation.SetInputXMagnitude(0f);
 
-        mController.Animator.AnimationEventReceiver.onTouchHand -= onFootStepFromFall;
-        mController.Animator.AnimationEventReceiver.onTouchHand += onFootStepFromFall;
+        mController.Animation.AnimationEventReceiver.onTouchHand -= onFootStepFromFall;
+        mController.Animation.AnimationEventReceiver.onTouchHand += onFootStepFromFall;
 
-        mController.Animator.AnimationEventReceiver.onReleaseHand -= startReleaseHandIKWeight;
-        mController.Animator.AnimationEventReceiver.onReleaseHand += startReleaseHandIKWeight;
+        mController.Animation.AnimationEventReceiver.onReleaseHand -= startReleaseHandIKWeight;
+        mController.Animation.AnimationEventReceiver.onReleaseHand += startReleaseHandIKWeight;
 
-        mController.Animator.onAnimatorFixedUpdate -= updateHandIKWeight;
+        mController.Animation.onAnimatorFixedUpdate -= updateHandIKWeight;
         // mController.Animator.onAnimatorFixedUpdate += updateHandIKWeight;
 
-        mController.Animator.onAnimatorMove -= updateAnimatorMove;
-        mController.Animator.onAnimatorMove += updateAnimatorMove;
+        mController.Animation.onAnimatorMove -= updateAnimatorMove;
+        mController.Animation.onAnimatorMove += updateAnimatorMove;
 
-        mController.Animator.onAnimatorIK -= onAnimatorIK;
-        mController.Animator.onAnimatorIK += onAnimatorIK;
+        mController.Animation.onAnimatorIK -= onAnimatorIK;
+        mController.Animation.onAnimatorIK += onAnimatorIK;
 
         //mController.Animator.onUpdateState -= onUpdateState;
         //mController.Animator.onUpdateState += onUpdateState;
@@ -174,12 +174,12 @@ public class PlayerClimbLedgeState : PlayerStateBase
         mbEnterAnimatorMove = false;
         mbStartClimb = false;
         mbClimbWithoutInput = false;
-        mController.Animator.AnimationEventReceiver.onTouchHand -= onFootStepFromFall;
-        mController.Animator.onAnimatorMove -= updateAnimatorMove;
-        mController.Animator.onAnimatorIK -= onAnimatorIK;
+        mController.Animation.AnimationEventReceiver.onTouchHand -= onFootStepFromFall;
+        mController.Animation.onAnimatorMove -= updateAnimatorMove;
+        mController.Animation.onAnimatorIK -= onAnimatorIK;
         //mController.Animator.onUpdateState -= onUpdateState;
 
-        mController.Animator.onAnimatorFixedUpdate -= updateHandIKWeight;
+        mController.Animation.onAnimatorFixedUpdate -= updateHandIKWeight;
         //mController.Animator.onAnimatorFixedUpdate -= releaseHandIKWeight;
         //mController.Animator.onAnimatorFixedUpdate += releaseHandIKWeight;
 
@@ -188,7 +188,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
     public override void Tick()
     {
-        mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
+        mController.Animation.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
 
         // updateHandIK();
         if (mClimbState != EClimbState.Hanging)
@@ -570,7 +570,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
                 mbClimb = false;
                 // mbClimbWithoutInput = mController.Movement.Velocity.y > 2.5f ? true : false;
                 mbLerpPosition = false;
-                mController.Animator.SetVertical(0f);
+                mController.Animation.SetVertical(0f);
                 _headAimIK.weight = 1f;
                 mTargetY -= _lerpYOffsetOverHead;
                 exitNormalizedTime = _exitNormalizedTimeOverHead;
@@ -626,7 +626,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
                 mbClimb = true;
                 mbStartLerp = true;
                 // mController.Animator.SetVertical(1f);
-                mController.Animator.SetActivate();
+                mController.Animation.SetActivate();
                 // mController.Animator.Play(AnimState.ClimbLedge_Directly_OverHead);
                 mAnimatorMoveTimer = 0f;
                 mbLerpPosition = true;
@@ -667,7 +667,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
                             mClimbState = EClimbState.Lerp;
                             mbClimb = true;
                             // mController.Animator.SetVertical(1f);
-                            mController.Animator.SetActivate();
+                            mController.Animation.SetActivate();
                             mAnimatorMoveTimer = 0f;
                             mbLerpPosition = true;
                         }
@@ -683,7 +683,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
                         mClimbState = EClimbState.Lerp;
                         mbClimb = true;
                         // mController.Animator.SetVertical(1f);
-                        mController.Animator.SetActivate();
+                        mController.Animation.SetActivate();
                         mAnimatorMoveTimer = 0f;
                         mbLerpPosition = true;
                     }
@@ -719,7 +719,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
                     mbClimb = true;
                     mbLerpDelay = false;
                     mAnimatorMoveTimer = 0f;
-                    mController.Animator.SetVertical(1f);
+                    mController.Animation.SetVertical(1f);
                 }
             }
 
@@ -731,7 +731,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
         if(mbStartLerp)
         {
             mbStartLerp = false;
-            mController.Animator.Play(AnimState.ClimbLedge_Directly_OverHead);
+            mController.Animation.Play(AnimState.ClimbLedge_Directly_OverHead);
         }
 
         float duration = .2f;
@@ -801,11 +801,11 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
     private void startReleaseHandIKWeight()
     {
-        mController.Animator.AnimationEventReceiver.onReleaseHand -= startReleaseHandIKWeight;
-        mController.Animator.onAnimatorFixedUpdate -= updateHandIKWeight;
+        mController.Animation.AnimationEventReceiver.onReleaseHand -= startReleaseHandIKWeight;
+        mController.Animation.onAnimatorFixedUpdate -= updateHandIKWeight;
 
-        mController.Animator.onAnimatorFixedUpdate -= releaseHandIKWeight;
-        mController.Animator.onAnimatorFixedUpdate += releaseHandIKWeight;
+        mController.Animation.onAnimatorFixedUpdate -= releaseHandIKWeight;
+        mController.Animation.onAnimatorFixedUpdate += releaseHandIKWeight;
     }
 
     private void updateHandIKWeight()
@@ -911,7 +911,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
                 _rightHandIK.weight = 0f;
                 _rightHandIK.data.targetPositionWeight = 1f;
                 _rightHandIK.data.targetRotationWeight = 1f;
-                mController.Animator.onAnimatorFixedUpdate -= releaseHandIKWeight;
+                mController.Animation.onAnimatorFixedUpdate -= releaseHandIKWeight;
             }
         }
 
@@ -973,7 +973,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
             mLeftHandTargetRot = targetRot;
             _leftHandIK.data.target.rotation = targetRot;
 
-            mController.Animator.onAnimatorFixedUpdate += updateHandIKWeight;
+            mController.Animation.onAnimatorFixedUpdate += updateHandIKWeight;
 
             mbLeftHandIK = true;
         }

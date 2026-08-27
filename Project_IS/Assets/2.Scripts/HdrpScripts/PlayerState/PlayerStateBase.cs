@@ -12,7 +12,7 @@ public abstract class PlayerStateBase : MonoBehaviour
     protected PlayerController mController;
     protected PlayerInputHandler mInputHandler;
     protected PlayerMovement mMovement;
-    protected PlayerAnimator mAnimator;
+    protected PlayerAnimation mAnimation;
     protected PlayerStateMachine mStateMachine;
     protected PlayerInteractable mInteractable;
     protected PlayerCharacterSound mCharacterSound;
@@ -23,7 +23,7 @@ public abstract class PlayerStateBase : MonoBehaviour
 
         mInputHandler = controller.InputHandler;
         mMovement = controller.Movement;
-        mAnimator = controller.Animator;
+        mAnimation = controller.Animation;
         mStateMachine = controller.StateMachine;
         mInteractable = controller.Interactable;
         mCharacterSound = controller.CharacterSound;

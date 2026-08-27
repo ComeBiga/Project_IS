@@ -28,7 +28,7 @@ public class PlayerPushPullState : PlayerStateBase
     [SerializeField]
     private float _pushPullSpeedAdditionalLimit = 1f;
 
-    private Animator Animator => mAnimator.Animator;
+    private Animator Animator => mAnimation.Animator;
 
     private bool mbPushPull = true;
     private PushPullInfo mPushPullInfo;
@@ -73,7 +73,7 @@ public class PlayerPushPullState : PlayerStateBase
         mPushPullDirection = mCharacterDirection;
         mCurrentDirection = mCharacterDirection;
         // mController.Animator.SetIndex(mType);
-        mAnimator.SetMultiplier(0f);
+        mAnimation.SetMultiplier(0f);
 
         mMovement.SetFriction(false);
 
@@ -86,7 +86,7 @@ public class PlayerPushPullState : PlayerStateBase
             setLerp();
 
             // mMovement.SetRadius(mFrontPushPullRadius);
-            mAnimator.Play((mPushPullType == EPushPullType.Front_Push) ? AnimState.PushPull_Front_Push : AnimState.PushPull_Front_Idle);
+            mAnimation.Play((mPushPullType == EPushPullType.Front_Push) ? AnimState.PushPull_Front_Push : AnimState.PushPull_Front_Idle);
 
             #region PushPull Position (Deprecated)
             //if (mMovement.Direction == PlayerMovement.EDirection.Right)
@@ -211,7 +211,7 @@ public class PlayerPushPullState : PlayerStateBase
         if (!mController.InputHandler.IsInteracting || !mbPushPull)
         {
             mAnimType = 0;
-            mController.Animator.SetIndex(mAnimType);
+            mController.Animation.SetIndex(mAnimType);
             mController.StateMachine.SwitchState<PlayerIdleState>();
             return;
         }
@@ -238,10 +238,10 @@ public class PlayerPushPullState : PlayerStateBase
                     mAnimType = 0; // idle
             }
 
-            mController.Animator.SetIndex(mAnimType);
+            mController.Animation.SetIndex(mAnimType);
         }
 
-        mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
+        mController.Animation.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
 
         // mController.Movement.Move(mController.InputHandler.MoveInput);
         // Debug.Log(mAnimator.velocity);
@@ -283,7 +283,7 @@ public class PlayerPushPullState : PlayerStateBase
         mbPushPull = mPushPullObject.PushPull(mController, pushPullMultiplier * Vector3.right * .8f);
         float speedMultiplier = mPushPullObject.GetVelocityXRatio();
         // mController.Animator.SetHorizontal(Mathf.Abs(speedMultiplier));
-        mController.Animator.SetMultiplier(Mathf.Abs(speedMultiplier));
+        mController.Animation.SetMultiplier(Mathf.Abs(speedMultiplier));
 
         Vector3 newPosition = mCharacterPosition;
         newPosition.x = mPushPullObject.transform.position.x - mDistanceToObject;
@@ -516,7 +516,7 @@ public class PlayerPushPullState : PlayerStateBase
         float characterVelocityXMagnitude = Mathf.Abs(characterVelocityX);
         float targetObjectVelocityXMagnitude = Mathf.Abs(targetObjectVelocityX);
         float speedMultiplier = (characterVelocityX > .01f) ? targetObjectVelocityX / characterVelocityX : 0.0f;
-        mAnimator.SetMultiplier(speedMultiplier);
+        mAnimation.SetMultiplier(speedMultiplier);
 
         //Vector3 newPosition = mCharacterPosition;
         //newPosition.x = mPushPullObject.transform.position.x - mDistanceToObject;
@@ -555,7 +555,7 @@ public class PlayerPushPullState : PlayerStateBase
         mPushPullObject.PushPull(pushPullForce);
 
         float speedMultiplier = mPushPullObject.GetVelocityXRatio();
-        mAnimator.SetMultiplier(Mathf.Abs(speedMultiplier));
+        mAnimation.SetMultiplier(Mathf.Abs(speedMultiplier));
 
         Vector3 newPosition = mCharacterPosition;
         newPosition.x = mPushPullObject.transform.position.x - mDistanceToObject;
@@ -701,9 +701,9 @@ public class PlayerPushPullState : PlayerStateBase
     private void setSidePushPullAnimation(PlayerMovement.EDirection direction)
     {
         if(mCharacterDirection == PlayerMovement.EDirection.Left)
-            mController.Animator.Play((direction == PlayerMovement.EDirection.Left) ? AnimState.PushPull_LL : AnimState.PushPull_LR);
+            mController.Animation.Play((direction == PlayerMovement.EDirection.Left) ? AnimState.PushPull_LL : AnimState.PushPull_LR);
         if(mCharacterDirection == PlayerMovement.EDirection.Right)
-            mController.Animator.Play((direction == PlayerMovement.EDirection.Left) ? AnimState.PushPull_RL : AnimState.PushPull_RR);
+            mController.Animation.Play((direction == PlayerMovement.EDirection.Left) ? AnimState.PushPull_RL : AnimState.PushPull_RR);
     }
 
     private IEnumerator eHandIKPos()

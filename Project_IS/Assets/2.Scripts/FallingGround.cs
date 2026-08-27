@@ -13,7 +13,7 @@ public class FallingGround : PushPullObject
     [SerializeField] private float _pushBackDistance = .1f;
     [SerializeField] private GameObject _goTopGround;
 
-    private Rigidbody mRigidbody;
+    // private Rigidbody mRigidbody;
 
     private bool mHasFallen = false;
     private int mCurrentStepOnCount = 0;
@@ -39,7 +39,7 @@ public class FallingGround : PushPullObject
     {
         base.Start();
 
-        mRigidbody = GetComponent<Rigidbody>();
+        // mRigidbody = GetComponent<Rigidbody>();
     }
 
     private void Fall()

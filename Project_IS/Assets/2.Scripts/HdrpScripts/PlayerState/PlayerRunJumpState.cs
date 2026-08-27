@@ -38,11 +38,11 @@ public class PlayerRunJumpState : PlayerStateBase
             mController.Movement.JumpFoward();
 
         if(!mbEnterWithoutAnimation)
-            mController.Animator.Play(AnimState.RunJump_Blend_Tree);
+            mController.Animation.Play(AnimState.RunJump_Blend_Tree);
         // mController.Animator.CrossFadeJump(true);
         // mController.Animator.SetJump(true);
         //mController.Animator.SetIndex(1);
-        mController.Animator.SetVertical(0f);
+        mController.Animation.SetVertical(0f);
 
         // var moveState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Move) as PlayerMoveState;
         var moveState = mController.StateMachine.GetStateBase<PlayerMoveState>();
@@ -68,7 +68,7 @@ public class PlayerRunJumpState : PlayerStateBase
 
         // mController.Animator.SetVertical(0f);
 
-        mController.Animator.onAnimatorFixedUpdate -= onAnimatorFixedUpdate;
+        mController.Animation.onAnimatorFixedUpdate -= onAnimatorFixedUpdate;
     }
 
     public override void Tick()
@@ -86,7 +86,7 @@ public class PlayerRunJumpState : PlayerStateBase
                 mMoveInput.x = 0f;
         }
 
-        var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
+        var currentStateInfo = mController.Animation.Animator.GetCurrentAnimatorStateInfo(0);
 
         // Jump Animation NormalizedTime
         if (currentStateInfo.IsTag("RunJump"))
@@ -115,7 +115,7 @@ public class PlayerRunJumpState : PlayerStateBase
             }
 
             // mController.Animator.SetVertical(resultNormalizedVelocityY);
-            mController.Animator.SetVertical(mMotionTime);
+            mController.Animation.SetVertical(mMotionTime);
 
             // Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {normalizedVelocityY}");
             // Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {resultNormalizedVelocityY}, Current State NormalizedTime: {currentStateInfo.normalizedTime}");
@@ -126,8 +126,8 @@ public class PlayerRunJumpState : PlayerStateBase
 
         // mController.Movement.Move(mMoveInput);
         mController.Movement.UpdateJump(mMoveInput);
-        mController.Animator.SetHorizontal(mController.InputHandler.MoveInput.x);
-        mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
+        mController.Animation.SetHorizontal(mController.InputHandler.MoveInput.x);
+        mController.Animation.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
 
         // mController.Movement.UpdateRotation(Time.deltaTime * 20f);
         float t = mRotationTimer / mRotationDuration;
@@ -172,19 +172,19 @@ public class PlayerRunJumpState : PlayerStateBase
             mLedgePoint = climbLedgeInfo.nearestLedgePoint;
 
             // Left Hand
-            Vector3 leftHandBonePos = mController.Animator.Animator.GetBoneTransform(HumanBodyBones.LeftHand).position;
+            Vector3 leftHandBonePos = mController.Animation.Animator.GetBoneTransform(HumanBodyBones.LeftHand).position;
             Vector3 leftHandTargetPos = mLedgePoint;
             leftHandTargetPos.z = leftHandBonePos.z;
             _climbLedgeState.LeftHandIK.data.target.position = leftHandTargetPos;
 
             // Right Hand
-            Vector3 rightHandBonePos = mController.Animator.Animator.GetBoneTransform(HumanBodyBones.RightHand).position;
+            Vector3 rightHandBonePos = mController.Animation.Animator.GetBoneTransform(HumanBodyBones.RightHand).position;
             Vector3 rightHandTargetPos = mLedgePoint;
             rightHandTargetPos.z = rightHandBonePos.z;
             _climbLedgeState.RightHandIK.data.target.position = rightHandTargetPos;
 
-            mController.Animator.onAnimatorFixedUpdate -= onAnimatorFixedUpdate;
-            mController.Animator.onAnimatorFixedUpdate += onAnimatorFixedUpdate;
+            mController.Animation.onAnimatorFixedUpdate -= onAnimatorFixedUpdate;
+            mController.Animation.onAnimatorFixedUpdate += onAnimatorFixedUpdate;
         }
         else if (ledgeDetection == 1)
         {
@@ -238,7 +238,7 @@ public class PlayerRunJumpState : PlayerStateBase
 
     public void SetTurningCW(bool value)
     {
-        mController.Animator.SetIndex(value ? 0 : 1);
+        mController.Animation.SetIndex(value ? 0 : 1);
     }
 
     public void SetDefaultHeight(float height)

@@ -44,7 +44,7 @@ public class RotationHandler
         mOffset180Rotation = new Offset180Rotation(this);
         mNormalRotation = new NormalRotation(this);
 
-        mPlayerController.Animator.onAnimatorMove += onAnimatorMove;
+        mPlayerController.Animation.onAnimatorMove += onAnimatorMove;
 
         mState = EState.StandBy;
         mbIsRotating = false;
@@ -177,7 +177,7 @@ public class RotationHandler
     {
         mNormalRotation.SetTurnType(turnType);
 
-        mPlayerController.Animator.SetIndex((turnType == PlayerTurnState.ETurnType.Idle) ? 0 : 1);
+        mPlayerController.Animation.SetIndex((turnType == PlayerTurnState.ETurnType.Idle) ? 0 : 1);
     }
 
     private void onAnimatorMove()

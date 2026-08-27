@@ -46,7 +46,7 @@ public class PlayerFallState : PlayerStateBase
     {
         base.Initialize(controller);
 
-        mAnimator = controller.Animator.Animator;
+        mAnimator = controller.Animation.Animator;
     }
 
     public override void EnterState()
@@ -55,13 +55,13 @@ public class PlayerFallState : PlayerStateBase
         mMinVelocityY = 0f;
         mStartMoveInputX = 0f;
 
-        mController.Animator.SetIndex(mFallIndex);
-        mController.Animator.SetFall(true);
+        mController.Animation.SetIndex(mFallIndex);
+        mController.Animation.SetFall(true);
         // mController.Animator.ResetLanding();
-        mController.Animator.SetLanding(false);
+        mController.Animation.SetLanding(false);
         // mController.Animator.SetInputXMagnitude(0f);
         // mController.Animator.CrossFadeFall(mFallType == EFallType.FromJump ? true : false);
-        mController.Animator.Play(mFallType == EFallType.FromJump ? AnimState.Fall_FromJump : AnimState.Fall_FromRun);
+        mController.Animation.Play(mFallType == EFallType.FromJump ? AnimState.Fall_FromJump : AnimState.Fall_FromRun);
 
         var moveState = mController.StateMachine.GetStateBase<PlayerMoveState>();
         mPathZPosition = moveState.PathZPosition;
@@ -76,9 +76,9 @@ public class PlayerFallState : PlayerStateBase
     {
         mbLanding = false;
 
-        mController.Animator.SetIndex(0);
+        mController.Animation.SetIndex(0);
         // mController.Animator.ResetFall();
-        mController.Animator.SetFall(false);
+        mController.Animation.SetFall(false);
         // mController.Animator.SetInputXMagnitude(0f);
         // mController.Animator.SetLanding(false);
 
@@ -118,7 +118,7 @@ public class PlayerFallState : PlayerStateBase
             // Medium Landing
             else if (mMinVelocityY < _mediumLandingVelocityY)
             {
-                mController.Animator.SetIndex(1);
+                mController.Animation.SetIndex(1);
 
                 // Idle Landing
                 if (inputXMagnitude < .1f)
@@ -155,7 +155,7 @@ public class PlayerFallState : PlayerStateBase
             // Soft Landing
             else
             {
-                mController.Animator.SetIndex(0);
+                mController.Animation.SetIndex(0);
 
                 // Idle Landing
                 if (inputXMagnitude < .1f)
@@ -222,15 +222,15 @@ public class PlayerFallState : PlayerStateBase
             return;
         }
 
-        var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
+        var currentStateInfo = mController.Animation.Animator.GetCurrentAnimatorStateInfo(0);
 
         // Jump Animation NormalizedTime
         if (currentStateInfo.IsTag("RunJump"))
         {
-            float motionTime = mController.Animator.GetVertical();
+            float motionTime = mController.Animation.GetVertical();
             motionTime += Time.fixedDeltaTime;
 
-            mController.Animator.SetVertical(motionTime);
+            mController.Animation.SetVertical(motionTime);
 
             // Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {motionTime}, Current State NormalizedTime: {currentStateInfo.normalizedTime}");
         }
@@ -309,7 +309,7 @@ public class PlayerFallState : PlayerStateBase
         }
 
         float inputXMagnitude = Mathf.Abs(mController.InputHandler.MoveInput.x);
-        mController.Animator.SetInputXMagnitude(inputXMagnitude);
+        mController.Animation.SetInputXMagnitude(inputXMagnitude);
 
         //if (mController.Movement.IsGrounded)
         //{

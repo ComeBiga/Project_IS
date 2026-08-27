@@ -12,14 +12,14 @@ public class PlayerIdleToRunState : PlayerStateBase
 
     public override void EnterState()
     {
-        mController.Animator.SetIdleToRun(true);
+        mController.Animation.SetIdleToRun(true);
 
-        mController.Animator.Play(AnimState.IdleToRun);
+        mController.Animation.Play(AnimState.IdleToRun);
     }
 
     public override void ExitState()
     {
-        mController.Animator.SetIdleToRun(false);
+        mController.Animation.SetIdleToRun(false);
     }
 
     public override void FixedTick()

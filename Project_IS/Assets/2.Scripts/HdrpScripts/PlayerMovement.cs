@@ -1,8 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
-using UnityEditor.PackageManager;
 using UnityEngine;
-using UnityEngine.InputSystem.XR;
 
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerMovement : MonoBehaviour
@@ -51,7 +49,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private LayerMask _groundLayer;
 
     [Header("Animator")]
-    [SerializeField] private PlayerAnimator _animator;
+    [SerializeField] private PlayerAnimation _animator;
 
     [Header("Interactable")]
     [SerializeField] private float _interactableOffsetY;

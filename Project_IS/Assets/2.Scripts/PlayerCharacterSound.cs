@@ -14,40 +14,40 @@ public class PlayerCharacterSound : MonoBehaviour
     {
         mController = playerController;
 
-        mController.Animator.AnimationEventReceiver.onFootStepSmall += onFootStepSmall;
-        mController.Animator.AnimationEventReceiver.onFootStepMedium += onFootStepMedium;
-        mController.Animator.AnimationEventReceiver.onFootStepBig += onFootStepBig;
-        mController.Animator.AnimationEventReceiver.onTouchHand += onTouchHand;
+        mController.Animation.AnimationEventReceiver.onFootStepSmall += onFootStepSmall;
+        mController.Animation.AnimationEventReceiver.onFootStepMedium += onFootStepMedium;
+        mController.Animation.AnimationEventReceiver.onFootStepBig += onFootStepBig;
+        mController.Animation.AnimationEventReceiver.onTouchHand += onTouchHand;
     }
 
     public void AddFootStepSmallEvent(Action action)
     {
-        mController.Animator.AnimationEventReceiver.onFootStepSmall += action;
+        mController.Animation.AnimationEventReceiver.onFootStepSmall += action;
     }
 
     public void AddFootStepMediumEvent(Action action)
     {
-        mController.Animator.AnimationEventReceiver.onFootStepMedium += action;
+        mController.Animation.AnimationEventReceiver.onFootStepMedium += action;
     }
 
     public void AddHandTouchEvent(Action action)
     {
-        mController.Animator.AnimationEventReceiver.onTouchHand += action;
+        mController.Animation.AnimationEventReceiver.onTouchHand += action;
     }
 
     public void RemoveFootStepSmallEvent(Action action)
     {
-        mController.Animator.AnimationEventReceiver.onFootStepSmall -= action;
+        mController.Animation.AnimationEventReceiver.onFootStepSmall -= action;
     }
 
     public void RemoveFootStepMediumEvent(Action action)
     {
-        mController.Animator.AnimationEventReceiver.onFootStepMedium -= action;
+        mController.Animation.AnimationEventReceiver.onFootStepMedium -= action;
     }
 
     public void RemoveHandTouchEvent(Action action)
     {
-        mController.Animator.AnimationEventReceiver.onTouchHand -= action;
+        mController.Animation.AnimationEventReceiver.onTouchHand -= action;
     }
 
     public void PlayRandomClothSound()

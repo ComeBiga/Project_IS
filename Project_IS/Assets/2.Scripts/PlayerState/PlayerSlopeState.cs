@@ -16,13 +16,13 @@ public class PlayerSlopeState : PlayerStateBase
     {
         base.Initialize(controller);
 
-        mAnimator = controller.Animator.Animator;
+        mAnimator = controller.Animation.Animator;
     }
 
     public override void EnterState()
     {
-        mController.Animator.SetInputXMagnitude(0f);
-        mController.Animator.SetIndex(0);
+        mController.Animation.SetInputXMagnitude(0f);
+        mController.Animation.SetIndex(0);
         mbEndSlope = false;
     }
 
@@ -47,7 +47,7 @@ public class PlayerSlopeState : PlayerStateBase
             if (slopeAngle < mSlopeAngle)
             {
                 // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Move);
-                mController.Animator.SetIndex(1);
+                mController.Animation.SetIndex(1);
                 mbEndSlope = true;
 
                 StartCoroutine(eEndSlope());

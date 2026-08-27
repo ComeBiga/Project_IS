@@ -6,7 +6,7 @@ using UnityEngine.Animations.Rigging;
 using static PlayerMovement;
 
 [RequireComponent(typeof(Animator))]
-public class PlayerAnimator : MonoBehaviour
+public class PlayerAnimation : MonoBehaviour
 {
     public Animator Animator => mAnimator;
     public AnimationEventReceiver AnimationEventReceiver => _animationEventReceiver;

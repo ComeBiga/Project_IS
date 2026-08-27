@@ -44,7 +44,7 @@ public class PlayerTurnState : PlayerStateBase
         mRotationHandler.SetTurnState(RotationHandler.EState.DirectionChanged);
 
         mController.InputHandler.ResetMoveInput();
-        mController.Animator.SetTurn(true);
+        mController.Animation.SetTurn(true);
 
         switch(mTurnType)
         {
@@ -61,8 +61,8 @@ public class PlayerTurnState : PlayerStateBase
 
         mTimer = 0f;
 
-        mController.Animator.onEndTransition -= startTimer;
-        mController.Animator.onEndTransition += startTimer;
+        mController.Animation.onEndTransition -= startTimer;
+        mController.Animation.onEndTransition += startTimer;
 
         //mController.Animator.onAnimatorStateChanged -= startTimer;
         //mController.Animator.onAnimatorStateChanged += startTimer;
@@ -74,9 +74,9 @@ public class PlayerTurnState : PlayerStateBase
 
         mRotationHandler.SetTurnState(RotationHandler.EState.StandBy);
 
-        mController.Animator.SetTurn(false);
+        mController.Animation.SetTurn(false);
 
-        mController.Animator.onEndTransition -= startTimer;
+        mController.Animation.onEndTransition -= startTimer;
 
         // mController.Animator.onAnimatorStateChanged -= startTimer;
     }
@@ -92,7 +92,7 @@ public class PlayerTurnState : PlayerStateBase
             return;
         }
 
-        var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
+        var currentStateInfo = mController.Animation.Animator.GetCurrentAnimatorStateInfo(0);
 
         // if(mTurnType == ETurnType.Run && mTimer > mTurnDuration)
         if(mTimer > mTurnDuration || Mathf.Approximately(mTimer, mTurnDuration))
@@ -154,7 +154,7 @@ public class PlayerTurnState : PlayerStateBase
 
         mController.Movement.Move(mController.InputHandler.MoveInput);
         mRotationHandler.UpdateTurnState();
-        mController.Animator.SetInputXMagnitude(mController.InputHandler.GetInputRawMagnitude().x);
+        mController.Animation.SetInputXMagnitude(mController.InputHandler.GetInputRawMagnitude().x);
 
         // To Turn
         if (mController.CheckOppositeInputX())
@@ -194,7 +194,7 @@ public class PlayerTurnState : PlayerStateBase
     {
         mbEnableTimer = true;
 
-        var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
+        var currentStateInfo = mController.Animation.Animator.GetCurrentAnimatorStateInfo(0);
 
         mTimer = mTurnDuration * currentStateInfo.normalizedTime;
 
@@ -206,7 +206,7 @@ public class PlayerTurnState : PlayerStateBase
     {
         mbEnableTimer = true;
 
-        var currentStateInfo = mController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
+        var currentStateInfo = mController.Animation.Animator.GetCurrentAnimatorStateInfo(0);
 
         mTimer = mTurnDuration * currentStateInfo.normalizedTime;
 

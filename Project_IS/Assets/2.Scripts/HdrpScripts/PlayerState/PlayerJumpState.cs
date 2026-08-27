@@ -19,16 +19,16 @@ public class PlayerJumpState : PlayerStateBase
     {
         base.Initialize(controller);
 
-        mAnimator = controller.Animator.Animator;
+        mAnimator = controller.Animation.Animator;
     }
 
     public override void EnterState()
     {
         mController.Movement.JumpUp();
 
-        mController.Animator.Play(AnimState.IdleJump);
+        mController.Animation.Play(AnimState.IdleJump);
         // mController.Animator.CrossFadeJump(false);
-        mController.Animator.SetJump(true);
+        mController.Animation.SetJump(true);
         //mController.Animator.SetIndex(0);
 
         mController.CharacterSound.PlayRandomClothSound();
@@ -36,8 +36,8 @@ public class PlayerJumpState : PlayerStateBase
 
     public override void ExitState()
     {
-        mController.Animator.SetJump(false);
-        mController.Animator.SetVertical(0f);
+        mController.Animation.SetJump(false);
+        mController.Animation.SetVertical(0f);
     }
 
     public override void Tick()
@@ -47,13 +47,13 @@ public class PlayerJumpState : PlayerStateBase
         if(currentStateInfo.IsTag("IdleJump"))
         {
             float normalizedVelocityY = 1f - ((mController.Movement.Velocity.y + 4f) / 8f);
-            mController.Animator.SetVertical(normalizedVelocityY);
+            mController.Animation.SetVertical(normalizedVelocityY);
 
             // Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {normalizedVelocityY}");
         }
 
         mController.Movement.UpdateRotation(Time.deltaTime * 20f);
-        mController.Animator.SetHorizontal(mController.InputHandler.MoveInput.x);
+        mController.Animation.SetHorizontal(mController.InputHandler.MoveInput.x);
 
         if (!mController.Movement.Jumping)
         {

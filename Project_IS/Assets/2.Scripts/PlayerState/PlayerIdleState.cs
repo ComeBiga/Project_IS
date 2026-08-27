@@ -20,10 +20,10 @@ public class PlayerIdleState : PlayerStateBase
         mMovement.SetVelocity(Vector3.zero);
 
         if(!mbEnterWithoutAnimation)
-            mAnimator.Play(AnimState.Idle);
+            mAnimation.Play(AnimState.Idle);
         // mController.Animator.CrossFadeIdle();
-        mAnimator.SetInputX(false);
-        mAnimator.SetInputXMagnitude(0f);
+        mAnimation.SetInputX(false);
+        mAnimation.SetInputXMagnitude(0f);
     }
 
     public override void ExitState()

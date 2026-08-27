@@ -35,20 +35,20 @@ public class PlayerClimbObjectState : PlayerStateBase
     {
         base.Initialize(controller);
 
-        mAnimator = controller.Animator.Animator;
+        mAnimator = controller.Animation.Animator;
     }
 
     public override void EnterState()
     {
-        mController.Animator.SetClimbObject();
+        mController.Animation.SetClimbObject();
 
         mController.Movement.SetVelocity(Vector3.zero);
         mController.Movement.SetUseGravity(false);
         mController.Movement.SetColliderActive(false);
         mbClimbing = true;
 
-        mController.Animator.onAnimatorIK -= updateAnimatorIK;
-        mController.Animator.onAnimatorIK += updateAnimatorIK;
+        mController.Animation.onAnimatorIK -= updateAnimatorIK;
+        mController.Animation.onAnimatorIK += updateAnimatorIK;
 
         if (mbClimbUp)
         {
@@ -66,11 +66,11 @@ public class PlayerClimbObjectState : PlayerStateBase
         mController.Movement.SetColliderActive(true);
 
         // 내리기일 때 어느 방향을 보고 있었는 지 체크하는 parameter
-        mController.Animator.SetHorizontal(0f);
+        mController.Animation.SetHorizontal(0f);
         // 오르기 인지 내리기 인지 AnimatorController에서 체크는 아래 parameter로 한다.
-        mController.Animator.SetVertical(0f);
+        mController.Animation.SetVertical(0f);
 
-        mController.Animator.onAnimatorIK -= updateAnimatorIK;
+        mController.Animation.onAnimatorIK -= updateAnimatorIK;
 
         if (mClimbUpRoutine != null)
         {
@@ -101,21 +101,21 @@ public class PlayerClimbObjectState : PlayerStateBase
         // 오르기 인지 내리기 인지 AnimatorController에서 체크는 아래 parameter로 한다.
         if (mbClimbUp)
         {
-            mController.Animator.SetVertical(1f);
+            mController.Animation.SetVertical(1f);
         }
         else
         {
-            mController.Animator.SetVertical(-1f);
+            mController.Animation.SetVertical(-1f);
         }
 
         // 내리기일 때 어느 방향을 보고 있었는 지 AnimatorController에서 체크하는 parameter
         if (mController.Movement.Direction == PlayerMovement.EDirection.Right)
         {
-            mController.Animator.SetHorizontal(1f);
+            mController.Animation.SetHorizontal(1f);
         }
         else
         {
-            mController.Animator.SetHorizontal(-1f);
+            mController.Animation.SetHorizontal(-1f);
         }
     }
 
@@ -155,7 +155,7 @@ public class PlayerClimbObjectState : PlayerStateBase
             targetRotation = mCharacterRotation;
         }
 
-        mController.Animator.SetVelocityY(0f);
+        mController.Animation.SetVelocityY(0f);
 
         // IK Hand
         mTargetIKPos = mCharacterPosition;
@@ -187,7 +187,7 @@ public class PlayerClimbObjectState : PlayerStateBase
         //transform.position = targetPos;
         // transform.rotation = targetRotation;
         mController.Movement.SetRotation(targetRotation);
-        mController.Animator.SetVelocityY(1f);
+        mController.Animation.SetVelocityY(1f);
 
         mbActiveIK = false;
 

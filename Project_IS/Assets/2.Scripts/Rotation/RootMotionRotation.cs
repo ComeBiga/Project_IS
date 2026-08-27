@@ -44,13 +44,13 @@ public class RootMotionRotation : RotationBase
 
         if (mRemainAngles < 0f)
         {
-            mPlayerController.Animator.TurnL(true);
-            mPlayerController.Animator.TurnR(false);
+            mPlayerController.Animation.TurnL(true);
+            mPlayerController.Animation.TurnR(false);
         }
         else
         {
-            mPlayerController.Animator.TurnL(false);
-            mPlayerController.Animator.TurnR(true);
+            mPlayerController.Animation.TurnL(false);
+            mPlayerController.Animation.TurnR(true);
         }
 
 
@@ -101,20 +101,20 @@ public class RootMotionRotation : RotationBase
     {
         // Debug.Log($"[{Time.frameCount}] Entered RootMotionRotation.rotate");
 
-        var currentStateInfo = mPlayerController.Animator.Animator.GetCurrentAnimatorStateInfo(0);
+        var currentStateInfo = mPlayerController.Animation.Animator.GetCurrentAnimatorStateInfo(0);
 
-        var deltaPosition = mPlayerController.Animator.Animator.deltaPosition;
+        var deltaPosition = mPlayerController.Animation.Animator.deltaPosition;
         deltaPosition.z = 0f;
         // transform.position += deltaPosition;
         float rootMotionVelocity = deltaPosition.x / Time.deltaTime;
         rootMotionVelocity = Mathf.Clamp(rootMotionVelocity, -mPlayerController.Movement.MoveSpeed, mPlayerController.Movement.MoveSpeed);
 
-        if (!(currentStateInfo.IsTag("Turn") && mPlayerController.Animator.Animator.IsInTransition(0)))
+        if (!(currentStateInfo.IsTag("Turn") && mPlayerController.Animation.Animator.IsInTransition(0)))
             mPlayerController.Movement.SetVelocity(Vector3.right * rootMotionVelocity);
         if (Mathf.Abs(rootMotionVelocity) > Mathf.Abs(mRootMotionVelocity))
             mRootMotionVelocity = rootMotionVelocity;
 
-        var deltaRotation = mPlayerController.Animator.Animator.deltaRotation;
+        var deltaRotation = mPlayerController.Animation.Animator.deltaRotation;
         var normalizedX = (deltaRotation.eulerAngles.x < 180f) ? deltaRotation.eulerAngles.x : deltaRotation.eulerAngles.x - 360f;
         var normalizedY = (deltaRotation.eulerAngles.y < 180f) ? deltaRotation.eulerAngles.y : deltaRotation.eulerAngles.y - 360f;
         var normalizedZ = (deltaRotation.eulerAngles.z < 180f) ? deltaRotation.eulerAngles.z : deltaRotation.eulerAngles.z - 360f;

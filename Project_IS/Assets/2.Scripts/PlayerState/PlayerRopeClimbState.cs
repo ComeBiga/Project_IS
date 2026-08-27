@@ -46,7 +46,7 @@ public class PlayerRopeClimbState : PlayerStateBase
     {
         base.Initialize(controller);
 
-        mAnimator = controller.Animator.Animator;
+        mAnimator = controller.Animation.Animator;
     }
 
     public override void EnterState()
@@ -91,7 +91,7 @@ public class PlayerRopeClimbState : PlayerStateBase
                 mbClimbOnce = true;
                 mbIsClimbUp = true;
                 mGoalNormalizedTime += 1f;
-                mController.Animator.SetVertical(1f); // mAnimator.SetFloat(MultiplierHash, 1f);
+                mController.Animation.SetVertical(1f); // mAnimator.SetFloat(MultiplierHash, 1f);
                 // mDeltaDistance = Vector3.zero;
 
                 mLastGrabPoint_RH = mRopeHandler.GetGrabPoint(HumanBodyBones.RightMiddleProximal);
@@ -117,7 +117,7 @@ public class PlayerRopeClimbState : PlayerStateBase
                 mbClimbOnce = true;
                 mbIsClimbUp = false;
                 mGoalNormalizedTime -= 1f;
-                mController.Animator.SetVertical(-1f); // mAnimator.SetFloat(MultiplierHash, -1f);
+                mController.Animation.SetVertical(-1f); // mAnimator.SetFloat(MultiplierHash, -1f);
                 // mDeltaDistance = Vector3.zero;
 
                 mLastGrabPoint_RH = mRopeHandler.GetGrabPoint(HumanBodyBones.RightMiddleProximal);
@@ -298,7 +298,7 @@ public class PlayerRopeClimbState : PlayerStateBase
                 || (!mbIsClimbUp && animatorStateInfo.normalizedTime < mGoalNormalizedTime))
             {
                 mbClimbOnce = false;
-                mController.Animator.SetVertical(0f); // mAnimator.SetFloat(MultiplierHash, 0f);
+                mController.Animation.SetVertical(0f); // mAnimator.SetFloat(MultiplierHash, 0f);
 
                 mbDistanceLerped = false;
                 mDistanceFromJoint = _startDistanceFromJoint;

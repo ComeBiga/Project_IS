@@ -106,13 +106,13 @@ public class PlayerLandingState : PlayerStateBase
             switch(mLandingType)
             {
                 case ELandingType.Soft:
-                    mController.Animator.Play(AnimState.Landing_Idle_Soft);
+                    mController.Animation.Play(AnimState.Landing_Idle_Soft);
                     break;
                 case ELandingType.Medium:
-                    mController.Animator.Play(AnimState.Landing_Idle_Medium);
+                    mController.Animation.Play(AnimState.Landing_Idle_Medium);
                     break;
                 case ELandingType.Heavy:
-                    mController.Animator.Play(AnimState.Landing_Idle_Heavy);
+                    mController.Animation.Play(AnimState.Landing_Idle_Heavy);
                     break;
             }
         }
@@ -121,13 +121,13 @@ public class PlayerLandingState : PlayerStateBase
             switch(mLandingType)
             {
                 case ELandingType.Soft:
-                    mController.Animator.Play(AnimState.Landing_Running_Soft);
+                    mController.Animation.Play(AnimState.Landing_Running_Soft);
                     break;
                 case ELandingType.Medium:
-                    mController.Animator.Play(AnimState.Landing_Running_Medium);
+                    mController.Animation.Play(AnimState.Landing_Running_Medium);
                     break;
                 case ELandingType.Heavy:
-                    mController.Animator.Play(AnimState.Landing_Running_Heavy);
+                    mController.Animation.Play(AnimState.Landing_Running_Heavy);
                     break;
             }
         }
@@ -140,7 +140,7 @@ public class PlayerLandingState : PlayerStateBase
     public override void ExitState()
     {
         // mController.Animator.SetIndex(0);
-        mController.Animator.SetLanding(false);
+        mController.Animation.SetLanding(false);
     }
 
     public override void FixedTick()

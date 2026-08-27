@@ -88,7 +88,7 @@ public class PlayerLadderState : PlayerStateBase
     {
         base.Initialize(controller);
 
-        mAnimator = mController.Animator.Animator;
+        mAnimator = mController.Animation.Animator;
     }
 
     public override void EnterState()
@@ -113,12 +113,12 @@ public class PlayerLadderState : PlayerStateBase
         // mbActiveIK = true;
 
         // mController.Animator.SetClimbLadder();
-        mController.Animator.SetInputXMagnitude(0f);
-        mController.Animator.SetVertical(0f);
-        mController.Animator.SetMotionTime(mClimbUpMotionTime);
+        mController.Animation.SetInputXMagnitude(0f);
+        mController.Animation.SetVertical(0f);
+        mController.Animation.SetMotionTime(mClimbUpMotionTime);
 
-        mController.Animator.onAnimatorIK -= updateAnimatorIK;
-        mController.Animator.onAnimatorIK += updateAnimatorIK;
+        mController.Animation.onAnimatorIK -= updateAnimatorIK;
+        mController.Animation.onAnimatorIK += updateAnimatorIK;
 
         mController.CharacterSound.enableFootStep = false;
         mController.CharacterSound.enableHandTouch = false;
@@ -144,14 +144,14 @@ public class PlayerLadderState : PlayerStateBase
         mController.Movement.SetUseGravity(true);
         // mController.Movement.SetColliderActive(true);
         mController.Movement.SetColliderTrigger(false);
-        mController.Animator.SetLadderTop(false);
+        mController.Animation.SetLadderTop(false);
 
         mbClimbLoop = false;
         mbLadderTop = false;
 
         mbActiveIK = false;
-        mController.Animator.onAnimatorIK -= updateAnimatorIK;
-        mController.Animator.SetVertical(0f);
+        mController.Animation.onAnimatorIK -= updateAnimatorIK;
+        mController.Animation.SetVertical(0f);
 
         mController.CharacterSound.enableFootStep = true;
         mController.CharacterSound.enableHandTouch = true;
@@ -168,7 +168,7 @@ public class PlayerLadderState : PlayerStateBase
         {
             mbClimbLoop = false;
 
-            mController.Animator.SetMultiplier(1f);
+            mController.Animation.SetMultiplier(1f);
             mController.Movement.SetDirection(mMovement.OppositeDirection);
             // mController.Movement.SetRotationToCurrentDirection();
             // mController.StateMachine.SwitchState(PlayerStateMachine.EState.RunJump);
@@ -462,7 +462,7 @@ public class PlayerLadderState : PlayerStateBase
             mRightHandIKWeight = 0f;
 
             // Start Climb Down 애니메이션 후 위치 설정하기 때문에 LadderTop만 true로 줌
-            mController.Animator.SetLadderTop(true);
+            mController.Animation.SetLadderTop(true);
         }
     }
 
@@ -657,8 +657,8 @@ public class PlayerLadderState : PlayerStateBase
                         if (mbIsLookBack)
                         {
                             mbIsLookBack = false;
-                            mController.Animator.SetVertical(0f);
-                            mController.Animator.Play(AnimState.Ladder_ClimbUp);
+                            mController.Animation.SetVertical(0f);
+                            mController.Animation.Play(AnimState.Ladder_ClimbUp);
 
                             GameDebug.Log($"Look Back UnPressed", tag: "Ladder LookBack");
                         }
@@ -668,8 +668,8 @@ public class PlayerLadderState : PlayerStateBase
                         if (!mbIsLookBack)
                         {
                             mbIsLookBack = true;
-                            mController.Animator.SetVertical(1f);
-                            mController.Animator.Play(AnimState.Ladder_Look_Back_L);
+                            mController.Animation.SetVertical(1f);
+                            mController.Animation.Play(AnimState.Ladder_Look_Back_L);
 
                             GameDebug.Log($"Look Back Pressed", tag: "Ladder LookBack");
                         }
@@ -696,8 +696,8 @@ public class PlayerLadderState : PlayerStateBase
                         if (!mbIsLookBack)
                         {
                             mbIsLookBack = true;
-                            mController.Animator.SetVertical(1f);
-                            mController.Animator.Play(AnimState.Ladder_Look_Back_L);
+                            mController.Animation.SetVertical(1f);
+                            mController.Animation.Play(AnimState.Ladder_Look_Back_L);
                         }
                     }
                     else
@@ -705,7 +705,7 @@ public class PlayerLadderState : PlayerStateBase
                         if (mbIsLookBack)
                         {
                             mbIsLookBack = false;
-                            mController.Animator.Play(AnimState.Ladder_ClimbUp);
+                            mController.Animation.Play(AnimState.Ladder_ClimbUp);
                         }
                     }
                     //if (mController.InputHandler.MoveInputRaw.x > .1f)
@@ -781,8 +781,8 @@ public class PlayerLadderState : PlayerStateBase
             // 코드 복잡성 때문에 크게 Climb Up, Down 분기로 나눠줘야될 듯
             if (mbClimbing)
             {
-                mController.Animator.SetInputXMagnitude(0f);
-                mController.Animator.SetVertical(mClimbMultiplier);
+                mController.Animation.SetInputXMagnitude(0f);
+                mController.Animation.SetVertical(mClimbMultiplier);
 
                 //mClimbUpMotionTime += mClimbMultiplier * Time.fixedDeltaTime;
                 //mController.Animator.SetMotionTime(mClimbUpMotionTime);
@@ -822,7 +822,7 @@ public class PlayerLadderState : PlayerStateBase
                 }
 
                 float stepGap = mStepPositions[1].y - mStepPositions[0].y;
-                GameDebug.Log($"Climb Multiplier: {mClimbMultiplier}, deltaPosition: {mController.Animator.Animator.deltaPosition}, StepGap: {stepGap.ToString("G9")}",
+                GameDebug.Log($"Climb Multiplier: {mClimbMultiplier}, deltaPosition: {mController.Animation.Animator.deltaPosition}, StepGap: {stepGap.ToString("G9")}",
                     tag: "Ladder Climbing");
 
                 // Hand IK Weight를 자연스럽게 0부터 1까지 계산
@@ -857,7 +857,7 @@ public class PlayerLadderState : PlayerStateBase
                 // || (mClimbType == EClimbType.ClimbDown && mClimbUpMotionTime < mStepNormalizedTime))
                 {
                     mbClimbing = false;
-                    mController.Animator.SetVertical(0f);
+                    mController.Animation.SetVertical(0f);
                     // Debug.Log($"Step!! [NormalizedTime : {animatorStateInfo.normalizedTime.ToString("F1")}]");
                 }
             }
@@ -1002,7 +1002,7 @@ public class PlayerLadderState : PlayerStateBase
                 if (!mbIsLookBack)
                 {
                     mbIsLookBack = true;
-                    mController.Animator.Play(AnimState.Ladder_Look_Back_L);
+                    mController.Animation.Play(AnimState.Ladder_Look_Back_L);
                 }
             }
             else
@@ -1010,7 +1010,7 @@ public class PlayerLadderState : PlayerStateBase
                 if (mbIsLookBack)
                 {
                     mbIsLookBack = false;
-                    mController.Animator.Play(AnimState.Ladder_ClimbUp);
+                    mController.Animation.Play(AnimState.Ladder_ClimbUp);
                 }
             }
         }
@@ -1019,12 +1019,12 @@ public class PlayerLadderState : PlayerStateBase
     private IEnumerator eLookBack()
     {
         mbIsLookBack = true;
-        mController.Animator.SetMultiplier(1f);
+        mController.Animation.SetMultiplier(1f);
 
         if(mbIsHandDefault)
-            mController.Animator.Play(AnimState.Ladder_Look_Back_L);
+            mController.Animation.Play(AnimState.Ladder_Look_Back_L);
         else
-            mController.Animator.Play(AnimState.Ladder_Look_Back_R);
+            mController.Animation.Play(AnimState.Ladder_Look_Back_R);
 
         while (mbClimbLoop)
         {
@@ -1045,7 +1045,7 @@ public class PlayerLadderState : PlayerStateBase
 
             if (stateInfo.normalizedTime > 1f)
             {
-                mController.Animator.SetMultiplier(0f);
+                mController.Animation.SetMultiplier(0f);
             }
 
             yield return null;
@@ -1054,7 +1054,7 @@ public class PlayerLadderState : PlayerStateBase
 
     private IEnumerator eLookFront()
     {
-        mController.Animator.SetMultiplier(-1f);
+        mController.Animation.SetMultiplier(-1f);
 
         while (mbClimbLoop)
         {
@@ -1062,7 +1062,7 @@ public class PlayerLadderState : PlayerStateBase
 
             if(stateInfo.normalizedTime < 0f)
             {
-                mController.Animator.Play(AnimState.Ladder_ClimbUp);
+                mController.Animation.Play(AnimState.Ladder_ClimbUp);
                 mbIsLookBack = false;
                 break;
             }
@@ -1085,7 +1085,7 @@ public class PlayerLadderState : PlayerStateBase
             AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
 
             mClimbUpMotionTime += mClimbMultiplier * (1f / CLIMB_ANIMATION_LENGTH) * Time.fixedDeltaTime; // 부호 * 변화속도 * 시간
-            mController.Animator.SetMotionTime(mClimbUpMotionTime);
+            mController.Animation.SetMotionTime(mClimbUpMotionTime);
 
             if(mClimbType == EClimbType.ClimbUp)
             {
@@ -1193,7 +1193,7 @@ public class PlayerLadderState : PlayerStateBase
             //}
 
             float stepGap = mStepPositions[1].y - mStepPositions[0].y;
-            GameDebug.Log($"Climb Multiplier: {mClimbMultiplier}, deltaPosition: {mController.Animator.Animator.deltaPosition}, StepGap: {stepGap.ToString("G9")}",
+            GameDebug.Log($"Climb Multiplier: {mClimbMultiplier}, deltaPosition: {mController.Animation.Animator.deltaPosition}, StepGap: {stepGap.ToString("G9")}",
                 tag: "Ladder Climbing");
 
             //// Hand IK Weight를 자연스럽게 0부터 1까지 계산
@@ -1236,7 +1236,7 @@ public class PlayerLadderState : PlayerStateBase
     {
         GameDebug.Log($"eStartClimbUp() called", tag: "LadderState Call");
 
-        mController.Animator.Play(AnimState.Ladder_ClimbUp);
+        mController.Animation.Play(AnimState.Ladder_ClimbUp);
 
         // Start Climb Up 애니메이션 없이 시작하기 때문에 위치 즉시 설정
         // 자연스러움을 위해서는 Lerp 처리하던지 해야함
@@ -1292,7 +1292,7 @@ public class PlayerLadderState : PlayerStateBase
 
     private IEnumerator eEndToGround()
     {
-        mController.Animator.Play(AnimState.Idle);
+        mController.Animation.Play(AnimState.Idle);
 
         Vector3 startPos = mCharacterPosition;
         Vector3 targetPos = startPos;
@@ -1334,16 +1334,16 @@ public class PlayerLadderState : PlayerStateBase
             {
                 AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
 
-                mController.Animator.SetVertical(mClimbMultiplier);
+                mController.Animation.SetVertical(mClimbMultiplier);
 
                 // 현재 위치가 다음 Step 위치가 되기 전까지 deltaPosition 처리
                 if (mClimbType == EClimbType.ClimbUp && mCharacterPosition.y < mStepPositions[mCurrentStepIndex].y)
                 {
                     // transform.position += mController.Animator.Animator.deltaPosition;
-                    mController.Movement.AddPosition(mController.Animator.Animator.deltaPosition);
+                    mController.Movement.AddPosition(mController.Animation.Animator.deltaPosition);
                 }
 
-                GameDebug.Log($"ClimbType: {mClimbType}, posY: {mCharacterPosition.y}, stepPositionY: {mStepPositions[mCurrentStepIndex].y}, deltaPosition: {mController.Animator.Animator.deltaPosition}",
+                GameDebug.Log($"ClimbType: {mClimbType}, posY: {mCharacterPosition.y}, stepPositionY: {mStepPositions[mCurrentStepIndex].y}, deltaPosition: {mController.Animation.Animator.deltaPosition}",
                     tag: "EndToPlatform ClimbUp", level: GameDebug.LogLevel.Verbose);
 
                 // Hand IK Weight를 자연스럽게 0부터 1까지 계산
@@ -1363,7 +1363,7 @@ public class PlayerLadderState : PlayerStateBase
                 // normalizedTime이 한 스텝만큼 변화하면 Idle로 전환
                 if (mClimbType == EClimbType.ClimbUp && animatorStateInfo.normalizedTime > mStepNormalizedTime)
                 {
-                    mController.Animator.SetVertical(0f);
+                    mController.Animation.SetVertical(0f);
                     break;
                 }
 
@@ -1372,13 +1372,13 @@ public class PlayerLadderState : PlayerStateBase
         }
 
         mbActiveIK = false;
-        mController.Animator.SetLadderTop(true);
+        mController.Animation.SetLadderTop(true);
 
         while (mbLadderTop)
         {
             AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
 
-            Vector3 deltaPosition = mController.Animator.Animator.deltaPosition;
+            Vector3 deltaPosition = mController.Animation.Animator.deltaPosition;
 
             if(mLadderDirection == PlayerMovement.EDirection.Forward)
             {
@@ -1405,7 +1405,7 @@ public class PlayerLadderState : PlayerStateBase
                 // mController.Movement.SetPosition(newPosition);
             }
 
-            mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
+            mController.Animation.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
 
             // mStartMoveInputX = deltaPosition.x / (Time.deltaTime * mController.Movement.MoveSpeed);
             float decimalTime = animatorStateInfo.normalizedTime - (int)animatorStateInfo.normalizedTime;
@@ -1425,7 +1425,7 @@ public class PlayerLadderState : PlayerStateBase
 
     private IEnumerator eStartClimbDown()
     {
-        mController.Animator.Play(AnimState.Ladder_Start_From_Top);
+        mController.Animation.Play(AnimState.Ladder_Start_From_Top);
 
         //while (true)
         //{
@@ -1438,7 +1438,7 @@ public class PlayerLadderState : PlayerStateBase
         //}
 
         // LadderTop을 통해서 이미 애니메이션이 실행됐기 때문에 False 처리
-        mController.Animator.SetLadderTop(false);
+        mController.Animation.SetLadderTop(false);
 
         var moveDirection = (mLadderDirection == PlayerMovement.EDirection.Left) ? PlayerMovement.EDirection.Right : PlayerMovement.EDirection.Left;
 
@@ -1575,7 +1575,7 @@ public class PlayerLadderState : PlayerStateBase
 
         GameDebug.Log($"StartFromTop End");
 
-        mController.Animator.Play(AnimState.Ladder_ClimbUp);
+        mController.Animation.Play(AnimState.Ladder_ClimbUp);
 
 
         // StartCoroutine(eClimb());
@@ -1600,7 +1600,7 @@ public class PlayerLadderState : PlayerStateBase
 
     private IEnumerator eLookBackToJump()
     {
-        mController.Animator.Play(mbIsHandDefault ? AnimState.Ladder_Look_Back_To_Jump_L : AnimState.Ladder_Look_Back_To_Jump_R);
+        mController.Animation.Play(mbIsHandDefault ? AnimState.Ladder_Look_Back_To_Jump_L : AnimState.Ladder_Look_Back_To_Jump_R);
 
         while (true)
         {
@@ -1610,7 +1610,7 @@ public class PlayerLadderState : PlayerStateBase
 
             if(stateInfo.normalizedTime > .99f)
             {
-                mController.Animator.Play(AnimState.RunJump_Blend_Tree);
+                mController.Animation.Play(AnimState.RunJump_Blend_Tree);
                 break;
             }
         }

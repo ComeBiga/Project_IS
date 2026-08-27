@@ -70,7 +70,7 @@ public class PlayerStateMachine : MonoBehaviour
         mCurrentState = state;
         mCurrentStateBase.EnterState();
 
-        mController.Animator.SetState((int)state);
+        mController.Animation.SetState((int)state);
 
         return mCurrentStateBase;
     }

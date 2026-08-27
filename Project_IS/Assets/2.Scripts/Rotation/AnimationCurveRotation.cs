@@ -81,13 +81,13 @@ public class AnimationCurveRotation : RotationBase
 
         if(mRemainAngles < 0f)
         {
-            mPlayerController.Animator.TurnL(true);
-            mPlayerController.Animator.TurnR(false);
+            mPlayerController.Animation.TurnL(true);
+            mPlayerController.Animation.TurnR(false);
         }
         else
         {
-            mPlayerController.Animator.TurnL(false);
-            mPlayerController.Animator.TurnR(true);
+            mPlayerController.Animation.TurnL(false);
+            mPlayerController.Animation.TurnR(true);
         }
 
         Debug.Log($"[{Time.frameCount}] Direction Changed");
@@ -95,8 +95,8 @@ public class AnimationCurveRotation : RotationBase
 
     public override void OnBeforeFixedUpdate()
     {
-        mPlayerController.Animator.TurnL(false);
-        mPlayerController.Animator.TurnR(false);
+        mPlayerController.Animation.TurnL(false);
+        mPlayerController.Animation.TurnR(false);
 
         Debug.Log($"[{Time.frameCount}] Before Rotate");
     }

@@ -9,12 +9,11 @@ public class PlayerController : MonoBehaviour
     public PlayerMovement Movement => mMovement;
     public PlayerInputHandler InputHandler => mInputHandler;
     public PlayerStateMachine StateMachine => mStateMachine;
-    public PlayerAnimator Animator => _animator;
+    public PlayerAnimation Animation => mAnimation;
     public PlayerCharacterSound CharacterSound => mCharacterSound;
     public PlayerInteractable Interactable => mInteractable;
 
-    [SerializeField] private PlayerAnimator _animator;
-
+    private PlayerAnimation mAnimation;
     private PlayerInputHandler mInputHandler;
     private PlayerMovement mMovement;
     private PlayerStateMachine mStateMachine;
@@ -43,6 +42,7 @@ public class PlayerController : MonoBehaviour
 
     private void Awake()
     {
+        mAnimation = GetComponentInChildren<PlayerAnimation>();
         mInputHandler = GetComponent<PlayerInputHandler>();
         mMovement = GetComponent<PlayerMovement>();
 

@@ -39,18 +39,18 @@ public class CraneController : InteractableObject
         mbEnterUp = false;
         mbEnterDown = false;
 
-        mPlayerAnimator = playerController.Animator.Animator;
-        playerController.Animator.Play(AnimState.Activate_Wall_SlideLever_Idle);
+        mPlayerAnimator = playerController.Animation.Animator;
+        playerController.Animation.Play(AnimState.Activate_Wall_SlideLever_Idle);
 
-        playerController.Animator.onAnimatorIK -= updateAnimatorIK;
-        playerController.Animator.onAnimatorIK += updateAnimatorIK;
+        playerController.Animation.onAnimatorIK -= updateAnimatorIK;
+        playerController.Animation.onAnimatorIK += updateAnimatorIK;
     }
 
     public override void Exit(PlayerController playerController)
     {
         setCraneMoving(false);
 
-        playerController.Animator.onAnimatorIK -= updateAnimatorIK;
+        playerController.Animation.onAnimatorIK -= updateAnimatorIK;
     }
 
     override public void Tick(PlayerController playerController)
@@ -80,7 +80,7 @@ public class CraneController : InteractableObject
                 mbEnterUp = true;
                 mbEnterDown = false;
 
-                playerController.Animator.Play(AnimState.Activate_Wall_SlideLever_Up);
+                playerController.Animation.Play(AnimState.Activate_Wall_SlideLever_Up);
             }
 
             mAnimator.SetInteger(LeverStateHash, 1);
@@ -104,7 +104,7 @@ public class CraneController : InteractableObject
                 mbEnterUp = false;
                 mbEnterDown = true;
 
-                playerController.Animator.Play(AnimState.Activate_Wall_SlideLever_Down);
+                playerController.Animation.Play(AnimState.Activate_Wall_SlideLever_Down);
             }
 
             mAnimator.SetInteger(LeverStateHash, 2);
@@ -128,7 +128,7 @@ public class CraneController : InteractableObject
                 mbEnterUp = false;
                 mbEnterDown = false;
 
-                playerController.Animator.Play(AnimState.Activate_Wall_SlideLever_Idle);
+                playerController.Animation.Play(AnimState.Activate_Wall_SlideLever_Idle);
             }
 
             mAnimator.SetInteger(LeverStateHash, 0);

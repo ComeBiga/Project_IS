@@ -765,7 +765,7 @@ MonoBehaviour:
   _groundLayer:
     serializedVersion: 2
     m_Bits: 1088
-  _animator: {fileID: 73511638120720891}
+  _animator: {fileID: 3784141733118082133}
   _interactableOffsetY: 0
 --- !u!114 &6822098587272501032
 MonoBehaviour:
@@ -779,7 +779,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: b98e2757e009c9743825171a50d54a98, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _animator: {fileID: 73511638120720891}
+  _animator: {fileID: 3784141733118082133}
 --- !u!114 &1757535740773381968
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -11414,7 +11414,7 @@ GameObject:
   - component: {fileID: 311334343670225973}
   - component: {fileID: 6679585787556184161}
   - component: {fileID: 6262626518577518911}
-  - component: {fileID: 73511638120720891}
+  - component: {fileID: 3784141733118082133}
   - component: {fileID: 1833744259983486528}
   - component: {fileID: 8161870178751329101}
   - component: {fileID: 3209840386185615148}
@@ -11624,7 +11624,7 @@ MonoBehaviour:
     - {fileID: 2563868834352730568}
     - {fileID: 5870066742890389966}
   prefabPath: Assets/3.Prefabs/PlayerCharacter/Player_Prototype_NewAvatar.prefab
-  instanceStatus: 1
+  instanceStatus: 5
   originHip: {fileID: 4783236753629303220}
   headHip: {fileID: 8779942228333954316}
   clothesAnchors:
@@ -12033,7 +12033,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   _startRagdollEnabled: 0
---- !u!114 &73511638120720891
+--- !u!114 &3784141733118082133
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -12042,7 +12042,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 6801644471159435578}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 49cb26e02c5e51a4a8ff523cfc26e66f, type: 3}
+  m_Script: {fileID: 11500000, guid: 4e05d266c167f96478a77235768ebe59, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   _animationEventReceiver: {fileID: 1833744259983486528}

@@ -20,7 +20,7 @@ public class PushPullObject : InteractableObject
     [SerializeField] private Transform _handlePointL;
     [SerializeField] private Transform _handlePointR;
 
-    private Rigidbody mRigidbody;
+    protected Rigidbody mRigidbody;
     // private BoxCollider mBoxCollider;
 
     public void SetFriction(bool value)
@@ -55,8 +55,6 @@ public class PushPullObject : InteractableObject
 
     public bool PushPull(PlayerController playerController, Vector3 velocity)
     {
-        // Debug.Log($"velocity {mRigidbody.velocity}, angular velocity {mRigidbody.angularVelocity}");
-
         // mRigidbody.AddForce(velocity * Time.fixedDeltaTime, ForceMode.Acceleration);
         mRigidbody.AddForce(velocity * 10f, ForceMode.Acceleration);
 
@@ -64,8 +62,6 @@ public class PushPullObject : InteractableObject
         if (Mathf.Abs(mRigidbody.velocity.x) > _pushPullMaxSpeed)
             finalVelocity.x = Mathf.Sign(mRigidbody.velocity.x) * _pushPullMaxSpeed;
         mRigidbody.velocity = finalVelocity;
-
-        // Debug.Log($"sign X:{Mathf.Sign(mRigidbody.velocity.x)} velocity: {mRigidbody.velocity}");
 
         //Vector3 finalVelocity = mRigidbody.velocity;
         //finalVelocity.x = Mathf.Abs(mRigidbody.velocity.x) > Mathf.Abs(velocity.x) ? mRigidbody.velocity.x : velocity.x;

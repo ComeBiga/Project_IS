@@ -9,7 +9,7 @@ public class PlayerClimbLedgeToIdleState : PlayerStateBase
 
     public override void EnterState()
     {
-        mController.Animator.Play(AnimState.ClimbLedgeToIdle);
+        mController.Animation.Play(AnimState.ClimbLedgeToIdle);
     }
 
     public override void ExitState()

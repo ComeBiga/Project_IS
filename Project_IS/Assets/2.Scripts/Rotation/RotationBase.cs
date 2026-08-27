@@ -7,7 +7,7 @@ public abstract class RotationBase
     protected RotationHandler mRotationHandler;
 
     protected PlayerController mPlayerController;
-    protected PlayerAnimator mPlayerAnimator;
+    protected PlayerAnimation mPlayerAnimator;
     protected Animator mAnimator;
 
     public RotationBase(RotationHandler rotationHandler)
@@ -15,8 +15,8 @@ public abstract class RotationBase
         mRotationHandler = rotationHandler;
 
         mPlayerController = rotationHandler.PlayerController;
-        mPlayerAnimator = mPlayerController.Animator;
-        mAnimator = mPlayerController.Animator.Animator;
+        mPlayerAnimator = mPlayerController.Animation;
+        mAnimator = mPlayerController.Animation.Animator;
     }
 
     public abstract void Start();

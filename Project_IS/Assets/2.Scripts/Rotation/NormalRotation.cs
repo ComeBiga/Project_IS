@@ -65,20 +65,20 @@ public class NormalRotation : RotationBase
         {
             mRotationHandler.SetRotationDirection(RotationHandler.ERotationDirection.Left);
 
-            mPlayerController.Animator.TurnL(true);
-            mPlayerController.Animator.TurnR(false);
+            mPlayerController.Animation.TurnL(true);
+            mPlayerController.Animation.TurnR(false);
 
-            mPlayerController.Animator.Play(mTurnType == PlayerTurnState.ETurnType.Run ? AnimState.RunTurn : AnimState.IdleTurn);
+            mPlayerController.Animation.Play(mTurnType == PlayerTurnState.ETurnType.Run ? AnimState.RunTurn : AnimState.IdleTurn);
             // mPlayerController.Animator.CrossFadeTurn(mTurnType == PlayerTurnState.ETurnType.Run ? true : false, true);
         }
         else
         {
             mRotationHandler.SetRotationDirection(RotationHandler.ERotationDirection.Right);
 
-            mPlayerController.Animator.TurnL(false);
-            mPlayerController.Animator.TurnR(true);
+            mPlayerController.Animation.TurnL(false);
+            mPlayerController.Animation.TurnR(true);
 
-            mPlayerController.Animator.Play(mTurnType == PlayerTurnState.ETurnType.Run ? AnimState.RunTurn_R : AnimState.IdleTurn_R);
+            mPlayerController.Animation.Play(mTurnType == PlayerTurnState.ETurnType.Run ? AnimState.RunTurn_R : AnimState.IdleTurn_R);
             // mPlayerController.Animator.CrossFadeTurn(mTurnType == PlayerTurnState.ETurnType.Run ? true : false, false);
         }
     }

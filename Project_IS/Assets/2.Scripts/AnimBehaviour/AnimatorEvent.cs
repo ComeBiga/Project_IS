@@ -13,7 +13,7 @@ public class AnimatorEvent : StateMachineBehaviour
     [SerializeField]
     private bool _ExitEvent = false;
 
-    private PlayerAnimator mPlayerAnimator;
+    private PlayerAnimation mPlayerAnimator;
 
     //public override void OnStateMachineEnter(Animator animator, int stateMachinePathHash)
     //{
@@ -25,7 +25,7 @@ public class AnimatorEvent : StateMachineBehaviour
     {
         if (_EnterEvent)
         {
-            PlayerAnimator playerAnimator = GetPlayerAnimator(animator);
+            PlayerAnimation playerAnimator = GetPlayerAnimator(animator);
             playerAnimator.EnterState(_stateName, stateInfo);
         }
     }
@@ -35,7 +35,7 @@ public class AnimatorEvent : StateMachineBehaviour
     {
         if (_UpdateEvent)
         {
-            PlayerAnimator playerAnimator = GetPlayerAnimator(animator);
+            PlayerAnimation playerAnimator = GetPlayerAnimator(animator);
             playerAnimator.UpdateState(_stateName, stateInfo);
         }
     }
@@ -45,7 +45,7 @@ public class AnimatorEvent : StateMachineBehaviour
     {
         if (_ExitEvent)
         {
-            PlayerAnimator playerAnimator = GetPlayerAnimator(animator);
+            PlayerAnimation playerAnimator = GetPlayerAnimator(animator);
             playerAnimator.ExitState(_stateName, stateInfo);
         }
     }
@@ -63,11 +63,11 @@ public class AnimatorEvent : StateMachineBehaviour
     //}
 
 
-    private PlayerAnimator GetPlayerAnimator(Animator animator)
+    private PlayerAnimation GetPlayerAnimator(Animator animator)
     {
         if (mPlayerAnimator == null)
         {
-            mPlayerAnimator = animator.GetComponentInParent<PlayerAnimator>();
+            mPlayerAnimator = animator.GetComponentInParent<PlayerAnimation>();
         }
 
         return mPlayerAnimator;

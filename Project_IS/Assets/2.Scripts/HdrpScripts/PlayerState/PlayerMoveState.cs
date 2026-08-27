@@ -76,12 +76,12 @@ public class PlayerMoveState : PlayerStateBase
 
     public override void EnterState()
     {
-        if(!mController.Animator.Play(AnimState.Run))
+        if(!mController.Animation.Play(AnimState.Run))
         {
             // mController.Animator.CrossFadeRun(mEnterTransitionSettings);
         }
 
-        mController.Animator.SetRunning(true);
+        mController.Animation.SetRunning(true);
 
         mDefaultHeight = mCharacterPosition.y;
 
@@ -95,10 +95,10 @@ public class PlayerMoveState : PlayerStateBase
         //mController.Animator.onAnimatorMove -= updateAnimatorMove;
         //mController.Animator.onAnimatorMove += updateAnimatorMove;
 
-        mController.Animator.onAnimatorIK -= updateAnimatorIK;
-        mController.Animator.onAnimatorIK += updateAnimatorIK;
+        mController.Animation.onAnimatorIK -= updateAnimatorIK;
+        mController.Animation.onAnimatorIK += updateAnimatorIK;
 
-        mController.Animator.AnimationEventReceiver.onFrontFoot += updateFrontFoot;
+        mController.Animation.AnimationEventReceiver.onFrontFoot += updateFrontFoot;
 
         if(mbEnterToIdle)
         {
@@ -109,10 +109,10 @@ public class PlayerMoveState : PlayerStateBase
 
     public override void ExitState()
     {
-        mController.Animator.SetRunning(false);
+        mController.Animation.SetRunning(false);
 
-        mController.Animator.onAnimatorMove -= updateAnimatorMove;
-        mController.Animator.onAnimatorIK -= updateAnimatorIK;
+        mController.Animation.onAnimatorMove -= updateAnimatorMove;
+        mController.Animation.onAnimatorIK -= updateAnimatorIK;
         _leftLegIKConstraint.weight = 0f;
         _rightLegIKConstraint.weight = 0f;
 
@@ -174,21 +174,21 @@ public class PlayerMoveState : PlayerStateBase
         {
             if (mController.Movement.IsMoveInputToCharacterDirection(mController.InputHandler.MoveInputRaw))
             {
-                mController.Animator.SetFrontWall(true);
+                mController.Animation.SetFrontWall(true);
             }
             else
             {
-                mController.Animator.SetFrontWall(false);
+                mController.Animation.SetFrontWall(false);
             }
         }
         else
         {
-            mController.Animator.SetFrontWall(false);
+            mController.Animation.SetFrontWall(false);
         }
 
         if (_moveRootMotion)
         {
-            var deltaPosition = mController.Animator.Animator.deltaPosition;
+            var deltaPosition = mController.Animation.Animator.deltaPosition;
             // deltaPosition.x *= 2f;
             deltaPosition.z = 0f;
             // transform.position += deltaPosition;
@@ -211,10 +211,10 @@ public class PlayerMoveState : PlayerStateBase
 
         }
 
-        mController.Animator.SetInputXMagnitude(Mathf.Abs(resultMoveInput.x));
-        mController.Animator.SetInputXRaw(mController.InputHandler.MoveInputRaw.x);
-        mController.Animator.SetInputX(Mathf.Abs(mController.InputHandler.MoveInputRaw.x) > .1f);
-        mController.Animator.SetHorizontal((4f - Mathf.Abs(mController.Movement.Velocity.x) / 4f));
+        mController.Animation.SetInputXMagnitude(Mathf.Abs(resultMoveInput.x));
+        mController.Animation.SetInputXRaw(mController.InputHandler.MoveInputRaw.x);
+        mController.Animation.SetInputX(Mathf.Abs(mController.InputHandler.MoveInputRaw.x) > .1f);
+        mController.Animation.SetHorizontal((4f - Mathf.Abs(mController.Movement.Velocity.x) / 4f));
         // mController.Movement.Move(mController.InputHandler.MoveInput);
         //mController.Animator.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
         // Debug.Log($"moveInput: {resultMoveInput}");
@@ -235,12 +235,12 @@ public class PlayerMoveState : PlayerStateBase
         //    }
         //}
 
-        mController.Animator.SetMoveInputXTapped(mController.InputHandler.MoveInputXTapped);
-        mController.Animator.SetMoveInputXPressed(mController.InputHandler.MoveInputXPressed);
-        mController.Animator.SetMoveInputXHeld(mController.InputHandler.MoveInputXHeld);
-        mController.Animator.SetMoveInputYTapped(mController.InputHandler.MoveInputYTapped);
-        mController.Animator.SetMoveInputYPressed(mController.InputHandler.MoveInputYPressed);
-        mController.Animator.SetMoveInputYHeld(mController.InputHandler.MoveInputYHeld);
+        mController.Animation.SetMoveInputXTapped(mController.InputHandler.MoveInputXTapped);
+        mController.Animation.SetMoveInputXPressed(mController.InputHandler.MoveInputXPressed);
+        mController.Animation.SetMoveInputXHeld(mController.InputHandler.MoveInputXHeld);
+        mController.Animation.SetMoveInputYTapped(mController.InputHandler.MoveInputYTapped);
+        mController.Animation.SetMoveInputYPressed(mController.InputHandler.MoveInputYPressed);
+        mController.Animation.SetMoveInputYHeld(mController.InputHandler.MoveInputYHeld);
 
         #region Rotation (Deprecated)
         //// Rotation
@@ -480,18 +480,18 @@ public class PlayerMoveState : PlayerStateBase
 
     private void updateFrontFoot(int footIndex)
     {
-        mController.Animator.SetFootPosition(footIndex);
+        mController.Animation.SetFootPosition(footIndex);
 
         // Debug.Log($"{footIndex}");
         switch (footIndex)
         {
             case 0:
             case 3:
-                mController.Animator.SetIsLeftFoot(true);
+                mController.Animation.SetIsLeftFoot(true);
                 break;
             case 1:
             case 2:
-                mController.Animator.SetIsLeftFoot(false);
+                mController.Animation.SetIsLeftFoot(false);
                 break;
         }
     }
@@ -1001,7 +1001,7 @@ public class PlayerMoveState : PlayerStateBase
 
     private void updateFootIK()
     {
-        Animator animator = mController.Animator.Animator;
+        Animator animator = mController.Animation.Animator;
 
         float valueLeftFoot = animator.GetFloat("LeftFootCurve");
 
@@ -1284,7 +1284,7 @@ public class PlayerMoveState : PlayerStateBase
 
     private void updateAnimatorMove()
     {
-        Animator animator = mController.Animator.Animator;
+        Animator animator = mController.Animation.Animator;
 
         Vector3 deltaPosition = animator.deltaPosition;
         deltaPosition.y = 0f; 
@@ -1358,7 +1358,7 @@ public class PlayerMoveState : PlayerStateBase
             return;
 
         Gizmos.color = Color.yellow;
-        Gizmos.DrawRay(mController.Animator.Animator.GetBoneTransform(HumanBodyBones.LeftFoot).position, Vector3.down * .5f);
+        Gizmos.DrawRay(mController.Animation.Animator.GetBoneTransform(HumanBodyBones.LeftFoot).position, Vector3.down * .5f);
         //Gizmos.DrawWireSphere(mController.Animator.Animator.GetIKPosition(AvatarIKGoal.LeftFoot), .02f);
         //Gizmos.color = Color.cyan;
         //Gizmos.DrawWireSphere(mController.Animator.Animator.GetBoneTransform(HumanBodyBones.LeftFoot).position, .02f);
