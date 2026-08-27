@@ -46,6 +46,13 @@ public class PushPullObject : InteractableObject
 
     }
 
+    public void PushPull(Vector3 force)
+    {
+        mRigidbody.AddForce(force, ForceMode.Force);
+
+        GameDebug.Log($"PushPullObject Velocity: {mRigidbody.velocity}", tag: "PushPullObject Velocity");
+    }
+
     public bool PushPull(PlayerController playerController, Vector3 velocity)
     {
         // Debug.Log($"velocity {mRigidbody.velocity}, angular velocity {mRigidbody.angularVelocity}");

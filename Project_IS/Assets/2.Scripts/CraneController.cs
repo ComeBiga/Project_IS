@@ -27,12 +27,20 @@ public class CraneController : InteractableObject
     private Animator mAnimator;
     private Animator mPlayerAnimator;
     private bool mbCraneMoving = false;
+    private bool mbEnterIdle = false;
+    private bool mbEnterUp = false;
+    private bool mbEnterDown = false;
 
     private readonly int LeverStateHash = Animator.StringToHash("LeverState");
 
     public override void Enter(PlayerController playerController)
     {
+        mbEnterIdle = true;
+        mbEnterUp = false;
+        mbEnterDown = false;
+
         mPlayerAnimator = playerController.Animator.Animator;
+        playerController.Animator.Play(AnimState.Activate_Wall_SlideLever_Idle);
 
         playerController.Animator.onAnimatorIK -= updateAnimatorIK;
         playerController.Animator.onAnimatorIK += updateAnimatorIK;
@@ -60,12 +68,21 @@ public class CraneController : InteractableObject
         playerController.transform.position = Vector3.Lerp(playerController.transform.position, targetPosition, Time.deltaTime * _lerpSpeed);
 
         float inputYMagnitude = Mathf.Abs(playerController.InputHandler.MoveInput.y);
-        playerController.Animator.SetInputYMagnitude(inputYMagnitude);
-        playerController.Animator.SetVertical(playerController.InputHandler.MoveInput.y);
+        //playerController.Animator.SetInputYMagnitude(inputYMagnitude);
+        //playerController.Animator.SetVertical(playerController.InputHandler.MoveInput.y);
 
         // if(playerController.InputHandler.MoveInput.y > 0.01f)
         if(playerController.InputHandler.MoveInputRaw.y > .01f)
         {
+            if(!mbEnterUp)
+            {
+                mbEnterIdle = false;
+                mbEnterUp = true;
+                mbEnterDown = false;
+
+                playerController.Animator.Play(AnimState.Activate_Wall_SlideLever_Up);
+            }
+
             mAnimator.SetInteger(LeverStateHash, 1);
             _trCrane.position += _moveSpeed * Vector3.up * Time.deltaTime;
 
@@ -81,6 +98,15 @@ public class CraneController : InteractableObject
         }
         else if(playerController.InputHandler.MoveInputRaw.y < -0.01f)
         {
+            if (!mbEnterDown)
+            {
+                mbEnterIdle = false;
+                mbEnterUp = false;
+                mbEnterDown = true;
+
+                playerController.Animator.Play(AnimState.Activate_Wall_SlideLever_Down);
+            }
+
             mAnimator.SetInteger(LeverStateHash, 2);
             _trCrane.position += _moveSpeed * Vector3.down * Time.deltaTime;
 
@@ -96,6 +122,15 @@ public class CraneController : InteractableObject
         }
         else
         {
+            if (!mbEnterIdle)
+            {
+                mbEnterIdle = true;
+                mbEnterUp = false;
+                mbEnterDown = false;
+
+                playerController.Animator.Play(AnimState.Activate_Wall_SlideLever_Idle);
+            }
+
             mAnimator.SetInteger(LeverStateHash, 0);
             setCraneMoving(false);
         }

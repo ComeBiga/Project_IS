@@ -80,6 +80,22 @@ public class PlayerInputHandler : MonoBehaviour
         return new Vector2(Mathf.Abs(MoveInputRaw.x), Mathf.Abs(MoveInputRaw.y));
     }
 
+    public bool CheckInputX()
+    {
+        if (GetInputRawMagnitude().x > _inputThreshold)
+            return true;
+
+        return false;
+    }
+
+    public bool CheckInputY()
+    {
+        if (GetInputRawMagnitude().y > _inputThreshold)
+            return true;
+
+        return false;
+    }
+
     public bool IsKeyPressed(PressKey key)
     {
         bool bResult = (PressedKeys & key) != 0;

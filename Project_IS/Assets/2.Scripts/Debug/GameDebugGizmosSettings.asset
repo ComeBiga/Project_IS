@@ -14,7 +14,17 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   enabled: 1
   categories: -1
-  tags: []
+  tags:
+  - value: Ledge Range
+    active: 0
+  - value: Ledge Check Bound
+    active: 0
+  - value: CheckLedge ClimbType Ray
+    active: 1
+  - value: CheckLedge LedgePoint Ray
+    active: 0
+  - value: Ledge NearestLedgePoint
+    active: 1
   sources:
   - value: PlayerClimbLedgeState
-    active: 0
+    active: 1

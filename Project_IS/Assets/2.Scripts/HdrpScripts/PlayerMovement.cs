@@ -94,6 +94,8 @@ public class PlayerMovement : MonoBehaviour
     public void SetRotation(Quaternion rotation)
     {
         mRigidbody.MoveRotation(rotation);
+
+        GameDebug.Log($"Set Rotation", tag: "SetRotation");
     }
 
     public void Move(Vector2 moveInput)
@@ -116,6 +118,8 @@ public class PlayerMovement : MonoBehaviour
     {
         mRigidbody.velocity = velocity;
         // Debug.Log($"[{Time.frameCount}] SetVelocity - Velocity: {mRigidbody.velocity}");
+
+        GameDebug.Log($"Set Velocity: {velocity}", tag: "Set Velocity");
     }
 
     // 현재 방향과 반대 방향으로 변수를 설정하는 함수
@@ -169,6 +173,8 @@ public class PlayerMovement : MonoBehaviour
         Quaternion targetRotation = DirectionToRotation(mDirection);
 
         mRigidbody.MoveRotation(Quaternion.Lerp(transform.rotation, targetRotation, Time.deltaTime * _rotateSpeed));
+
+        GameDebug.Log($"Update Rotation", tag: "UpdateRotation");
     }
 
     public void UpdateRotation(Quaternion from, EDirection direction, float t)
@@ -191,6 +197,8 @@ public class PlayerMovement : MonoBehaviour
         Quaternion targetRotation = DirectionToRotation(direction);
 
         mRigidbody.MoveRotation(Quaternion.Lerp(transform.rotation, targetRotation, t));
+
+        GameDebug.Log($"Update Rotation", tag: "UpdateRotation");
     }
 
     public void UpdateRotation(float t)
@@ -222,6 +230,7 @@ public class PlayerMovement : MonoBehaviour
         mRigidbody.MoveRotation(Quaternion.Euler(transform.rotation.x, angle, transform.rotation.z));
 
         // GameDebug.Log($"cw: {cw}, Start Angle: {startAngle}, Target Angle: {targetAngle}, delta: {delta}, t: {t}, delta-t: {deltaT}, Result Angle: {angle}");
+        GameDebug.Log($"Update Rotation", tag: "UpdateRotation");
     }
 
     public void UpdateRotation(bool cw, float t)

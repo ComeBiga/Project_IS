@@ -131,11 +131,10 @@ public class PlayerClimbLedgeState : PlayerStateBase
         mController.Movement.SetUseGravity(false);
         mController.Movement.SetColliderActive(false);
 
-        // mController.Animator.SetClimbLedge();
         mController.Animator.SetIndex(mClimbLedgeInfo.checkIndex);
 
-        bool bHanging = mClimbLedgeInfo.checkIndex == 0 || mClimbLedgeInfo.checkIndex == 4 ? true : false;
-        // mController.Animator.CrossFadeClimbLedge(bHanging);
+        // bool bHanging = mClimbLedgeInfo.checkIndex == 0 || mClimbLedgeInfo.checkIndex == 4 ? true : false;
+        bool bHanging = mClimbLedgeInfo.checkIndex == 0 ? true : false;
         mController.Animator.Play(bHanging ? AnimState.ClimbLedge_OverHead_Hanging : AnimState.ClimbLedge_Directly_Critical);
 
         mController.Animator.SetInputXMagnitude(0f);
@@ -325,9 +324,9 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
         //Vector3 center = _detectionBoxCollider.transform.position + _detectionBoxCollider.center;
         //Vector3 halfExtents = _detectionBoxCollider.size / 2f;
-        Vector3 center = mController.transform.position + mController.Movement.DirectionToVector() * _detectionBoxCenterDistance + Vector3.up * _detectionBoxCenterHeight;
+        Vector3 center = mCharacterPosition + mMovement.DirectionToVector() * _detectionBoxCenterDistance + Vector3.up * _detectionBoxCenterHeight;
         Vector3 halfExtents = _detectionBoxSize / 2f;
-        Quaternion orientation = mController.Movement.DirectionToRotation();
+        Quaternion orientation = mMovement.DirectionToRotation();
 
         Collider[] colliders = Physics.OverlapBox(center,
                                 halfExtents,
@@ -340,18 +339,31 @@ public class PlayerClimbLedgeState : PlayerStateBase
             return -1;
         }
 
+
         detectedCollider = colliders[0];
         Bounds detectedColliderBounds = detectedCollider.bounds;
         climbLedgeInfo.ledgeBounds = detectedColliderBounds;
         float ledgeY = detectedColliderBounds.max.y;
 
-        Vector3 ledgePoint = detectedColliderBounds.max;
-        float distanceToMin = Mathf.Abs(mController.transform.position.x - detectedColliderBounds.min.x);
-        float distanceToMax = Mathf.Abs(mController.transform.position.x - detectedColliderBounds.max.x);
-        ledgePoint.x = (distanceToMin < distanceToMax) ? detectedColliderBounds.min.x : detectedColliderBounds.max.x;
+        Vector3 ledgePointOrigin = mCharacterPosition;
+        ledgePointOrigin.y = detectedColliderBounds.center.y;
+
+        Physics.Raycast(ledgePointOrigin,
+                        PlayerMovement.DirectionToVector(mMovement.Direction),
+                        out RaycastHit hitInfo,
+                        _raycastDistance,
+                        _raycastLayer,
+                        QueryTriggerInteraction.Ignore);
+
+        Vector3 ledgePoint = new Vector3(hitInfo.point.x, ledgeY, mCharacterPosition.z);
+        //Vector3 ledgePoint = detectedColliderBounds.max;
+        //float distanceToMin = Mathf.Abs(mCharacterPosition.x - detectedColliderBounds.min.x);
+        //float distanceToMax = Mathf.Abs(mCharacterPosition.x - detectedColliderBounds.max.x);
+        //ledgePoint.x = (distanceToMin < distanceToMax) ? detectedColliderBounds.min.x : detectedColliderBounds.max.x;
 
         climbLedgeInfo.nearestLedgePoint = ledgePoint;
-        mDebugLedgePoint = ledgePoint;
+        mDebugLedgePoint = hitInfo.point;
+        // mDebugLedgePoint = ledgePoint;
 
         // LedgeHandler
         LedgeHandler ledgeHandler = detectedCollider.GetComponent<LedgeHandler>();
@@ -379,15 +391,18 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
         if(ledgePoint.y > maxHeight)
         {
+            GameDebug.Log($"Ledge Height is Too High! - Ledge Point Y: {ledgePoint.y}, Max Height: {maxHeight}", tag: "CheckLedge MaxHeight");
             return -1;
         }
 
         if(ledgePoint.y > reachHeight)
         {
+            GameDebug.Log($"Ledge Height is Close! - Ledge Point Y: {ledgePoint.y}, Reachable Height: {reachHeight}", tag: "CheckLedge ReachableHeight");
             return 0;
         }
 
-        float distanceToLedge = (distanceToMin < distanceToMax) ? distanceToMin : distanceToMax;
+        float distanceToLedge = Mathf.Abs(mCharacterPosition.x - ledgePoint.x);
+        // float distanceToLedge = (distanceToMin < distanceToMax) ? distanceToMin : distanceToMax;
         float gapToLedge = distanceToLedge - _raycastDistance;
         climbLedgeInfo.gapToLedge = (gapToLedge < 0f) ? 0f : gapToLedge;
         //climbLedgeInfo.maxGapToLedge = _detectionBoxCollider.size.z - GetArmLength();
@@ -395,6 +410,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
         if (distanceToLedge > _raycastDistance)
         {
+            GameDebug.Log($"Ledge distance is Close! - Distance To Ledge: {distanceToLedge}, Raycast Distance: {_raycastDistance}", tag: "CheckLedge Distance");
             return 0;
         }
 
@@ -423,15 +439,16 @@ public class PlayerClimbLedgeState : PlayerStateBase
         //    }
         //}
 
-        if (climbLedgeInfo.checkIndex == 0 && mController.Movement.Velocity.y > 2.5f)
+        if (climbLedgeInfo.checkIndex == 0 && mMovement.Velocity.y > 2.5f)
         {
             mbClimbWithoutInput = true;
         }
 
         GameDebug.Log($"checkIndex: {climbLedgeInfo.checkIndex}, raycastOrigin: {climbLedgeInfo.raycastOrigin}",
-            category: GameDebug.LogCategory.State, level: GameDebug.LogLevel.Verbose);
+            tag: "CheckLedge Detected", category: GameDebug.LogCategory.State, level: GameDebug.LogLevel.Verbose);
 
-        GameDebug.Log($"climb without Input: {mbClimbWithoutInput}, velocity Y: {mController.Movement.Velocity.y}", category: GameDebug.LogCategory.State);
+        GameDebug.Log($"climb without Input: {mbClimbWithoutInput}, velocity Y: {mMovement.Velocity.y}",
+            tag: "CheckLedge Detected", category: GameDebug.LogCategory.State);
 
         return 1;
     }
@@ -736,12 +753,10 @@ public class PlayerClimbLedgeState : PlayerStateBase
                 mMovement.SetPosition(newPos);
                 // mDeltaPosition = newPos - transform.position;
 
-                GameDebug.Log($"StartPos: {mStartPos}, TargetPos: ({mTargetX}, {mTargetY})",
+                GameDebug.Log($"StartPos: {mStartPos}, TargetPos: ({mTargetX}, {mTargetY}), newPos: {newPos}",
                     tag: "ClimbLedge Lerp Pos");
 
-                mAnimatorMoveTimer += Time.fixedDeltaTime;
-
-                if(mAnimatorMoveTimer > duration)
+                if (mAnimatorMoveTimer > duration)
                 {
                     mClimbState = EClimbState.Climb;
                     Vector3 targetPos = mCharacterPosition;
@@ -750,6 +765,16 @@ public class PlayerClimbLedgeState : PlayerStateBase
                     mMovement.SetPosition(targetPos);
                     mbLerpPosition = false;
                 }
+
+                mAnimatorMoveTimer += Time.fixedDeltaTime;
+            }
+            else
+            {
+                mClimbState = EClimbState.Climb;
+                Vector3 targetPos = mCharacterPosition;
+                targetPos.y = mTargetY;
+                mMovement.SetPosition(targetPos);
+                mbLerpPosition = false;
             }
         }
         // else
@@ -1064,8 +1089,95 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
     private void OnDrawGizmos()
     {
-        if (!Application.isPlaying)
-            return;
+        var climbTypeRayGizmosInfo = GameDebug.GizmosInfo.normal;
+        climbTypeRayGizmosInfo.tag = "CheckLedge ClimbType Ray";
+
+        GameDebug.DrawGizmos(climbTypeRayGizmosInfo, () =>
+        {
+            Vector3 origin = getOrigin();
+            Gizmos.color = Color.red;
+
+            for (int i = 0; i < _raycastCount; i++)
+            {
+                Vector3 pos = origin;
+                pos.y -= getSpacing() * i;
+                Gizmos.DrawRay(pos, getDirection() * _raycastDistance);
+            }
+            Gizmos.DrawRay(getOrigin(), getDirection() * _raycastDistance);
+        });
+
+        var ledgePointRayGizmosInfo = GameDebug.GizmosInfo.normal;
+        ledgePointRayGizmosInfo.tag = "CheckLedge LedgePoint Ray";
+
+        GameDebug.DrawGizmos(ledgePointRayGizmosInfo, () =>
+        {
+            Vector3 origin = mCharacterPosition;
+            Vector3 direction = PlayerMovement.DirectionToVector(mMovement.Direction);
+
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawRay(origin, direction * _raycastDistance);
+        });
+
+        var ledgeRangeGizmosInfo = GameDebug.GizmosInfo.normal;
+        ledgeRangeGizmosInfo.tag = "Ledge Range";
+
+        GameDebug.DrawGizmos(ledgeRangeGizmosInfo, () =>
+        {
+            Bounds ledgeBounds = mClimbLedgeInfo.ledgeBounds;
+
+            Vector3 ledgeMaxPos = ledgeBounds.max;
+            ledgeMaxPos.z = getOrigin().z;
+
+            Gizmos.color = Color.blue;
+            Vector3 ledgeMaxPosRange = ledgeMaxPos;
+            ledgeMaxPosRange.y += _ledgeRange;
+            Gizmos.DrawSphere(ledgeMaxPosRange, .1f);
+            ledgeMaxPosRange.y -= _ledgeRange;
+            ledgeMaxPosRange.y -= _ledgeRange;
+            Gizmos.DrawSphere(ledgeMaxPosRange, .1f);
+
+            Vector3 ledgeMinPos = ledgeBounds.max;
+            ledgeMinPos.x = ledgeBounds.min.x;
+            ledgeMinPos.z = getOrigin().z;
+
+            Gizmos.color = Color.blue;
+            Vector3 ledgeMinPosRange = ledgeMinPos;
+            ledgeMinPosRange.y += _ledgeRange;
+            Gizmos.DrawSphere(ledgeMinPosRange, .1f);
+            ledgeMinPosRange.y -= _ledgeRange;
+            ledgeMinPosRange.y -= _ledgeRange;
+            Gizmos.DrawSphere(ledgeMinPosRange, .1f);
+        });
+
+        var ledgeTargetGizmosInfo = GameDebug.GizmosInfo.normal;
+        ledgeTargetGizmosInfo.tag = "Ledge NearestLedgePoint";
+
+        GameDebug.DrawGizmos(ledgeTargetGizmosInfo, () =>
+        {
+            var nearestLedgePoint = mClimbLedgeInfo.nearestLedgePoint;
+            // var nearestLedgePoint = mDebugLedgePoint;
+            // var targetPoint = new Vector3(mTargetX, mTargetY, 0f);
+
+            Gizmos.color = Color.red;
+            Gizmos.DrawSphere(nearestLedgePoint, .1f);
+        });
+
+        var CheckBoundGizmosInfo = GameDebug.GizmosInfo.normal;
+        CheckBoundGizmosInfo.tag = "Ledge Check Bound";
+
+        GameDebug.DrawGizmos(CheckBoundGizmosInfo, () =>
+        {
+            // Bounds Cube
+            Vector3 center = mController.transform.position + mController.Movement.DirectionToVector() * _detectionBoxCenterDistance + Vector3.up * _detectionBoxCenterHeight;
+            Vector3 halfExtents = _detectionBoxSize / 2f;
+            Quaternion orientation = mController.Movement.DirectionToRotation();
+            Gizmos.color = Color.red;
+            Gizmos.matrix = Matrix4x4.TRS(center, orientation, Vector3.one);
+            Gizmos.DrawWireCube(Vector3.zero, _detectionBoxSize);
+        });
+
+        //if (!Application.isPlaying)
+        //    return;
 
         //Transform trLeftElbow = mAnimator.GetBoneTransform(HumanBodyBones.LeftLowerArm);
         //Gizmos.color = Color.blue;
@@ -1124,79 +1236,76 @@ public class PlayerClimbLedgeState : PlayerStateBase
 
     private void OnDrawGizmosSelected()
     {
-        //if (!Application.isPlaying)
-        //    return;
+        //GameDebug.DrawGizmos(GameDebug.GizmosInfo.normal, () =>
+        //{
+        //    Vector3 origin = getOrigin();
+        //    Gizmos.color = Color.red;
 
-        // if(_drawRay)
-        GameDebug.DrawGizmos(GameDebug.GizmosInfo.normal, () =>
-        {
-            Vector3 origin = getOrigin();
-            Gizmos.color = Color.red;
+        //    for (int i = 0; i < _raycastCount; i++)
+        //    {
+        //        Vector3 pos = origin;
+        //        pos.y -= getSpacing() * i;
+        //        Gizmos.DrawRay(pos, getDirection() * _raycastDistance);
+        //    }
+        //    Gizmos.DrawRay(getOrigin(), getDirection() * _raycastDistance);
+        //});
 
-            for (int i = 0; i < _raycastCount; i++)
-            {
-                Vector3 pos = origin;
-                pos.y -= getSpacing() * i;
-                Gizmos.DrawRay(pos, getDirection() * _raycastDistance);
-            }
-            Gizmos.DrawRay(getOrigin(), getDirection() * _raycastDistance);
-        });
+        //var ledgeRangeGizmosInfo = GameDebug.GizmosInfo.normal;
+        //ledgeRangeGizmosInfo.tag = "Ledge Range";
 
-        var ledgeRangeGizmosInfo = GameDebug.GizmosInfo.normal;
-        ledgeRangeGizmosInfo.tag = "Ledge Range";
+        //GameDebug.DrawGizmos(ledgeRangeGizmosInfo, () =>
+        //{
+        //    Bounds ledgeBounds = mClimbLedgeInfo.ledgeBounds;
 
-        GameDebug.DrawGizmos(ledgeRangeGizmosInfo, () =>
-        {
-            Bounds ledgeBounds = mClimbLedgeInfo.ledgeBounds;
+        //    Vector3 ledgeMaxPos = ledgeBounds.max;
+        //    ledgeMaxPos.z = getOrigin().z;
 
-            Vector3 ledgeMaxPos = ledgeBounds.max;
-            ledgeMaxPos.z = getOrigin().z;
+        //    Gizmos.color = Color.blue;
+        //    Vector3 ledgeMaxPosRange = ledgeMaxPos;
+        //    ledgeMaxPosRange.y += _ledgeRange;
+        //    Gizmos.DrawSphere(ledgeMaxPosRange, .1f);
+        //    ledgeMaxPosRange.y -= _ledgeRange;
+        //    ledgeMaxPosRange.y -= _ledgeRange;
+        //    Gizmos.DrawSphere(ledgeMaxPosRange, .1f);
 
-            Gizmos.color = Color.blue;
-            Vector3 ledgeMaxPosRange = ledgeMaxPos;
-            ledgeMaxPosRange.y += _ledgeRange;
-            Gizmos.DrawSphere(ledgeMaxPosRange, .1f);
-            ledgeMaxPosRange.y -= _ledgeRange;
-            ledgeMaxPosRange.y -= _ledgeRange;
-            Gizmos.DrawSphere(ledgeMaxPosRange, .1f);
+        //    Vector3 ledgeMinPos = ledgeBounds.max;
+        //    ledgeMinPos.x = ledgeBounds.min.x;
+        //    ledgeMinPos.z = getOrigin().z;
 
-            Vector3 ledgeMinPos = ledgeBounds.max;
-            ledgeMinPos.x = ledgeBounds.min.x;
-            ledgeMinPos.z = getOrigin().z;
+        //    Gizmos.color = Color.blue;
+        //    Vector3 ledgeMinPosRange = ledgeMinPos;
+        //    ledgeMinPosRange.y += _ledgeRange;
+        //    Gizmos.DrawSphere(ledgeMinPosRange, .1f);
+        //    ledgeMinPosRange.y -= _ledgeRange;
+        //    ledgeMinPosRange.y -= _ledgeRange;
+        //    Gizmos.DrawSphere(ledgeMinPosRange, .1f);
+        //});
 
-            Gizmos.color = Color.blue;
-            Vector3 ledgeMinPosRange = ledgeMinPos;
-            ledgeMinPosRange.y += _ledgeRange;
-            Gizmos.DrawSphere(ledgeMinPosRange, .1f);
-            ledgeMinPosRange.y -= _ledgeRange;
-            ledgeMinPosRange.y -= _ledgeRange;
-            Gizmos.DrawSphere(ledgeMinPosRange, .1f);
-        });
+        //var ledgeTargetGizmosInfo = GameDebug.GizmosInfo.normal;
+        //ledgeTargetGizmosInfo.tag = "Ledge TargetPoint";
 
-        var ledgeTargetGizmosInfo = GameDebug.GizmosInfo.normal;
-        ledgeTargetGizmosInfo.tag = "Ledge TargetPoint";
+        //GameDebug.DrawGizmos(ledgeTargetGizmosInfo, () =>
+        //{
+        //    // var nearestLedgePoint = mClimbLedgeInfo.nearestLedgePoint;
+        //    var nearestLedgePoint = mDebugLedgePoint;
+        //    var targetPoint = new Vector3(mTargetX, mTargetY, 0f);
 
-        GameDebug.DrawGizmos(ledgeTargetGizmosInfo, () =>
-        {
-            var nearestLedgePoint = mClimbLedgeInfo.nearestLedgePoint;
-            var targetPoint = new Vector3(mTargetX, mTargetY, 0f);
+        //    Gizmos.color = Color.red;
+        //    Gizmos.DrawSphere(targetPoint, .1f);
+        //});
 
-            Gizmos.color = Color.red;
-            Gizmos.DrawSphere(targetPoint, .1f);
-        });
+        //var CheckBoundGizmosInfo = GameDebug.GizmosInfo.normal;
+        //CheckBoundGizmosInfo.tag = "Ledge Check Bound";
 
-        var CheckBoundGizmosInfo = GameDebug.GizmosInfo.normal;
-        CheckBoundGizmosInfo.tag = "Ledge Check Bound";
-
-        GameDebug.DrawGizmos(CheckBoundGizmosInfo, () =>
-        {
-            // Bounds Cube
-            Vector3 center = mController.transform.position + mController.Movement.DirectionToVector() * _detectionBoxCenterDistance + Vector3.up * _detectionBoxCenterHeight;
-            Vector3 halfExtents = _detectionBoxSize / 2f;
-            Quaternion orientation = mController.Movement.DirectionToRotation();
-            Gizmos.color = Color.red;
-            Gizmos.matrix = Matrix4x4.TRS(center, orientation, Vector3.one);
-            Gizmos.DrawWireCube(Vector3.zero, _detectionBoxSize);
-        });
+        //GameDebug.DrawGizmos(CheckBoundGizmosInfo, () =>
+        //{
+        //    // Bounds Cube
+        //    Vector3 center = mController.transform.position + mController.Movement.DirectionToVector() * _detectionBoxCenterDistance + Vector3.up * _detectionBoxCenterHeight;
+        //    Vector3 halfExtents = _detectionBoxSize / 2f;
+        //    Quaternion orientation = mController.Movement.DirectionToRotation();
+        //    Gizmos.color = Color.red;
+        //    Gizmos.matrix = Matrix4x4.TRS(center, orientation, Vector3.one);
+        //    Gizmos.DrawWireCube(Vector3.zero, _detectionBoxSize);
+        //});
     }
 }

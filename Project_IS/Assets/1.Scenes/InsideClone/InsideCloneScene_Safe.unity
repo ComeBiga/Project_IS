@@ -3986,7 +3986,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 0}
   m_Follow: {fileID: 1341988527}
   m_Lens:
-    FieldOfView: 60.000004
+    FieldOfView: 60
     OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
@@ -5345,7 +5345,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 1341988527}
   m_Follow: {fileID: 1341988527}
   m_Lens:
-    FieldOfView: 60.000004
+    FieldOfView: 60
     OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
@@ -6453,6 +6453,79 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 218312342}
   m_PrefabAsset: {fileID: 0}
+--- !u!1001 &269693510
+PrefabInstance:
+  m_ObjectHideFlags: 0
+  serializedVersion: 2
+  m_Modification:
+    serializedVersion: 3
+    m_TransformParent: {fileID: 0}
+    m_Modifications:
+    - target: {fileID: 447995265844539448, guid: f09f650e6e34b454ebef22df0e59ef2e,
+        type: 3}
+      propertyPath: m_Name
+      value: Player_Prototype_NewAvatar
+      objectReference: {fileID: 0}
+    - target: {fileID: 447995265844539448, guid: f09f650e6e34b454ebef22df0e59ef2e,
+        type: 3}
+      propertyPath: m_IsActive
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 806837071997424628, guid: f09f650e6e34b454ebef22df0e59ef2e,
+        type: 3}
+      propertyPath: m_LocalPosition.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 806837071997424628, guid: f09f650e6e34b454ebef22df0e59ef2e,
+        type: 3}
+      propertyPath: m_LocalPosition.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 806837071997424628, guid: f09f650e6e34b454ebef22df0e59ef2e,
+        type: 3}
+      propertyPath: m_LocalPosition.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 806837071997424628, guid: f09f650e6e34b454ebef22df0e59ef2e,
+        type: 3}
+      propertyPath: m_LocalRotation.w
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 806837071997424628, guid: f09f650e6e34b454ebef22df0e59ef2e,
+        type: 3}
+      propertyPath: m_LocalRotation.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 806837071997424628, guid: f09f650e6e34b454ebef22df0e59ef2e,
+        type: 3}
+      propertyPath: m_LocalRotation.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 806837071997424628, guid: f09f650e6e34b454ebef22df0e59ef2e,
+        type: 3}
+      propertyPath: m_LocalRotation.z
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 806837071997424628, guid: f09f650e6e34b454ebef22df0e59ef2e,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.x
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 806837071997424628, guid: f09f650e6e34b454ebef22df0e59ef2e,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.y
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 806837071997424628, guid: f09f650e6e34b454ebef22df0e59ef2e,
+        type: 3}
+      propertyPath: m_LocalEulerAnglesHint.z
+      value: 0
+      objectReference: {fileID: 0}
+    m_RemovedComponents: []
+    m_RemovedGameObjects: []
+    m_AddedGameObjects: []
+    m_AddedComponents: []
+  m_SourcePrefab: {fileID: 100100000, guid: f09f650e6e34b454ebef22df0e59ef2e, type: 3}
 --- !u!1001 &270367577
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -7551,13 +7624,13 @@ MonoBehaviour:
   _targetFrameRate: 60
   _updateTimeScale: 0
   _timeScale: 1
+  _useTimeScalePreset: 0
+  _timeScalePreset: []
   _trPlayerCharacter: {fileID: 0}
   _checkPoint: {x: 0, y: 0, z: 0}
   _goPlayerCharacter: {fileID: 0}
-  _trCameraFollowTarget: {fileID: 0}
-  _cameraFollowOffset: {x: 1, y: 0, z: 0}
-  _trCameraAimTarget: {fileID: 0}
-  _cameraAimOffset: {x: 1, y: 3, z: 0}
+  _virtualCamera: {fileID: 0}
+  _cameraAutoFollow: 0
 --- !u!4 &283283217
 Transform:
   m_ObjectHideFlags: 0
@@ -8745,6 +8818,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 712958953486247521, guid: ceb8b399c04f657409507b2c79c6d8a7,
         type: 3}
+      propertyPath: m_IsActive
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 712958953486247521, guid: ceb8b399c04f657409507b2c79c6d8a7,
+        type: 3}
       propertyPath: m_TagString
       value: Player
       objectReference: {fileID: 0}
@@ -8876,7 +8954,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 0}
   m_Follow: {fileID: 1341988527}
   m_Lens:
-    FieldOfView: 60.000004
+    FieldOfView: 60
     OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
@@ -14075,7 +14153,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 0}
   m_Follow: {fileID: 1341988527}
   m_Lens:
-    FieldOfView: 60.000004
+    FieldOfView: 60
     OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
@@ -14370,7 +14448,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 0}
   m_Follow: {fileID: 1341988527}
   m_Lens:
-    FieldOfView: 60.000004
+    FieldOfView: 60
     OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
@@ -26815,7 +26893,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 0}
   m_Follow: {fileID: 1341988527}
   m_Lens:
-    FieldOfView: 60.000004
+    FieldOfView: 60
     OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
@@ -28743,7 +28821,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 0}
   m_Follow: {fileID: 0}
   m_Lens:
-    FieldOfView: 60.000004
+    FieldOfView: 60
     OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
@@ -31883,7 +31961,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 0}
   m_Follow: {fileID: 1341988527}
   m_Lens:
-    FieldOfView: 60.000004
+    FieldOfView: 60
     OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
@@ -33290,7 +33368,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 0}
   m_Follow: {fileID: 1341988527}
   m_Lens:
-    FieldOfView: 60.000004
+    FieldOfView: 60
     OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
@@ -37085,7 +37163,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 0}
   m_Follow: {fileID: 1341988527}
   m_Lens:
-    FieldOfView: 60.000004
+    FieldOfView: 60
     OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
@@ -39486,7 +39564,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 0}
   m_Follow: {fileID: 1341988527}
   m_Lens:
-    FieldOfView: 60.000004
+    FieldOfView: 60
     OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
@@ -40636,7 +40714,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 0}
   m_Follow: {fileID: 1341988527}
   m_Lens:
-    FieldOfView: 60.000004
+    FieldOfView: 60
     OrthographicSize: 10
     NearClipPlane: 0.1
     FarClipPlane: 5000
@@ -47337,7 +47415,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 0}
   m_Follow: {fileID: 1341988527}
   m_Lens:
-    FieldOfView: 60.000004
+    FieldOfView: 60
     OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
@@ -49681,7 +49759,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 0}
   m_Follow: {fileID: 1341988527}
   m_Lens:
-    FieldOfView: 60.000004
+    FieldOfView: 60
     OrthographicSize: 5
     NearClipPlane: 0.3
     FarClipPlane: 1000
@@ -52100,7 +52178,7 @@ MonoBehaviour:
   m_LookAt: {fileID: 0}
   m_Follow: {fileID: 1341988527}
   m_Lens:
-    FieldOfView: 60.000004
+    FieldOfView: 60
     OrthographicSize: 10
     NearClipPlane: 0.1
     FarClipPlane: 5000
@@ -52988,6 +53066,7 @@ SceneRoots:
   - {fileID: 643581051}
   - {fileID: 826637439}
   - {fileID: 331838055}
+  - {fileID: 269693510}
   - {fileID: 1357046489}
   - {fileID: 1478377564}
   - {fileID: 861302494}

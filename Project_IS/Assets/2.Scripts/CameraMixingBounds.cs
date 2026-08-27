@@ -88,6 +88,11 @@ public class CameraMixingBounds : MonoBehaviour
 
     private float[] mCameraWeights = new float[6];
 
+    public void SetPlayerCharacter(Transform trPlayerCharacter)
+    {
+        _trPlayerCharacter = trPlayerCharacter;
+    }
+
     private void Start()
     {
         mBoxCollider = GetComponent<BoxCollider>();

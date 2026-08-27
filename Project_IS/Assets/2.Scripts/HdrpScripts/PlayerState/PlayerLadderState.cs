@@ -928,6 +928,7 @@ public class PlayerLadderState : PlayerStateBase
 
             if(IsBottom)
             {
+                mbClimbing = false;
                 StartCoroutine(eEndToGround());
                 break;
             }

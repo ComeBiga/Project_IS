@@ -1,5 +1,6 @@
 using System.Collections;
 using System.Collections.Generic;
+using UnityEditor.PackageManager;
 using UnityEngine;
 
 public class PlayerIdleToRunState : PlayerStateBase
@@ -61,6 +62,49 @@ public class PlayerIdleToRunState : PlayerStateBase
                 return;
             }
         }
+
+        // PushPull Front
+        var pushPullState = mStateMachine.GetStateBase<PlayerPushPullState>();
+
+        if(pushPullState.CheckPushPull(PlayerPushPullState.EPushPullType.Front_Push, out PlayerPushPullState.PushPullInfo pushPullInfo))
+        {
+            mStateMachine.SwitchState<PlayerPushPullState>((state) =>
+            {
+                state.SetPushPullInfo(pushPullInfo);
+            });
+
+            return;
+        }
+        //if (mInteractable.TryGetInteractedInfo(PlayerInteractable.CastDirection.Front, out PlayerInteractable.InteractedInfo interactedInfo))
+        //{
+        //    InteractableObject interactableObject = interactedInfo.interactableObject;
+        //    RaycastHit hitInfo = interactedInfo.hitInfo;
+        //    float distanceToEdge = interactedInfo.distanceToEdge;
+
+        //    PlayerPushPullState pushPullState = mStateMachine.GetStateBase<PlayerPushPullState>();
+
+        //    // PushPull Front
+        //    if (!interactableObject.SidePassable && interactableObject.Pushable && distanceToEdge < mInteractable.InteractableDistance && mInputHandler.IsInteracting)
+        //    {
+        //        mController.StateMachine.SwitchState<PlayerPushPullState>((state) =>
+        //        {
+        //            state.SetPushPullObject(interactableObject as PushPullObject);
+        //            state.SetPushPullType(PlayerPushPullState.EPushPullType.Front_PushPull);
+        //            state.SetPushPoint(hitInfo.point);
+        //        });
+        //    }
+
+        //    // PushPull Front (Auto Push)
+        //    if (!interactableObject.SidePassable && interactableObject.Pushable && distanceToEdge < pushPullState.FrontPushPullDistance && Mathf.Abs(mInputHandler.MoveInput.x) > .1f)
+        //    {
+        //        mController.StateMachine.SwitchState<PlayerPushPullState>((state) =>
+        //        {
+        //            state.SetPushPullObject(interactableObject as PushPullObject);
+        //            state.SetPushPullType(PlayerPushPullState.EPushPullType.Front_Push);
+        //            state.SetPushPoint(hitInfo.point);
+        //        });
+        //    }
+        //}
 
         // To RunToIdle
         if (mController.InputHandler.GetInputRawMagnitude().x < .1f)

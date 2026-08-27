@@ -16,7 +16,7 @@ MonoBehaviour:
   - name: Idle -> IdleToRun
     anyFrom: 0
     from: 1
-    to: 52
+    to: 55
     fixedDuration: 0
     duration: 0
     offset: 0
@@ -29,21 +29,21 @@ MonoBehaviour:
     offset: 0
   - name: IdleToRun -> Run
     anyFrom: 0
-    from: 52
-    to: 51
+    from: 55
+    to: 54
     fixedDuration: 1
     duration: 0.25
     offset: 0.18
   - name: Run -> RunToIdle_R
     anyFrom: 0
-    from: 51
-    to: 54
+    from: 54
+    to: 57
     fixedDuration: 1
     duration: 0.25
     offset: 0
   - name: RunToIdle_R -> Idle
     anyFrom: 0
-    from: 54
+    from: 57
     to: 1
     fixedDuration: 1
     duration: 0.05
@@ -51,287 +51,287 @@ MonoBehaviour:
   - name: Any -> Run
     anyFrom: 1
     from: 0
-    to: 51
+    to: 54
     fixedDuration: 1
     duration: 0.25
     offset: 0
   - name: IdleTurn -> Run
     anyFrom: 0
-    from: 44
-    to: 51
+    from: 47
+    to: 54
     fixedDuration: 0
     duration: 0.05
     offset: 0.625
   - name: IdleTurn_R -> Run
     anyFrom: 0
-    from: 45
-    to: 51
+    from: 48
+    to: 54
     fixedDuration: 0
     duration: 0.05
     offset: 0.625
   - name: RunTurn -> Run
     anyFrom: 0
-    from: 41
-    to: 51
+    from: 44
+    to: 54
     fixedDuration: 0
     duration: 0.05
     offset: 0.19
   - name: RunTurn_R -> Run
     anyFrom: 0
-    from: 42
-    to: 51
+    from: 45
+    to: 54
     fixedDuration: 0
     duration: 0.05
     offset: 0.68
   - name: Landing_Idle_Soft -> Run
     anyFrom: 0
-    from: 34
-    to: 51
+    from: 37
+    to: 54
     fixedDuration: 1
     duration: 0.25
     offset: 0
   - name: Landing_Idle_Medium -> Run
     anyFrom: 0
-    from: 35
-    to: 51
+    from: 38
+    to: 54
     fixedDuration: 1
     duration: 0.25
     offset: 0
   - name: Landing_Idle_Heavy -> Run
     anyFrom: 0
-    from: 36
-    to: 51
+    from: 39
+    to: 54
     fixedDuration: 0
     duration: 0.05
     offset: 0
   - name: Landing_Running_Soft -> Run
     anyFrom: 0
-    from: 37
-    to: 51
+    from: 40
+    to: 54
     fixedDuration: 0
     duration: 0.05
     offset: 0
   - name: Landing_Running_Medium -> Run
     anyFrom: 0
-    from: 38
-    to: 51
+    from: 41
+    to: 54
     fixedDuration: 0
     duration: 0.05
     offset: 0.35
   - name: Landing_Running_Heavy -> Run
     anyFrom: 0
-    from: 39
-    to: 51
+    from: 42
+    to: 54
     fixedDuration: 0
     duration: 0.25
     offset: 0
   - name: Run -> RunJump_Blend_Tree
     anyFrom: 0
-    from: 51
-    to: 29
+    from: 54
+    to: 32
     fixedDuration: 1
     duration: 0.05
     offset: 0
   - name: Idle -> IdleJump
     anyFrom: 0
     from: 1
-    to: 27
+    to: 30
     fixedDuration: 1
     duration: 0.05
     offset: 0
   - name: Any -> RunJump_Blend_Tree
     anyFrom: 1
     from: 0
-    to: 29
+    to: 32
     fixedDuration: 1
     duration: 0.05
     offset: 0
   - name: Any -> IdleJump
     anyFrom: 1
     from: 0
-    to: 27
+    to: 30
     fixedDuration: 1
     duration: 0.05
     offset: 0
   - name: RunJump_Blend_Tree -> Fall_FromRun
     anyFrom: 0
-    from: 29
-    to: 31
+    from: 32
+    to: 34
     fixedDuration: 1
     duration: 0.25
     offset: 0
   - name: RunJump_Blend_Tree -> Fall_FromJump
     anyFrom: 0
-    from: 29
-    to: 32
+    from: 32
+    to: 35
     fixedDuration: 1
     duration: 0.05
     offset: 0
   - name: Any -> Fall_FromRun
     anyFrom: 1
     from: 0
-    to: 31
+    to: 34
     fixedDuration: 1
     duration: 0.25
     offset: 0
   - name: Any -> ClimbLedge_Directly_Critical
     anyFrom: 1
     from: 0
-    to: 21
+    to: 24
     fixedDuration: 1
     duration: 0.2
     offset: 0
   - name: Any -> ClimbLedge_OverHead_Hanging
     anyFrom: 1
     from: 0
-    to: 22
+    to: 25
     fixedDuration: 1
     duration: 0.2
     offset: 0
   - name: Any -> ClimbLedge_Directly_OverHead
     anyFrom: 1
     from: 0
-    to: 23
+    to: 26
     fixedDuration: 1
     duration: 0.2
     offset: 0
   - name: Any -> ClimbLedgeToIdle
     anyFrom: 1
     from: 0
-    to: 25
+    to: 28
     fixedDuration: 0
     duration: 0.05
     offset: 0
   - name: Any -> ClimbLedgeToRun
     anyFrom: 1
     from: 0
-    to: 26
+    to: 29
     fixedDuration: 0
     duration: 0.05
     offset: 0
   - name: Any -> Landing_Idle_Soft
     anyFrom: 1
     from: 0
-    to: 34
+    to: 37
     fixedDuration: 1
     duration: 0.05
     offset: 0
   - name: Any -> Landing_Idle_Medium
     anyFrom: 1
     from: 0
-    to: 35
+    to: 38
     fixedDuration: 1
     duration: 0.05
     offset: 0
   - name: Any -> Landing_Idle_Heavy
     anyFrom: 1
     from: 0
-    to: 36
+    to: 39
     fixedDuration: 1
     duration: 0.05
     offset: 0
   - name: Any -> Landing_Running_Soft
     anyFrom: 1
     from: 0
-    to: 37
+    to: 40
     fixedDuration: 1
     duration: 0.05
     offset: 0
   - name: Any -> Landing_Running_Medium
     anyFrom: 1
     from: 0
-    to: 38
+    to: 41
     fixedDuration: 1
     duration: 0.05
     offset: 0
   - name: Any -> Landing_Running_Heavy
     anyFrom: 1
     from: 0
-    to: 39
+    to: 42
     fixedDuration: 1
     duration: 0.05
     offset: 0
   - name: Any -> IdleTurn
     anyFrom: 1
     from: 0
-    to: 44
+    to: 47
     fixedDuration: 1
     duration: 0.05
     offset: 0
   - name: Any -> IdleTurn_R
     anyFrom: 1
     from: 0
-    to: 45
+    to: 48
     fixedDuration: 1
     duration: 0.05
     offset: 0
   - name: Any -> RunTurn
     anyFrom: 1
     from: 0
-    to: 41
+    to: 44
     fixedDuration: 1
     duration: 0.05
     offset: 0
   - name: Any -> RunTurn_R
     anyFrom: 1
     from: 0
-    to: 42
+    to: 45
     fixedDuration: 1
     duration: 0.05
     offset: 0
   - name: Any -> RunToIdle_R
     anyFrom: 1
     from: 0
-    to: 54
+    to: 57
     fixedDuration: 1
     duration: 0.25
     offset: 0
   - name: Any -> IdleToRun
     anyFrom: 1
     from: 0
-    to: 52
+    to: 55
     fixedDuration: 1
     duration: 0.25
     offset: 0
   - name: Landing_Idle_Medium -> IdleTurn
     anyFrom: 0
-    from: 35
-    to: 44
+    from: 38
+    to: 47
     fixedDuration: 1
     duration: 0.25
     offset: 0
   - name: Landing_Idle_Medium -> IdleTurn_R
     anyFrom: 0
-    from: 35
-    to: 45
+    from: 38
+    to: 48
     fixedDuration: 1
     duration: 0.25
     offset: 0
   - name: ClimbLedge_Directly_OverHead -> RunTurn
     anyFrom: 0
-    from: 23
-    to: 41
+    from: 26
+    to: 44
     fixedDuration: 1
     duration: 0.25
     offset: 0
   - name: ClimbLedge_Directly_OverHead -> RunTurn_R
     anyFrom: 0
-    from: 23
-    to: 42
+    from: 26
+    to: 45
     fixedDuration: 1
     duration: 0.25
     offset: 0
   - name: ClimbLedge_Directly_Critical -> RunTurn
     anyFrom: 0
-    from: 21
-    to: 41
+    from: 24
+    to: 44
     fixedDuration: 1
     duration: 0.25
     offset: 0
   - name: ClimbLedge_Directly_Critical -> RunTurn_R
     anyFrom: 0
-    from: 21
-    to: 42
+    from: 24
+    to: 45
     fixedDuration: 1
     duration: 0.25
     offset: 0
@@ -408,14 +408,14 @@ MonoBehaviour:
   - name: Ladder_Look_Back_L -> RunJump_Blend_Tree
     anyFrom: 0
     from: 9
-    to: 29
+    to: 32
     fixedDuration: 0
     duration: 0.2
     offset: 0
   - name: Ladder_Look_Back_R -> RunJump_Blend_Tree
     anyFrom: 0
     from: 10
-    to: 29
+    to: 32
     fixedDuration: 0
     duration: 0.2
     offset: 0
@@ -436,14 +436,119 @@ MonoBehaviour:
   - name: Ladder_Look_Back_To_Jump_L -> RunJump_Blend_Tree
     anyFrom: 0
     from: 11
-    to: 29
+    to: 32
     fixedDuration: 1
     duration: 0
     offset: 0
   - name: Ladder_Look_Back_To_Jump_R -> RunJump_Blend_Tree
     anyFrom: 0
     from: 12
-    to: 29
+    to: 32
     fixedDuration: 1
     duration: 0
+    offset: 0
+  - name: Any -> PushPull_LL
+    anyFrom: 1
+    from: 0
+    to: 17
+    fixedDuration: 0
+    duration: 0.2
+    offset: 0
+  - name: Any -> PushPull_RR
+    anyFrom: 1
+    from: 0
+    to: 13
+    fixedDuration: 0
+    duration: 0.2
+    offset: 0
+  - name: PushPull_LL -> PushPull_RR
+    anyFrom: 0
+    from: 17
+    to: 13
+    fixedDuration: 0
+    duration: 0.2
+    offset: 0
+  - name: PushPull_RR -> PushPull_LL
+    anyFrom: 0
+    from: 13
+    to: 17
+    fixedDuration: 0
+    duration: 0.2
+    offset: 0
+  - name: PushPull_LL -> PushPull_LR
+    anyFrom: 0
+    from: 17
+    to: 18
+    fixedDuration: 0
+    duration: 0.2
+    offset: 0
+  - name: PushPull_RR -> PushPull_RL
+    anyFrom: 0
+    from: 13
+    to: 19
+    fixedDuration: 0
+    duration: 0.2
+    offset: 0
+  - name: PushPull_LR -> PushPull_LL
+    anyFrom: 0
+    from: 18
+    to: 17
+    fixedDuration: 0
+    duration: 0.2
+    offset: 0
+  - name: PushPull_RL -> PushPull_RL
+    anyFrom: 0
+    from: 19
+    to: 19
+    fixedDuration: 0
+    duration: 0.2
+    offset: 0
+  - name: Any -> PushPull_Front_Idle
+    anyFrom: 1
+    from: 0
+    to: 16
+    fixedDuration: 0
+    duration: 0.2
+    offset: 0
+  - name: Any -> PushPull_Front_Push
+    anyFrom: 1
+    from: 0
+    to: 15
+    fixedDuration: 0
+    duration: 0.2
+    offset: 0
+  - name: PushPull_Front_Idle -> PushPull_Front_Pull
+    anyFrom: 0
+    from: 16
+    to: 14
+    fixedDuration: 0
+    duration: 0.2
+    offset: 0
+  - name: PushPull_Front_Idle -> PushPull_Front_Push
+    anyFrom: 0
+    from: 16
+    to: 15
+    fixedDuration: 0
+    duration: 0.2
+    offset: 0
+  - name: Any -> Activate_Wall_SlideLever_Idle
+    anyFrom: 1
+    from: 0
+    to: 53
+    fixedDuration: 0
+    duration: 0.2
+    offset: 0
+  - name: Activate_Wall_SlideLever_Idle -> Activate_Wall_SlideLever_Up
+    anyFrom: 0
+    from: 53
+    to: 51
+    fixedDuration: 0
+    duration: 0.2
+    offset: 0
+  - name: Activate_Wall_SlideLever_Idle -> Activate_Wall_SlideLever_Down
+    anyFrom: 0
+    from: 53
+    to: 52
+    fixedDuration: 0
+    duration: 0.2
     offset: 0

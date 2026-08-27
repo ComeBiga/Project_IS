@@ -124,6 +124,32 @@ public class PlayerIdleState : PlayerStateBase
             }
         }
 
+        // PushPull
+        var pushPullState = mStateMachine.GetStateBase<PlayerPushPullState>();
+
+        if(mInputHandler.IsInteracting && pushPullState.CheckPushPull(PlayerPushPullState.EPushPullType.Side, out PlayerPushPullState.PushPullInfo pushPullInfo))
+        {
+            mController.StateMachine.SwitchState<PlayerPushPullState>((state) =>
+            {
+                //state.SetPushPullObject(pushPullObject);
+                //state.SetPushPullType(PlayerPushPullState.EPushPullType.Side);
+                state.SetPushPullInfo(pushPullInfo);
+            });
+
+            return;
+        }
+
+        // Interactable
+        if(mInputHandler.IsInteracting && mInteractable.TryGetInteractedInfo(PlayerInteractable.CastDirection.Front, out PlayerInteractable.InteractedInfo interactedInfo))
+        {
+            mStateMachine.SwitchState<PlayerInteractState>((state) =>
+            {
+                state.SetInteractableObject(interactedInfo.interactableObject);
+            });
+
+            return;
+        }
+
         mMovement.UpdateRotation();
     }
 

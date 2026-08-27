@@ -3,11 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using Cinemachine;
 
-
-#if UNITY_EDITOR
-using UnityEditor;
-#endif
-
 public class GameSystem : MonoBehaviour
 {
     [SerializeField]
@@ -45,7 +40,8 @@ public class GameSystem : MonoBehaviour
 
         Time.timeScale = _timeScale;
 
-        _goPlayerCharacter = FindActivePlayerCharacterObject();
+        // _goPlayerCharacter = FindActivePlayerCharacterObject();
+        _goPlayerCharacter = PlayerCharacterUtility.FindActivePlayerCharacterObject();
 
         if(_cameraAutoFollow)
             _virtualCamera.Follow = _goPlayerCharacter.transform;
@@ -121,16 +117,4 @@ public class GameSystem : MonoBehaviour
 
         return null;
     }
-
-#if UNITY_EDITOR
-
-    [MenuItem("Tools/Select Player Character #p")]
-    private static void SelectPlayerCharacter()
-    {
-        GameObject target = GameObject.FindWithTag("Player");
-        Selection.activeGameObject = target;
-        EditorGUIUtility.PingObject(target);
-        // EditorUtility.FocusProjectWindow();
-    }
-#endif
 }

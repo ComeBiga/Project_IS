@@ -122,7 +122,7 @@ public class PlayerRunJumpState : PlayerStateBase
             // Debug.Log($"[{Time.frameCount}] Velocity Y: {mController.Movement.Velocity.y}, Normalized Velocity Y: {mMotionTime}, Current State NormalizedTime: {currentStateInfo.normalizedTime}");
         }
 
-        GameDebug.Log($"IsRunJump: {currentStateInfo.IsTag("RunJump")}, Motion Time: {mMotionTime}");
+        GameDebug.Log($"IsRunJump: {currentStateInfo.IsTag("RunJump")}, Motion Time: {mMotionTime}", tag: "RunJump Motion Time");
 
         // mController.Movement.Move(mMoveInput);
         mController.Movement.UpdateJump(mMoveInput);

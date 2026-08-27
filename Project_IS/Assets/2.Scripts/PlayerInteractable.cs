@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor.PackageManager;
@@ -25,6 +26,7 @@ public class PlayerInteractable : MonoBehaviour
 
     public int Layer => _layer;
     public CastDirection CastedDirections => mCastedDirections;
+    public float InteractableDistance => _interactableDistance;
 
     private Vector3 CharacterPosition => mController.Movement.Position;
 
@@ -49,7 +51,7 @@ public class PlayerInteractable : MonoBehaviour
 
     public void Tick()
     {
-        CheckInteractableObject(out RaycastHit hit);
+        checkInteractableObject(out RaycastHit hit);
     }
 
     public bool IsDirectionCasted(CastDirection direction)
@@ -69,7 +71,7 @@ public class PlayerInteractable : MonoBehaviour
         return false;
     }
 
-    public CastDirection CheckInteractableObject(out RaycastHit hitInfo)
+    private CastDirection checkInteractableObject(out RaycastHit hitInfo)
     {
         var castedDirections = CastDirection.None;
 
@@ -121,6 +123,7 @@ public class PlayerInteractable : MonoBehaviour
         return castedDirections;
     }
 
+    [Obsolete]
     private void updateInteractable(int type, RaycastHit hitInfo)
     {
         // front

@@ -1,7 +1,9 @@
 using PropMaker;
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEditor;
+using UnityEditor.PackageManager;
 using UnityEngine;
 using UnityEngine.Animations.Rigging;
 using static PlayerMovement;
@@ -115,6 +117,11 @@ public class PlayerMoveState : PlayerStateBase
         _rightLegIKConstraint.weight = 0f;
 
         // mRotationHandler.EndRotation();
+    }
+
+    public override void FixedTick()
+    {
+        sidePass();
     }
 
     public override void Tick()
@@ -235,7 +242,7 @@ public class PlayerMoveState : PlayerStateBase
         mController.Animator.SetMoveInputYPressed(mController.InputHandler.MoveInputYPressed);
         mController.Animator.SetMoveInputYHeld(mController.InputHandler.MoveInputYHeld);
 
-        #region Rotation
+        #region Rotation (Deprecated)
         //// Rotation
         //mRotationHandler.Update();
         #endregion
@@ -246,7 +253,7 @@ public class PlayerMoveState : PlayerStateBase
         //mController.Animator.SetInputXRaw(mController.InputHandler.MoveInputRaw.x);
         //mController.Animator.SetInputX(Mathf.Abs(mController.InputHandler.MoveInputRaw.x) > .1f);
 
-        #region Jump
+        #region Jump (Deprecated)
         //// Jump
         //if (mController.InputHandler.JumpPressed)
         //{
@@ -338,39 +345,99 @@ public class PlayerMoveState : PlayerStateBase
         //    switchToLadderState(ladderColliders);
         //}
 
-        // Interactable
+        // PushPull Front
+        var pushPullState = mStateMachine.GetStateBase<PlayerPushPullState>();
+        
+        if(pushPullState.CheckPushPull(PlayerPushPullState.EPushPullType.Front_Push, out PlayerPushPullState.PushPullInfo pushPullInfo))
+        {
+            mStateMachine.SwitchState<PlayerPushPullState>((state) =>
+            {
+                state.SetPushPullInfo(pushPullInfo);
+            });
+
+            return;
+        }
+
+        #region PushPull Front (Deprecated)
+
+        //// Interactable
+        //if (mInteractable.TryGetInteractedInfo(PlayerInteractable.CastDirection.Front, out PlayerInteractable.InteractedInfo interactedInfo))
+        //{
+        //    InteractableObject interactableObject = interactedInfo.interactableObject;
+        //    RaycastHit hitInfo = interactedInfo.hitInfo;
+        //    float distanceToEdge = interactedInfo.distanceToEdge;
+
+        //    PlayerPushPullState pushPullState = mStateMachine.GetStateBase<PlayerPushPullState>();
+
+        //    // PushPull Front
+        //    if (!interactableObject.SidePassable && interactableObject.Pushable && distanceToEdge < mInteractable.InteractableDistance && mInputHandler.IsInteracting)
+        //    {
+        //        //pushPullState.SetPushPullObject(interactableObject as PushPullObject);
+        //        //pushPullState.SetPushPullType(PlayerPushPullState.EPushPullType.Front_PushPull);
+        //        //pushPullState.SetPushPoint(hitInfo.point);
+        //        mController.StateMachine.SwitchState<PlayerPushPullState>((state) =>
+        //        {
+        //            state.SetPushPullObject(interactableObject as PushPullObject);
+        //            state.SetPushPullType(PlayerPushPullState.EPushPullType.Front_PushPull);
+        //            state.SetPushPoint(hitInfo.point);
+        //        });
+        //    }
+
+        //    // PushPull Front (Auto Push)
+        //    if (!interactableObject.SidePassable && interactableObject.Pushable && distanceToEdge < pushPullState.FrontPushPullDistance && Mathf.Abs(mInputHandler.MoveInput.x) > .1f)
+        //    {
+        //        //pushPullState.SetPushPullObject(interactableObject as PushPullObject);
+        //        //pushPullState.SetPushPullType(PlayerPushPullState.EPushPullType.Front_Push);
+        //        //pushPullState.SetPushPoint(hitInfo.point);
+        //        mController.StateMachine.SwitchState<PlayerPushPullState>((state) =>
+        //        {
+        //            state.SetPushPullObject(interactableObject as PushPullObject);
+        //            state.SetPushPullType(PlayerPushPullState.EPushPullType.Front_Push);
+        //            state.SetPushPoint(hitInfo.point);
+        //        });
+        //    }
+        //}
+
+        #endregion
+
+        #region Interactable
+
         int bHitDirection = checkInteractableObject(out RaycastHit interactableHitInfo);
 
         updateInteractable(bHitDirection, interactableHitInfo);
 
-        // Terrain Normal
-        if (Physics.Raycast(mCharacterPosition, Vector3.down, out RaycastHit hitInfo, .1f, LayerMask.GetMask("Ground")))
-        {
-            mGroundNormal = hitInfo.normal;
-            float slopeAngle = Vector3.Angle(Vector3.up, hitInfo.normal);
-            // Debug.Log(slopeAngle);
+        #endregion
 
-            // var slopeState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Slope) as PlayerSlopeState;
-            var slopeState = mController.StateMachine.GetStateBase<PlayerSlopeState>();
+        #region Terrain (Deprecated)
+        //// Terrain Normal
+        //if (Physics.Raycast(mCharacterPosition, Vector3.down, out RaycastHit hitInfo, .1f, LayerMask.GetMask("Ground")))
+        //{
+        //    mGroundNormal = hitInfo.normal;
+        //    float slopeAngle = Vector3.Angle(Vector3.up, hitInfo.normal);
+        //    // Debug.Log(slopeAngle);
 
-            if (slopeAngle > slopeState.SlopeAngle)
-            {
-                // Slope State로 전환하는 코드 작성
-                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Slope);
-                mController.StateMachine.SwitchState<PlayerSlopeState>();
-                return;
-            }
-        }
-        else
-        {
-            mGroundNormal = Vector3.zero;
-        }
+        //    // var slopeState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.Slope) as PlayerSlopeState;
+        //    var slopeState = mController.StateMachine.GetStateBase<PlayerSlopeState>();
 
-        if (mTerrain != null)
-        {
-            //float slopeAngle = Vector3.Angle(Vector3.up, getTerrainNormal());
-            //Debug.Log(slopeAngle);
-        }
+        //    if (slopeAngle > slopeState.SlopeAngle)
+        //    {
+        //        // Slope State로 전환하는 코드 작성
+        //        // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Slope);
+        //        mController.StateMachine.SwitchState<PlayerSlopeState>();
+        //        return;
+        //    }
+        //}
+        //else
+        //{
+        //    mGroundNormal = Vector3.zero;
+        //}
+
+        //if (mTerrain != null)
+        //{
+        //    //float slopeAngle = Vector3.Angle(Vector3.up, getTerrainNormal());
+        //    //Debug.Log(slopeAngle);
+        //}
+        #endregion
     }
 
     public void EnterToIdle()
@@ -386,11 +453,6 @@ public class PlayerMoveState : PlayerStateBase
         moveInput.x = startMoveInputX;
         mController.InputHandler.SetMoveInput(moveInput);
     }
-
-    //private void Start()
-    //{
-    //    mPathZPosition = mCharacterPosition.z;
-    //}
 
     private void onFootStep()
     {
@@ -434,6 +496,7 @@ public class PlayerMoveState : PlayerStateBase
         }
     }
 
+    [Obsolete]
     private bool checkOppositeInputX()
     {
         bool bOppositePressed = mController.InputHandler.MoveInputXOppositePressed;
@@ -451,6 +514,7 @@ public class PlayerMoveState : PlayerStateBase
         return false;
     }
 
+    [Obsolete]
     private bool checkGround(out Ground ground)
     {
         // z가 0일 때의 위치
@@ -529,6 +593,7 @@ public class PlayerMoveState : PlayerStateBase
         return bFrontCasted;
     }
 
+    [Obsolete]
     private bool checkLadderObject(out Collider[] collider)
     {
         Collider[] ladderColliders = Physics.OverlapSphere(mCharacterPosition, _ladderRadius, LayerMask.GetMask("Ladder"));
@@ -661,50 +726,53 @@ public class PlayerMoveState : PlayerStateBase
             // float distanceToEdge = Mathf.Min(distanceToMin, distanceToMax);
             float distanceToEdge = Mathf.Abs(characterPos.x - hitInfo.point.x);
 
-            // 전방의 오브젝트를 옆으로 비켜지나가는 코드
-            if (interactableObject.SidePassable && characterPos.z > mPathZPosition - _sidePassZDistance)
-            {
-                // 가까운 모서리를 기준으로 zDistance 떨어진 점을 targetPos로 설정
-                Vector3 targetPos = (characterPos.x < bounds.center.x) ? bounds.min : bounds.max;
-                // targetPos.y = 0f;
-                targetPos.y = characterPos.y;
-                targetPos.z = mPathZPosition - _sidePassZDistance;
+            GameDebug.Log($"Interacted Front", tag: "MoveState SidePass");
 
-                // targetPos까지의 방향을 normalize해서 x:z 비율로 velocity.z를 계산 
-                Vector3 direction = targetPos - characterPos;
-                Vector3 normalized = direction.normalized;
+            #region SidePass Front (Deprecated)
+            //// 전방의 오브젝트를 옆으로 비켜지나가는 코드
+            //if (interactableObject.SidePassable && characterPos.z > mPathZPosition - _sidePassZDistance)
+            //{
+            //    // 가까운 모서리를 기준으로 zDistance 떨어진 점을 targetPos로 설정
+            //    Vector3 targetPos = (characterPos.x < bounds.center.x) ? bounds.min : bounds.max;
+            //    // targetPos.y = 0f;
+            //    targetPos.y = characterPos.y;
+            //    targetPos.z = mPathZPosition - _sidePassZDistance;
 
-                Vector3 velocity = mController.Movement.Velocity;
-                velocity.z = velocity.x * (normalized.z / normalized.x);    // velocity.x : velocity.z = normalized.x : normalized.z
-                mController.Movement.SetVelocity(velocity);
-            }
+            //    // targetPos까지의 방향을 normalize해서 x:z 비율로 velocity.z를 계산 
+            //    Vector3 direction = targetPos - characterPos;
+            //    Vector3 normalized = direction.normalized;
 
-            // PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
-            PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase<PlayerPushPullState>();
+            //    Vector3 velocity = mController.Movement.Velocity;
+            //    velocity.z = velocity.x * (normalized.z / normalized.x);    // velocity.x : velocity.z = normalized.x : normalized.z
+            //    mController.Movement.SetVelocity(velocity);
 
-            // PushPull Front
-            if (interactableObject.Pushable && distanceToEdge < _interactableDistance && mController.InputHandler.IsInteracting)
-            {
-                // PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
-                pushPullState.SetPushPullObject(interactableObject as PushPullObject);
-                pushPullState.SetType(1);
-                pushPullState.SetPushPoint(hitInfo.point);
-                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.PushPull);
-                mController.StateMachine.SwitchState<PlayerPushPullState>();
-            }
+            //    GameDebug.Log($"SidePass Velocity: {velocity}", tag: "MoveState SidePass");
+            //}
+            #endregion
 
-            // PushPull Front (Auto Push)
-            if (interactableObject.Pushable && distanceToEdge < pushPullState.FrontPushPullDistance && Mathf.Abs(mController.InputHandler.MoveInput.x)> .1f)
-            {
-                // mController.Animator.SetPush();
-                // PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
-                pushPullState.SetPushPullObject(interactableObject as PushPullObject);
-                pushPullState.SetType(2);
-                pushPullState.SetPushPoint(hitInfo.point);
-                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.PushPull);
-                mController.StateMachine.SwitchState<PlayerPushPullState>();
+            #region PushPull Front (Deprecated)
+            //// PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
+            //PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase<PlayerPushPullState>();
 
-            }
+            //// PushPull Front
+            //if (!interactableObject.SidePassable && interactableObject.Pushable && distanceToEdge < _interactableDistance && mController.InputHandler.IsInteracting)
+            //{
+            //    pushPullState.SetPushPullObject(interactableObject as PushPullObject);
+            //    pushPullState.SetPushPullType(PlayerPushPullState.EPushPullType.Front_PushPull);
+            //    pushPullState.SetPushPoint(hitInfo.point);
+            //    mController.StateMachine.SwitchState<PlayerPushPullState>();
+            //}
+
+            //// PushPull Front (Auto Push)
+            //if (!interactableObject.SidePassable && interactableObject.Pushable && distanceToEdge < pushPullState.FrontPushPullDistance && Mathf.Abs(mController.InputHandler.MoveInput.x)> .1f)
+            //{
+            //    pushPullState.SetPushPullObject(interactableObject as PushPullObject);
+            //    pushPullState.SetPushPullType(PlayerPushPullState.EPushPullType.Front_Push);
+            //    pushPullState.SetPushPoint(hitInfo.point);
+            //    mController.StateMachine.SwitchState<PlayerPushPullState>();
+
+            //}
+            #endregion
 
             // Climb Object Up
             if (interactableObject.CanClimb && distanceToEdge < _interactableDistance && mController.InputHandler.MoveInput.y > .1f)
@@ -717,6 +785,7 @@ public class PlayerMoveState : PlayerStateBase
                 mController.StateMachine.SwitchState<PlayerClimbObjectState>();
             }
 
+            #region Ladder Front (Deprecated)
             //// Ladder
             //if ((interactableObject.CompareTag("Ladder") || hitInfo.collider.CompareTag("LadderTop"))
             //    && distanceToEdge < _interactableDistance)
@@ -728,6 +797,7 @@ public class PlayerMoveState : PlayerStateBase
             //    if (bSwitched)
             //        return;
             //}
+            #endregion
 
             // Interact
             if (distanceToEdge < interactableObject.InteractionDistance && mController.InputHandler.IsInteracting)
@@ -739,7 +809,6 @@ public class PlayerMoveState : PlayerStateBase
                 // mController.StateMachine.SwitchState(PlayerStateMachine.EState.Interact);
                 mController.StateMachine.SwitchState<PlayerInteractState>();
             }
-
         }
         // side
         else if (type == 2)
@@ -751,24 +820,23 @@ public class PlayerMoveState : PlayerStateBase
 
             var interactableObject = hitInfo.collider.GetComponentInParent<InteractableObject>();
 
-            // PushPull Object
-            if (interactableObject.Pushable && mController.InputHandler.IsInteracting)
-            {
-                // PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.PushPull) as PlayerPushPullState;
-                PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase<PlayerPushPullState>();
-                pushPullState.SetPushPullObject(interactableObject as PushPullObject);
-                pushPullState.SetType(0);
-                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.PushPull);
-                mController.StateMachine.SwitchState<PlayerPushPullState>();
-            }
+            #region PushPull Side (Deprecated)
+            //// PushPull Object
+            //if (interactableObject.Pushable && mController.InputHandler.IsInteracting)
+            //{
+            //    PlayerPushPullState pushPullState = mController.StateMachine.GetStateBase<PlayerPushPullState>();
+            //    pushPullState.SetPushPullObject(interactableObject as PushPullObject);
+            //    // pushPullState.SetType(0);
+            //    pushPullState.SetPushPullType(PlayerPushPullState.EPushPullType.Side);
+            //    mController.StateMachine.SwitchState<PlayerPushPullState>();
+            //}
+            #endregion
 
             // Climb Object Up
             if (interactableObject.CanClimb && mController.InputHandler.MoveInput.y > .1f)
             {
-                // PlayerClimbObjectState climbObjectState = mController.StateMachine.GetStateBase(PlayerStateMachine.EState.ClimbObject) as PlayerClimbObjectState;
                 PlayerClimbObjectState climbObjectState = mController.StateMachine.GetStateBase<PlayerClimbObjectState>();
                 climbObjectState.SetClimbObject(interactableObject, climbUp: true);
-                // mController.StateMachine.SwitchState(PlayerStateMachine.EState.ClimbObject);
                 mController.StateMachine.SwitchState<PlayerClimbObjectState>();
             }
 
@@ -812,22 +880,26 @@ public class PlayerMoveState : PlayerStateBase
             float distanceToMax = Mathf.Abs(characterPos.x - bounds.max.x);
             float distanceToEdge = Mathf.Min(distanceToMin, distanceToMax);
 
-            // 오브젝트를 비켜지나가고 나서 z위치를 다시 0으로 맞춰주는 코드
-            if (interactableObject.SidePassable && characterPos.z < mPathZPosition)
-            {
-                Vector3 targetPos = (characterPos.x < bounds.center.x) ? bounds.min : bounds.max;
-                // 오브젝트를 감지할 수 있는 최대 거리까지 서서히 맞춰주게 함
-                targetPos.x += (characterPos.x < bounds.center.x) ? -_interactableMaxDistance : _interactableMaxDistance;
-                targetPos.y = characterPos.y;
-                targetPos.z = mPathZPosition;
+            #region SidePass Back (Deprecated)
 
-                Vector3 direction = targetPos - characterPos;
-                Vector3 normalized = direction.normalized;
+            //// 오브젝트를 비켜지나가고 나서 z위치를 다시 0으로 맞춰주는 코드
+            //if (interactableObject.SidePassable && characterPos.z < mPathZPosition)
+            //{
+            //    Vector3 targetPos = (characterPos.x < bounds.center.x) ? bounds.min : bounds.max;
+            //    // 오브젝트를 감지할 수 있는 최대 거리까지 서서히 맞춰주게 함
+            //    targetPos.x += (characterPos.x < bounds.center.x) ? -_interactableMaxDistance : _interactableMaxDistance;
+            //    targetPos.y = characterPos.y;
+            //    targetPos.z = mPathZPosition;
 
-                Vector3 velocity = mController.Movement.Velocity;
-                velocity.z = velocity.x * (normalized.z / normalized.x);    // velocity.x : velocity.z = normalized.x : normalized.z
-                mController.Movement.SetVelocity(velocity);
-            }
+            //    Vector3 direction = targetPos - characterPos;
+            //    Vector3 normalized = direction.normalized;
+
+            //    Vector3 velocity = mController.Movement.Velocity;
+            //    velocity.z = velocity.x * (normalized.z / normalized.x);    // velocity.x : velocity.z = normalized.x : normalized.z
+            //    mController.Movement.SetVelocity(velocity);
+            //}
+
+            #endregion
 
             // Ladder
             if ((interactableObject.CompareTag("Ladder") || hitInfo.collider.CompareTag("LadderTop"))
@@ -848,6 +920,82 @@ public class PlayerMoveState : PlayerStateBase
             Vector3 velocity = mController.Movement.Velocity;
             velocity.z = 0f;
             mController.Movement.SetVelocity(velocity);
+        }
+    }
+
+    private void sidePass()
+    {
+        if(mInteractable.TryGetInteractedInfo(PlayerInteractable.CastDirection.Front, out PlayerInteractable.InteractedInfo frontInteractedInfo))
+        {
+            InteractableObject interactableObject = frontInteractedInfo.interactableObject;
+            RaycastHit hitInfo = frontInteractedInfo.hitInfo;
+            Bounds bounds = hitInfo.collider.bounds;
+            Vector3 characterPos = mCharacterPosition;
+
+            // 현재 캐릭터 위치와 오브젝트의 가까운 모서리까지의 거리
+            float distanceToMin = Mathf.Abs(characterPos.x - bounds.min.x);
+            float distanceToMax = Mathf.Abs(characterPos.x - bounds.max.x);
+            // float distanceToEdge = Mathf.Min(distanceToMin, distanceToMax);
+            float distanceToEdge = Mathf.Abs(characterPos.x - hitInfo.point.x);
+
+            // 전방의 오브젝트를 옆으로 비켜지나가는 코드
+            if (interactableObject.SidePassable && characterPos.z > mPathZPosition - _sidePassZDistance)
+            {
+                // 가까운 모서리를 기준으로 zDistance 떨어진 점을 targetPos로 설정
+                Vector3 targetPos = (characterPos.x < bounds.center.x) ? bounds.min : bounds.max;
+                // targetPos.y = 0f;
+                targetPos.y = characterPos.y;
+                targetPos.z = mPathZPosition - _sidePassZDistance;
+
+                // targetPos까지의 방향을 normalize해서 x:z 비율로 velocity.z를 계산 
+                Vector3 direction = targetPos - characterPos;
+                Vector3 normalized = direction.normalized;
+
+                //Vector3 velocity = mMovement.Velocity;
+                //velocity.z = velocity.x * (normalized.z / normalized.x);    // velocity.x : velocity.z = normalized.x : normalized.z
+                // mMovement.SetVelocity(velocity);
+
+                float deltaPositionX = PlayerMovement.DirectionToVector(mMovement.Direction).x * mMovement.MoveSpeed * Time.fixedDeltaTime;
+                float deltaPositionZ = deltaPositionX * (normalized.z / normalized.x);
+                Vector3 newPosition = mCharacterPosition;
+                newPosition.z += deltaPositionZ;
+                mMovement.transform.position = newPosition;
+            }
+        }
+
+        if(mInteractable.TryGetInteractedInfo(PlayerInteractable.CastDirection.Back, out PlayerInteractable.InteractedInfo backInteractedInfo))
+        {
+            InteractableObject interactableObject = backInteractedInfo.interactableObject;
+            Bounds bounds = interactableObject.BoxCollider.bounds;
+            Vector3 characterPos = mCharacterPosition;
+
+            // 현재 캐릭터 위치와 오브젝트의 가까운 모서리까지의 거리
+            float distanceToMin = Mathf.Abs(characterPos.x - bounds.min.x);
+            float distanceToMax = Mathf.Abs(characterPos.x - bounds.max.x);
+            float distanceToEdge = Mathf.Min(distanceToMin, distanceToMax);
+
+            // 오브젝트를 비켜지나가고 나서 z위치를 다시 0으로 맞춰주는 코드
+            if (interactableObject.SidePassable && characterPos.z < mPathZPosition)
+            {
+                Vector3 targetPos = (characterPos.x < bounds.center.x) ? bounds.min : bounds.max;
+                // 오브젝트를 감지할 수 있는 최대 거리까지 서서히 맞춰주게 함
+                targetPos.x += (characterPos.x < bounds.center.x) ? -_interactableMaxDistance : _interactableMaxDistance;
+                targetPos.y = characterPos.y;
+                targetPos.z = mPathZPosition;
+
+                Vector3 direction = targetPos - characterPos;
+                Vector3 normalized = direction.normalized;
+
+                //Vector3 velocity = mMovement.Velocity;
+                //velocity.z = velocity.x * (normalized.z / normalized.x);    // velocity.x : velocity.z = normalized.x : normalized.z
+                //mMovement.SetVelocity(velocity);
+
+                float deltaPositionX = PlayerMovement.DirectionToVector(mMovement.Direction).x * mMovement.MoveSpeed * Time.fixedDeltaTime;
+                float deltaPositionZ = deltaPositionX * (normalized.z / normalized.x);
+                Vector3 newPosition = mCharacterPosition;
+                newPosition.z += deltaPositionZ;
+                mMovement.transform.position = newPosition;
+            }
         }
     }
 

@@ -716,6 +716,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _axisSensitivity: 3.5
   _axisDeadZone: 0.3
+  _inputThreshold: 0.1
   _heldThreshold: 0.15
 --- !u!114 &8957090207203182471
 MonoBehaviour:
@@ -4472,12 +4473,14 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   key: 3
+  _interactableDistance: 0.5
   _startHeight: 0.2
-  _distanceToCharacter: 0.3
+  _distanceToCharacter: 0.484
   _startClimbUpDuration: 0.2
   _endToGroundDuration: 0.2
   _endToPlatformTopTime: 0.6
   _endToPlatformXSpeed: 3
+  _startClimbDownStepNormalizedTime: 0.5
   _startClimbDownXSpeed: 5
   _startClimbDownYSpeed: 2
   _rotationSpeed: 1.5
@@ -4494,8 +4497,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   key: 4
-  mFrontPushPullDistance: 0.5
-  mFrontPushPullRadius: 0.45
+  _frontPushPullDistance: 0.5
+  _frontPushPullRadius: 0.5
+  _pushPullForce: 10
+  _pushPullSpeed: 1
+  _pushPullSpeedAdditionalLimit: 0.8
 --- !u!114 &1811900998791484272
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -4551,8 +4557,8 @@ MonoBehaviour:
   _animationType: 0
   _hangingCriticalDuration: 0.85
   _hangingClimbLedgeDuration: 1.3
-  _criticalDuration: 0.333
-  _ClimbLedgeDuration: 0.5
+  _criticalDuration: 0.542
+  _ClimbLedgeDuration: 0.8
   _lerpXOffset: -0.2
   _lerpXOffsetOverHead: 0.35
   _lerpXOffsetChest: 0.35

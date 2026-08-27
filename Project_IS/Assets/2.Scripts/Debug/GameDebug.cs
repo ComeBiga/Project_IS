@@ -112,6 +112,19 @@ public static class GameDebug
 
     //public static HashSet<string> disabledTags_Gizmos = new();
     //public static HashSet<string> disabledClasses_Gizmos = new();
+    [MenuItem("Tools/Debug/Open LogSettings &d")]
+    private static void OpenLogSettings()
+    {
+        Selection.activeObject = LogSettings;
+        EditorGUIUtility.PingObject(LogSettings);
+    }
+
+    [MenuItem("Tools/Debug/Open GizmosSettings")]
+    private static void OpenGizmosSettings()
+    {
+        Selection.activeObject = GizmosSettings;
+        EditorGUIUtility.PingObject(GizmosSettings);
+    }
 
     public static void Initialize(GameDebugLogSettings logSettings, GameDebugGizmosSettings gizmosSettings)
     {
@@ -241,6 +254,8 @@ public static class GameDebug
 
         if ((gizmosInfo.category & GizmosSettings.categories) == 0)
             return false;
+
+        registerTag(gizmosInfo.tag, gizmosSettings.tags);
 
         // if(disabledTags_Gizmos.Contains(gizmosInfo.tag))
         if(!isEnabledToggleString(gizmosInfo.tag, gizmosSettings.tags))
