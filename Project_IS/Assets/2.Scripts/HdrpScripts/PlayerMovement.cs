@@ -80,6 +80,8 @@ public class PlayerMovement : MonoBehaviour
     public void SetPosition(Vector3 position)
     {
         mRigidbody.MovePosition(position);
+
+        GameDebug.Log($"Set to: {position}", tag: "SetPosition");
     }
 
     public void AddPosition(Vector3 position)

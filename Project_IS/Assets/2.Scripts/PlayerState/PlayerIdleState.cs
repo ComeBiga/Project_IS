@@ -142,10 +142,13 @@ public class PlayerIdleState : PlayerStateBase
         // Interactable
         if(mInputHandler.IsInteracting && mInteractable.TryGetInteractedInfo(PlayerInteractable.CastDirection.Front, out PlayerInteractable.InteractedInfo interactedInfo))
         {
-            mStateMachine.SwitchState<PlayerInteractState>((state) =>
+            if (interactedInfo.interactableObject.SwitchState)
             {
-                state.SetInteractableObject(interactedInfo.interactableObject);
-            });
+                mStateMachine.SwitchState<PlayerInteractState>((state) =>
+                {
+                    state.SetInteractableObject(interactedInfo.interactableObject);
+                });
+            }
 
             return;
         }

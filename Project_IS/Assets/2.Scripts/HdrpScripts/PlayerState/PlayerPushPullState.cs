@@ -148,6 +148,7 @@ public class PlayerPushPullState : PlayerStateBase
     {
         if(mbLerp)
         {
+            // mLerpTimer += Time.deltaTime;
             return;
         }
 
@@ -383,8 +384,12 @@ public class PlayerPushPullState : PlayerStateBase
             return;
         }
 
-        Vector3 lerpedPosition = Vector3.Lerp(mLerpStartPosition, mLerpTargetPosition, mLerpTimer / mLerpDuration);
-        mMovement.SetPosition(mLerpTargetPosition);
+        float t = mLerpTimer / mLerpDuration;
+        Vector3 lerpedPosition = Vector3.Lerp(mLerpStartPosition, mLerpTargetPosition, t);
+        mMovement.SetPosition(lerpedPosition);
+
+        GameDebug.Log($"Start Position: {mLerpStartPosition}, TargetPosition: {mLerpTargetPosition}, t: {t}, Current Position: {mCharacterPosition}",
+            tag: "PushPull Lerp");
 
         mLerpTimer += Time.fixedDeltaTime;
     }

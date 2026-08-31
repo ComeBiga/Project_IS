@@ -598,7 +598,7 @@ public class PlayerAnimation : MonoBehaviour
             AnimStateNameLookUp.names.TryGetValue(mCurrentAnimatorStateHash, out string currentStateName);
 
             GameDebug.Log($"Animator State Changed from [{lastStateName}] to [{currentStateName}], Normalized Time: {currentStateInfo.normalizedTime}", 
-                category: GameDebug.LogCategory.Animation);
+                tag: "Animation State Changed", category: GameDebug.LogCategory.Animation);
         }
     }
 

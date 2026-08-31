@@ -31449,6 +31449,11 @@ PrefabInstance:
       propertyPath: _topGround
       value: 
       objectReference: {fileID: 2152273849641516730}
+    - target: {fileID: 3607934442172727699, guid: 36c8f89c88959364797c454ea73db824,
+        type: 3}
+      propertyPath: _bottomGround
+      value: 
+      objectReference: {fileID: 1922681823}
     - target: {fileID: 4488419935900353650, guid: 36c8f89c88959364797c454ea73db824,
         type: 3}
       propertyPath: m_Layer

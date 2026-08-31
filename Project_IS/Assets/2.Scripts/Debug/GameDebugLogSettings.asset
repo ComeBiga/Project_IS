@@ -50,7 +50,7 @@ MonoBehaviour:
   - value: ClimbLedge Lerp Pos
     active: 0
   - value: Animation Transition
-    active: 0
+    active: 1
   - value: RunJump LadderCheck
     active: 0
   - value: IsValidStartInMiddle
@@ -83,8 +83,14 @@ MonoBehaviour:
     active: 1
   - value: CheckLedge ReachableHeight
     active: 1
+  - value: PushPull Lerp
+    active: 0
+  - value: SetPosition
+    active: 0
+  - value: Animation State Changed
+    active: 1
   sources:
-  - value: PlayerAnimator
+  - value: PlayerAnimation
     active: 1
   - value: PlayerStateMachine
     active: 0

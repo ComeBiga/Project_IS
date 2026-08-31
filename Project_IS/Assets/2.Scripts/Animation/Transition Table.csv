@@ -84,7 +84,7 @@ PushPull_RR,PushPull_RL,FALSE,0.2,0
 PushPull_LR,PushPull_LL,FALSE,0.2,0
 PushPull_RL,PushPull_RL,FALSE,0.2,0
 Any,PushPull_Front_Idle,FALSE,0.2,0
-Any,PushPull_Front_Push,FALSE,0.2,0
+Any,PushPull_Front_Push,TRUE,0.2,0
 PushPull_Front_Idle,PushPull_Front_Pull,FALSE,0.2,0
 PushPull_Front_Idle,PushPull_Front_Push,FALSE,0.2,0
 ,,,,

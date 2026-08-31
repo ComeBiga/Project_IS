@@ -20,11 +20,11 @@ MonoBehaviour:
   - value: Ledge Check Bound
     active: 0
   - value: CheckLedge ClimbType Ray
-    active: 1
+    active: 0
   - value: CheckLedge LedgePoint Ray
     active: 0
   - value: Ledge NearestLedgePoint
-    active: 1
+    active: 0
   sources:
   - value: PlayerClimbLedgeState
-    active: 1
+    active: 0
