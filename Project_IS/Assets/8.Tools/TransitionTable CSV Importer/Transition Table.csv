@@ -49,6 +49,12 @@ Any,RunTurn_R,TRUE,0.05,0
 ,,,,
 Any,RunToIdle_R,TRUE,0.25,0
 Any,IdleToRun,TRUE,0.25,0
+Any,Idle_Turn_To_Idle_R,TRUE,0.25,0
+Any,Idle_Turn_To_Idle_L,TRUE,0.25,0
+IdleTurn,Idle_Turn_To_Idle_L,TRUE,0.25,0
+IdleTurn_R,Idle_Turn_To_Idle_R,TRUE,0.25,0
+Idle_Turn_To_Idle_L,IdleTurn_R,TRUE,0.25,0
+Idle_Turn_To_Idle_R,IdleTurn,TRUE,0.25,0
 ,,,,
 Landing_Idle_Medium,IdleTurn,TRUE,0.25,0
 Landing_Idle_Medium,IdleTurn_R,TRUE,0.25,0
@@ -91,3 +97,6 @@ PushPull_Front_Idle,PushPull_Front_Push,FALSE,0.2,0
 Any,Activate_Wall_SlideLever_Idle,FALSE,0.2,0
 Activate_Wall_SlideLever_Idle,Activate_Wall_SlideLever_Up,FALSE,0.2,0
 Activate_Wall_SlideLever_Idle,Activate_Wall_SlideLever_Down,FALSE,0.2,0
+,,,,
+Any,Door_Push,TRUE,0.25,0
+Door_Push,Idle,TRUE,0.25,0

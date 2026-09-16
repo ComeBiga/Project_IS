@@ -16,7 +16,7 @@ MonoBehaviour:
   - name: Idle -> IdleToRun
     anyFrom: 0
     from: 1
-    to: 55
+    to: 57
     fixedDuration: 0
     duration: 0
     offset: 0
@@ -29,21 +29,21 @@ MonoBehaviour:
     offset: 0
   - name: IdleToRun -> Run
     anyFrom: 0
-    from: 55
-    to: 54
+    from: 57
+    to: 56
     fixedDuration: 1
     duration: 0.25
     offset: 0.18
   - name: Run -> RunToIdle_R
     anyFrom: 0
-    from: 54
-    to: 57
+    from: 56
+    to: 59
     fixedDuration: 1
     duration: 0.25
     offset: 0
   - name: RunToIdle_R -> Idle
     anyFrom: 0
-    from: 57
+    from: 59
     to: 1
     fixedDuration: 1
     duration: 0.05
@@ -51,83 +51,83 @@ MonoBehaviour:
   - name: Any -> Run
     anyFrom: 1
     from: 0
-    to: 54
+    to: 56
     fixedDuration: 1
     duration: 0.25
     offset: 0
   - name: IdleTurn -> Run
     anyFrom: 0
     from: 47
-    to: 54
+    to: 56
     fixedDuration: 0
     duration: 0.05
     offset: 0.625
   - name: IdleTurn_R -> Run
     anyFrom: 0
     from: 48
-    to: 54
+    to: 56
     fixedDuration: 0
     duration: 0.05
     offset: 0.625
   - name: RunTurn -> Run
     anyFrom: 0
     from: 44
-    to: 54
+    to: 56
     fixedDuration: 0
     duration: 0.05
     offset: 0.19
   - name: RunTurn_R -> Run
     anyFrom: 0
     from: 45
-    to: 54
+    to: 56
     fixedDuration: 0
     duration: 0.05
     offset: 0.68
   - name: Landing_Idle_Soft -> Run
     anyFrom: 0
     from: 37
-    to: 54
+    to: 56
     fixedDuration: 1
     duration: 0.25
     offset: 0
   - name: Landing_Idle_Medium -> Run
     anyFrom: 0
     from: 38
-    to: 54
+    to: 56
     fixedDuration: 1
     duration: 0.25
     offset: 0
   - name: Landing_Idle_Heavy -> Run
     anyFrom: 0
     from: 39
-    to: 54
+    to: 56
     fixedDuration: 0
     duration: 0.05
     offset: 0
   - name: Landing_Running_Soft -> Run
     anyFrom: 0
     from: 40
-    to: 54
+    to: 56
     fixedDuration: 0
     duration: 0.05
     offset: 0
   - name: Landing_Running_Medium -> Run
     anyFrom: 0
     from: 41
-    to: 54
+    to: 56
     fixedDuration: 0
     duration: 0.05
     offset: 0.35
   - name: Landing_Running_Heavy -> Run
     anyFrom: 0
     from: 42
-    to: 54
+    to: 56
     fixedDuration: 0
     duration: 0.25
     offset: 0
   - name: Run -> RunJump_Blend_Tree
     anyFrom: 0
-    from: 54
+    from: 56
     to: 32
     fixedDuration: 1
     duration: 0.05
@@ -282,14 +282,56 @@ MonoBehaviour:
   - name: Any -> RunToIdle_R
     anyFrom: 1
     from: 0
-    to: 57
+    to: 59
     fixedDuration: 1
     duration: 0.25
     offset: 0
   - name: Any -> IdleToRun
     anyFrom: 1
     from: 0
-    to: 55
+    to: 57
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: Any -> Idle_Turn_To_Idle_R
+    anyFrom: 1
+    from: 0
+    to: 49
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: Any -> Idle_Turn_To_Idle_L
+    anyFrom: 1
+    from: 0
+    to: 50
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: IdleTurn -> Idle_Turn_To_Idle_L
+    anyFrom: 0
+    from: 47
+    to: 50
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: IdleTurn_R -> Idle_Turn_To_Idle_R
+    anyFrom: 0
+    from: 48
+    to: 49
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: Idle_Turn_To_Idle_L -> IdleTurn_R
+    anyFrom: 0
+    from: 50
+    to: 48
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: Idle_Turn_To_Idle_R -> IdleTurn
+    anyFrom: 0
+    from: 49
+    to: 47
     fixedDuration: 1
     duration: 0.25
     offset: 0
@@ -534,21 +576,35 @@ MonoBehaviour:
   - name: Any -> Activate_Wall_SlideLever_Idle
     anyFrom: 1
     from: 0
-    to: 53
+    to: 55
     fixedDuration: 0
     duration: 0.2
     offset: 0
   - name: Activate_Wall_SlideLever_Idle -> Activate_Wall_SlideLever_Up
     anyFrom: 0
-    from: 53
-    to: 51
+    from: 55
+    to: 53
     fixedDuration: 0
     duration: 0.2
     offset: 0
   - name: Activate_Wall_SlideLever_Idle -> Activate_Wall_SlideLever_Down
     anyFrom: 0
-    from: 53
-    to: 52
+    from: 55
+    to: 54
     fixedDuration: 0
     duration: 0.2
+    offset: 0
+  - name: Any -> Door_Push
+    anyFrom: 1
+    from: 0
+    to: 60
+    fixedDuration: 1
+    duration: 0.25
+    offset: 0
+  - name: Door_Push -> Idle
+    anyFrom: 0
+    from: 60
+    to: 1
+    fixedDuration: 1
+    duration: 0.25
     offset: 0

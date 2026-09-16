@@ -153,6 +153,19 @@ public class PlayerIdleState : PlayerStateBase
             return;
         }
 
+        if(mController.IsFrontPressed() && mInteractable.TryGetInteractedInfo(PlayerInteractable.CastDirection.Front, out PlayerInteractable.InteractedInfo frontInteractedInfo))
+        {
+            if (frontInteractedInfo.interactableObject.SwitchState)
+            {
+                mStateMachine.SwitchState<PlayerInteractState>((state) =>
+                {
+                    state.SetInteractableObject(frontInteractedInfo.interactableObject);
+                });
+            }
+
+            return;
+        }
+
         mMovement.UpdateRotation();
     }
 

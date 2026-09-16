@@ -358,6 +358,22 @@ public class PlayerMoveState : PlayerStateBase
             return;
         }
 
+        var interactState = mStateMachine.GetStateBase<PlayerInteractState>();
+
+        if (mController.IsFrontPressed() && mInteractable.TryGetInteractedInfo(PlayerInteractable.CastDirection.Front, out PlayerInteractable.InteractedInfo frontInteractedInfo))
+        {
+            // if (frontInteractedInfo.interactableObject.SwitchState)
+            if (frontInteractedInfo.interactableObject.Check(mController, frontInteractedInfo))
+            {
+                mStateMachine.SwitchState<PlayerInteractState>((state) =>
+                {
+                    state.SetInteractableObject(frontInteractedInfo.interactableObject);
+                });
+            }
+
+            return;
+        }
+
         #region PushPull Front (Deprecated)
 
         //// Interactable

@@ -5,6 +5,12 @@ using UnityEngine;
 
 public class TimeDistanceCalculater : EditorWindow
 {
+    public enum CalculationMode
+    {
+        TimeToDistance,
+        DistanceToVelocity
+    }
+
     private float mFrameRate = 24f;
     private float mStartVelocity = 0f;
     private int mframeTime = 1;

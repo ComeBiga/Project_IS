@@ -9,6 +9,7 @@
     "com.unity.ide.vscode": "1.2.5",
     "com.unity.inputsystem": "1.14.2",
     "com.unity.memoryprofiler": "1.1.12",
+    "com.unity.playablegraph-visualizer": "https://github.com/Unity-Technologies/graph-visualizer.git",
     "com.unity.render-pipelines.universal": "14.0.12",
     "com.unity.shadergraph": "14.0.12",
     "com.unity.terrain-tools": "5.0.6",

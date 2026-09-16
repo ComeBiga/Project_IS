@@ -5,7 +5,8 @@ Properties
     [HDR]_Color ("Color", Color) = (0.5, 0.5, 0.5, 1.0)
 
     [Space(15)]
-    _Depth ("Depth Fade Distance", Range(1.0, 500.0)) = 100.0
+    _Depth ("Depth Fade Distance", Range(.001, 500.0)) = 100.0
+    _Strength("Strength", Range(0, 1)) = 1.0
 
     [Space]
     _CameraDistanceFadeFar("Camera Distance Fade Far", Float) = 10.0
@@ -37,6 +38,7 @@ SubShader
 
         fixed4 _Color;
         float _Depth;
+        float _Strength;
         float _CameraDistanceFadeFar, _CameraDistanceFadeClose;
         float _UvFadeX, _UvFadeY;
 
@@ -80,8 +82,9 @@ SubShader
             // const float object_depth = i.projPos.z + length(i.dist);
             // const float object_depth = i.dist.z + length(i.dist);
             const float object_depth = -i.dist.z;
-            const float depth_fade = saturate((scene_depth - object_depth) / _Depth) * .3;
-            c.a *= pow(depth_fade, 4);
+            const float depth_fade = saturate((scene_depth - object_depth) / _Depth) * _Strength;// * .3;
+            c.a *= depth_fade;
+            // c.a *= pow(depth_fade, 2); //4);
             // c.a *= saturate((depth_fade * length(i.dist) - _CameraDistanceFadeClose) / (_CameraDistanceFadeFar - _CameraDistanceFadeClose));
 
             const float fade_uv_x = pow(smoothstep(1, 0, abs(i.uv.x * 2 - 1)), _UvFadeX);

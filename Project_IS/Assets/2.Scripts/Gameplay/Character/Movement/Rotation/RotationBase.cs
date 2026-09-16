@@ -4,6 +4,8 @@ using UnityEngine;
 
 public abstract class RotationBase
 {
+    public float NormalizedTime { get; protected set; }
+
     protected RotationHandler mRotationHandler;
 
     protected PlayerController mPlayerController;

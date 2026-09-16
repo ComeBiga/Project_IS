@@ -356,7 +356,8 @@ public class PlayerInteractable : MonoBehaviour
     {
         var interactedInfo = new InteractedInfo();
         interactedInfo.hitInfo = hitInfo;
-        interactedInfo.interactableObject = hitInfo.collider.GetComponent<InteractableObject>();
+        // interactedInfo.interactableObject = hitInfo.collider.GetComponent<InteractableObject>();
+        interactedInfo.interactableObject = hitInfo.collider.GetComponentInParent<InteractableObject>();
         interactedInfo.distanceToEdge = Mathf.Abs(CharacterPosition.x - hitInfo.point.x);
 
         mInteractableObjectsDic[targetDirection] = interactedInfo;

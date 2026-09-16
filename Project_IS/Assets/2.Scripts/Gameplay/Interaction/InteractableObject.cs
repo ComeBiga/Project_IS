@@ -21,10 +21,17 @@ public class InteractableObject : MonoBehaviour
 
     public virtual void Enter(PlayerController playerController)
     {
+
     }
 
     public virtual void Exit(PlayerController playerController)
     {
+
+    }
+
+    public virtual void FixedTick(PlayerController playerController)
+    {
+
     }
 
     public virtual void Tick(PlayerController playerController)
@@ -32,8 +39,21 @@ public class InteractableObject : MonoBehaviour
 
     }
 
+    public bool Check(PlayerController playerController, PlayerInteractable.InteractedInfo interactedInfo)
+    {
+        if(!_switchState)
+            return false;
+
+        return check(playerController, interactedInfo);
+    }
+
     protected virtual void Start()
     {
-        mBoxCollider = GetComponent<BoxCollider>();
+        mBoxCollider = GetComponentInChildren<BoxCollider>();
+    }
+
+    protected virtual bool check(PlayerController playerController, PlayerInteractable.InteractedInfo interactedInfo)
+    {
+        return true;
     }
 }

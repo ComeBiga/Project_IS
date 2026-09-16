@@ -1404,6 +1404,17 @@ MonoBehaviour:
     mats:
     - {fileID: 2100000, guid: 3f3d17836a87ae942ac524d7020ac829, type: 2}
     - {fileID: 2100000, guid: a4d90c6a694253e4380dd8ad8aca9b32, type: 2}
+  - name: Hand Type
+    mesh:
+    - {fileID: -3267667537319569785, guid: ffc13095f792d7b48b5f62930b6d7ece, type: 3}
+    - {fileID: -3267667537319569785, guid: ffc13095f792d7b48b5f62930b6d7ece, type: 3}
+    - {fileID: -3267667537319569785, guid: ffc13095f792d7b48b5f62930b6d7ece, type: 3}
+    - {fileID: -3267667537319569785, guid: ffc13095f792d7b48b5f62930b6d7ece, type: 3}
+    hideParts: []
+    yOffset: 0
+    mats:
+    - {fileID: 2100000, guid: 3f3d17836a87ae942ac524d7020ac829, type: 2}
+    - {fileID: 2100000, guid: a4d90c6a694253e4380dd8ad8aca9b32, type: 2}
   shirtsPresets:
   - name: Shirt Type 1
     mesh:
@@ -1580,6 +1591,19 @@ MonoBehaviour:
     yOffset: 0
     mats:
     - {fileID: 2100000, guid: 3f3d17836a87ae942ac524d7020ac829, type: 2}
+  - name: Doctor Shirt Type 1 (ClearedBone)
+    mesh:
+    - {fileID: 8932948938243017497, guid: 09e45b045e5f8fa4f8e70b5716f4e45c, type: 3}
+    - {fileID: 2749820849713149422, guid: 09e45b045e5f8fa4f8e70b5716f4e45c, type: 3}
+    - {fileID: 2509491733281903495, guid: 09e45b045e5f8fa4f8e70b5716f4e45c, type: 3}
+    - {fileID: 1007704120569998302, guid: 09e45b045e5f8fa4f8e70b5716f4e45c, type: 3}
+    hideParts:
+    - Stomach
+    - Shoulders
+    - Arms
+    yOffset: 0
+    mats:
+    - {fileID: 2100000, guid: 3f3d17836a87ae942ac524d7020ac829, type: 2}
   - name: Worker Shirt Type 1
     mesh:
     - {fileID: 4300000, guid: ec53eba6a90aa4a42a35bc62dc833b79, type: 3}
@@ -1624,6 +1648,30 @@ MonoBehaviour:
     - {fileID: -6067838308625961572, guid: 3da04cf365869424bb534c82183a0aee, type: 3}
     - {fileID: 5665722397086803487, guid: 3da04cf365869424bb534c82183a0aee, type: 3}
     - {fileID: 2082621516358903504, guid: 3da04cf365869424bb534c82183a0aee, type: 3}
+    hideParts:
+    - Stomach
+    - Chest
+    yOffset: 0
+    mats:
+    - {fileID: 2100000, guid: 3f3d17836a87ae942ac524d7020ac829, type: 2}
+  - name: Test Type (Long Sleeve)
+    mesh:
+    - {fileID: 7588423875348741128, guid: 8a8c99e3e46b841438cc31250778a26f, type: 3}
+    - {fileID: -6067838308625961572, guid: 3da04cf365869424bb534c82183a0aee, type: 3}
+    - {fileID: 5665722397086803487, guid: 3da04cf365869424bb534c82183a0aee, type: 3}
+    - {fileID: 2082621516358903504, guid: 3da04cf365869424bb534c82183a0aee, type: 3}
+    hideParts:
+    - Stomach
+    - Chest
+    yOffset: 0
+    mats:
+    - {fileID: 2100000, guid: 3f3d17836a87ae942ac524d7020ac829, type: 2}
+  - name: Test Subject Type (ClearedBone)
+    mesh:
+    - {fileID: 7588423875348741128, guid: ffc13095f792d7b48b5f62930b6d7ece, type: 3}
+    - {fileID: -6067838308625961572, guid: ffc13095f792d7b48b5f62930b6d7ece, type: 3}
+    - {fileID: 5665722397086803487, guid: ffc13095f792d7b48b5f62930b6d7ece, type: 3}
+    - {fileID: 2082621516358903504, guid: ffc13095f792d7b48b5f62930b6d7ece, type: 3}
     hideParts:
     - Stomach
     - Chest
@@ -1840,6 +1888,19 @@ MonoBehaviour:
   - name: Doctor Pants Type 1 (ClearedBone)
     mesh:
     - {fileID: 7964232402222631269, guid: 09e45b045e5f8fa4f8e70b5716f4e45c, type: 3}
+    - {fileID: -3287440249436047859, guid: 09e45b045e5f8fa4f8e70b5716f4e45c, type: 3}
+    - {fileID: -3194441434596939065, guid: 09e45b045e5f8fa4f8e70b5716f4e45c, type: 3}
+    - {fileID: 8613220230884997916, guid: 09e45b045e5f8fa4f8e70b5716f4e45c, type: 3}
+    hideParts:
+    - Hip
+    - Legs
+    - ShinUpper
+    yOffset: 0
+    mats:
+    - {fileID: 2100000, guid: 3f3d17836a87ae942ac524d7020ac829, type: 2}
+  - name: Test Subject Type 1 (ClearedBone)
+    mesh:
+    - {fileID: 7964232402222631269, guid: ffc13095f792d7b48b5f62930b6d7ece, type: 3}
     - {fileID: -3287440249436047859, guid: 09e45b045e5f8fa4f8e70b5716f4e45c, type: 3}
     - {fileID: -3194441434596939065, guid: 09e45b045e5f8fa4f8e70b5716f4e45c, type: 3}
     - {fileID: 8613220230884997916, guid: 09e45b045e5f8fa4f8e70b5716f4e45c, type: 3}

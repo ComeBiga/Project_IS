@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using static PlayerMovement;
 
+[SelectionBase]
 [RequireComponent(typeof(PlayerInputHandler), typeof(PlayerMovement))]
 public class PlayerController : MonoBehaviour
 {
@@ -38,6 +39,13 @@ public class PlayerController : MonoBehaviour
         }
 
         return false;
+    }
+
+    public bool IsFrontPressed()
+    {
+        PlayerInputHandler.PressKey targetKey = PlayerInputHandler.DirectionToPressKey(mMovement.Direction);
+
+        return mInputHandler.IsKeyPressed(targetKey);
     }
 
     private void Awake()

@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d212b5f851ef9864da1043a92ba4b941, type: 3}
   m_Name: GameDebugLogSettings
   m_EditorClassIdentifier: 
-  enabled: 1
+  enabled: 0
   frameCount: 1
   showCategory: 1
   showLevel: 1
@@ -89,10 +89,18 @@ MonoBehaviour:
     active: 0
   - value: Animation State Changed
     active: 1
+  - value: Animation Play
+    active: 1
+  - value: Idle Turn To Idle
+    active: 1
+  - value: Normal Rotation
+    active: 1
+  - value: Turn Normalized Time
+    active: 1
   sources:
   - value: PlayerAnimation
     active: 1
   - value: PlayerStateMachine
-    active: 0
+    active: 1
   - value: PlayerTurnState
-    active: 0
+    active: 1

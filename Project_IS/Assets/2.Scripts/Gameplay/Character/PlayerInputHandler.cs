@@ -103,6 +103,19 @@ public class PlayerInputHandler : MonoBehaviour
         return bResult;
     }
 
+    public static PressKey DirectionToPressKey(PlayerMovement.EDirection direction)
+    {
+        switch (direction)
+        {
+            case PlayerMovement.EDirection.Left:
+                return PressKey.Left;
+            case PlayerMovement.EDirection.Right:
+                return PressKey.Right;
+            default:
+                return PressKey.None;
+        }
+    }
+
     // Update is called once per frame
     void Update()
     {

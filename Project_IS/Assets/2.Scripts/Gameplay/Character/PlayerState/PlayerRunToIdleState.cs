@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -14,7 +15,6 @@ public class PlayerRunToIdleState : PlayerStateBase
         mController.Animation.SetRunToIdle(true);
 
         mController.Animation.Play(AnimState.RunToIdle_R);
-        // mController.Animator.CrossFadeRunToIdle(false);
     }
 
     public override void ExitState()
@@ -84,10 +84,21 @@ public class PlayerRunToIdleState : PlayerStateBase
         mController.Movement.UpdateRotation();
 
         // To Idle
-        if (Mathf.Abs(mController.Movement.Velocity.x) < .01f)
+        AnimatorStateInfo currentStateInfo = mAnimation.Animator.GetCurrentAnimatorStateInfo(0);
+
+        if (currentStateInfo.IsTag("RunToIdle"))
         {
-            mController.StateMachine.SwitchState<PlayerIdleState>();
-            return;
+            if (currentStateInfo.normalizedTime > .99f)
+            {
+                mController.StateMachine.SwitchState<PlayerIdleState>();
+                return;
+            }
         }
+
+        //if (Mathf.Abs(mController.Movement.Velocity.x) < .01f)
+        //{
+        //    mController.StateMachine.SwitchState<PlayerIdleState>();
+        //    return;
+        //}
     }
 }

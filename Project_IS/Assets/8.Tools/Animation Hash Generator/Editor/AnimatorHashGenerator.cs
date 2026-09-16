@@ -32,11 +32,14 @@ public class AnimatorHashGenerator : EditorWindow
     private AnimatorController controller;
 
     private const string OutputPath =
-        "Assets/2.Scripts/Animation/AnimStateHash.cs";
+        "Assets/2.Scripts/Gameplay/Character/Animation/AnimStateHash.cs";
+        // "Assets/2.Scripts/Animation/AnimStateHash.cs";
     private const string AnimStatePath =
-        "Assets/2.Scripts/Animation/AnimState.cs";
+        "Assets/2.Scripts/Gameplay/Character/Animation/AnimState.cs";
+        // "Assets/2.Scripts/Animation/AnimState.cs";
     private const string AnimStateNameLookUpPath =
-        "Assets/2.Scripts/Animation/AnimStateNameLookUp.cs";
+        "Assets/2.Scripts/Gameplay/Character/Animation/AnimStateNameLookUp.cs";
+        // "Assets/2.Scripts/Animation/AnimStateNameLookUp.cs";
 
     [MenuItem("Tools/Animation/Generate State Hashes")]
     private static void Open()

@@ -21,6 +21,11 @@ public class PlayerInteractState : PlayerStateBase
         mInteractableObject.Exit(mController);
     }
 
+    public override void FixedTick()
+    {
+        mInteractableObject.FixedTick(mController);
+    }
+
     public override void Tick()
     {
         mInteractableObject.Tick(mController);

@@ -47,28 +47,42 @@ public class NormalRotation : RotationBase
     {
         mbRotationFinished = false;
         mTimer = 0f;
+        NormalizedTime = 0f;
 
+        mStartEulerAngles = mPlayerController.Movement.DirectionToRotation(mPlayerController.Movement.Direction).eulerAngles;
         mPlayerController.Movement.SetDirection(mPlayerController.Movement.OppositeDirection);
 
-        mStartEulerAngles = mPlayerController.Movement.Rotation.eulerAngles;
+        // mStartEulerAngles = mPlayerController.Movement.Rotation.eulerAngles;
         mTargetYEulerAngle = mPlayerController.Movement.DirectionToRotation(mPlayerController.Movement.Direction).eulerAngles.y;
-        mDeltaAngle = Mathf.DeltaAngle(mStartEulerAngles.y, mTargetYEulerAngle);
+        // mDeltaAngle = Mathf.DeltaAngle(mStartEulerAngles.y, mTargetYEulerAngle);
+        mDeltaAngle = Mathf.DeltaAngle(mPlayerController.Movement.Rotation.eulerAngles.y, mTargetYEulerAngle);
         // Debug.Log($"a: {mStartEulerAngles.y:F9}, b: {mTargetYEulerAngle:F9}, delta: {mDeltaAngle:F9}");
 
         Vector3 currentForward = rotateVector(mPlayerController.Movement.transform.forward, .01f);
         Vector3 targetDirection = mPlayerController.Movement.DirectionToVector();
         float remainAngles = Vector3.SignedAngle(currentForward, targetDirection, Vector3.up);
 
-        // mDeltaAngle = FIXED_ROTATION_ANGLE;
+        NormalizedTime = 1f - Mathf.Abs(mDeltaAngle) / Number.DEG_180;
+        mTimer = NormalizedTime * mDuration;
 
-        if(mDeltaAngle < 0f)
+        GameDebug.Log($"DeltaAngle: {mDeltaAngle}, RemainAngles: {remainAngles}, timer: {mTimer}, Rotation Normalized Time: {NormalizedTime}", tag: "Normal Rotation");
+
+        // mDeltaAngle = FIXED_ROTATION_ANGLE;
+        //if(Mathf.Abs(Mathf.Abs(mDeltaAngle) - 180f) < 0.01f)
+        //{
+        //    mDeltaAngle = FIXED_ROTATION_ANGLE;
+        //}
+
+        if (mDeltaAngle < 0f)
         {
             mRotationHandler.SetRotationDirection(RotationHandler.ERotationDirection.Left);
 
             mPlayerController.Animation.TurnL(true);
             mPlayerController.Animation.TurnR(false);
 
-            mPlayerController.Animation.Play(mTurnType == PlayerTurnState.ETurnType.Run ? AnimState.RunTurn : AnimState.IdleTurn);
+            AnimState animState = mTurnType == PlayerTurnState.ETurnType.Run ? AnimState.RunTurn : AnimState.IdleTurn;
+            // mPlayerController.Animation.Play(animState, true, .25f, mTimer);
+            mPlayerController.Animation.Play(animState, mTimer);
             // mPlayerController.Animator.CrossFadeTurn(mTurnType == PlayerTurnState.ETurnType.Run ? true : false, true);
         }
         else
@@ -77,8 +91,10 @@ public class NormalRotation : RotationBase
 
             mPlayerController.Animation.TurnL(false);
             mPlayerController.Animation.TurnR(true);
-
-            mPlayerController.Animation.Play(mTurnType == PlayerTurnState.ETurnType.Run ? AnimState.RunTurn_R : AnimState.IdleTurn_R);
+            
+            AnimState animState = mTurnType == PlayerTurnState.ETurnType.Run ? AnimState.RunTurn_R : AnimState.IdleTurn_R;
+            // mPlayerController.Animation.Play(animState, true, .25f, mTimer);
+            mPlayerController.Animation.Play(animState, mTimer);
             // mPlayerController.Animator.CrossFadeTurn(mTurnType == PlayerTurnState.ETurnType.Run ? true : false, false);
         }
     }
@@ -115,6 +131,7 @@ public class NormalRotation : RotationBase
     {
         if (mTimer > mDuration)
         {
+            NormalizedTime = 1f;
             mbRotationFinished = true;
             // mPlayerController.transform.rotation = Quaternion.Euler(mStartEulerAngles.x, mTargetYEulerAngle, mStartEulerAngles.z);
             mPlayerController.Movement.SetRotation(Quaternion.Euler(mStartEulerAngles.x, mTargetYEulerAngle, mStartEulerAngles.z));
@@ -123,10 +140,16 @@ public class NormalRotation : RotationBase
         }
 
         float t = mTimer / mDuration;
-        float newYEulerAngle = Mathf.LerpAngle(mStartEulerAngles.y, mTargetYEulerAngle, t);
+        NormalizedTime = t;
+        // float newYEulerAngle = Mathf.LerpAngle(mStartEulerAngles.y, mTargetYEulerAngle, t);
+        float newYEulerAngle = lerpAngle(mRotationHandler.RotationDirection, mStartEulerAngles.y, mTargetYEulerAngle, t);
         // float newYEulerAngle = lerpFixedAngle(mStartEulerAngles.y, mTargetYEulerAngle, t);
         // mPlayerController.transform.rotation = Quaternion.Euler(mStartEulerAngles.x, newYEulerAngle, mStartEulerAngles.z);
         mPlayerController.Movement.SetRotation(Quaternion.Euler(mStartEulerAngles.x, newYEulerAngle, mStartEulerAngles.z));
+        float remainAngle = Mathf.DeltaAngle(newYEulerAngle, mTargetYEulerAngle);
+        float angleT = 1 - Mathf.Abs(remainAngle) / Number.DEG_180;
+
+        GameDebug.Log($"Rotation Normalized Time: {NormalizedTime}, Start Angle: {mStartEulerAngles.y}, Target Angle: {mTargetYEulerAngle}, New Angle: {newYEulerAngle}, Remain Angle: {remainAngle}, Angle T: {angleT}", tag: "Normal Rotation");
 
         mTimer += Time.fixedDeltaTime;
     }
@@ -176,6 +199,22 @@ public class NormalRotation : RotationBase
         }
 
         float angle = a + delta * Mathf.Clamp01(t);
+
+        return angle;
+    }
+
+    private float lerpAngle(RotationHandler.ERotationDirection rotationDirection, float a, float b, float t)
+    {
+        float delta = Mathf.DeltaAngle(a, b);
+        float deltaMagnitude = Mathf.Abs(delta);
+
+        if (Mathf.Abs(deltaMagnitude - 180f) < 0.01f)
+        {
+            delta = FIXED_ROTATION_ANGLE;
+        }
+
+        float direction = (rotationDirection == RotationHandler.ERotationDirection.Left) ? -1f : 1f;
+        float angle = a + direction * deltaMagnitude * Mathf.Clamp01(t);
 
         return angle;
     }

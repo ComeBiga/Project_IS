@@ -6,9 +6,11 @@ public class PlayerTurnState : PlayerStateBase
 {
     public enum ETurnType { None = 0, Idle, Run }
 
+    [SerializeField] private TurnPlayable turnPlayable;
     [SerializeField] private RotationHandler.EType _rotationType = RotationHandler.EType.Normal;
     [SerializeField] private float _idleTurnDuration = .6f;
     [SerializeField] private float _runTurnDuration = .4f;
+    [SerializeField][Range(0f, 1f)] private float _idleTurnStartRunNormalizedTime = .666f;
 
     [Header("TimeOffset")]
     [SerializeField] private float _idleTurnLTimeOffset = .615f;
@@ -27,6 +29,8 @@ public class PlayerTurnState : PlayerStateBase
     private bool mbEnableTimer = false;
     private float mTimer = 0f;
     private float mTurnDuration = 0f;
+    private bool mbTurnToIdle = false;
+    private float mFixedDeltaTime = 0f;
 
     public override void Initialize(PlayerController controller)
     {
@@ -40,6 +44,8 @@ public class PlayerTurnState : PlayerStateBase
     public override void EnterState()
     {
         mbEnableTimer = false;
+        mbTurnToIdle = false;
+        mFixedDeltaTime = 0f;
 
         mRotationHandler.SetTurnState(RotationHandler.EState.DirectionChanged);
 
@@ -85,18 +91,96 @@ public class PlayerTurnState : PlayerStateBase
     {
         mRotationHandler.FixedUpdate();
 
-        if(mController.InputHandler.GetInputRawMagnitude().x < .1f)
+        float rotationNormalizedTime = mRotationHandler.GetRotationBase<NormalRotation>().NormalizedTime;// - .12f;
+        float animationRotationLength = 2f / 3f;
+
+        if (!mbTurnToIdle && mController.InputHandler.GetInputRawMagnitude().x < .1f)
         {
-            // To RunToIdle
-            mController.StateMachine.SwitchState<PlayerRunToIdleState>();
+            mbTurnToIdle = true;
+
+            if(mTurnType == ETurnType.Idle)
+            {
+                if (mTimer > mTurnDuration * _idleTurnStartRunNormalizedTime)
+                {
+                    // To RunToIdle
+                    mController.StateMachine.SwitchState<PlayerRunToIdleState>();
+                }
+                else
+                {
+                    // mAnimation.Play(AnimState.Idle_Turn_To_Idle_R, true, .25f, mTimer / mTurnDuration * 2f / 3f);
+                    AnimState animState = (mRotationHandler.RotationDirection == RotationHandler.ERotationDirection.Right) ? AnimState.Idle_Turn_To_Idle_R : AnimState.Idle_Turn_To_Idle_L;
+                    mAnimation.Play(animState, true, .25f, rotationNormalizedTime * animationRotationLength * .75f);
+                    mAnimation.SetMotionTime(rotationNormalizedTime * animationRotationLength);
+                    GameDebug.Log($"Rotation Normalized Time: {rotationNormalizedTime}, Animation Rotation Length: {animationRotationLength}, Animation Offset: {rotationNormalizedTime * animationRotationLength}", tag: "Idle Turn To Idle");
+                }
+            }
+            else
+            {
+                var moveInput = mInputHandler.MoveInput;
+                moveInput.x = PlayerMovement.DirectionToVector(mMovement.Direction).x * .8f;
+                mInputHandler.SetMoveInput(moveInput);
+
+                // To RunToIdle
+                mController.StateMachine.SwitchState<PlayerRunToIdleState>();
+            }
+
+            //if(mTimer < .1f)
+            //{
+            //    mAnimation.Play(AnimState.Idle_Turn_To_Idle_R);
+            //}
+            //else
+            //{
+            //    var moveInput = mInputHandler.MoveInput;
+            //    moveInput.x = PlayerMovement.DirectionToVector(mMovement.Direction).x * .8f;
+            //    mInputHandler.SetMoveInput(moveInput);
+
+            //    // To RunToIdle
+            //    mController.StateMachine.SwitchState<PlayerRunToIdleState>();
+            //}
+
             return;
         }
 
         var currentStateInfo = mController.Animation.Animator.GetCurrentAnimatorStateInfo(0);
 
-        // if(mTurnType == ETurnType.Run && mTimer > mTurnDuration)
-        if(mTimer > mTurnDuration || Mathf.Approximately(mTimer, mTurnDuration))
+        float motionTime = 0f;
+
+        if(mbTurnToIdle)
         {
+            if (rotationNormalizedTime < 1f)
+            {
+                motionTime = rotationNormalizedTime * animationRotationLength;
+                mAnimation.SetMotionTime(motionTime);
+            }
+            else
+            {
+                float deltaMotionTime = mFixedDeltaTime / mTurnDuration;
+                motionTime = animationRotationLength + deltaMotionTime;
+                mAnimation.SetMotionTime(motionTime);
+                mFixedDeltaTime += Time.fixedDeltaTime;
+            }
+        }
+
+        string currentAnimName = AnimStateNameLookUp.names[currentStateInfo.fullPathHash];
+        GameDebug.Log($"Current Animation Name: {currentAnimName}, Anim Normalized Time: {currentStateInfo.normalizedTime}, Animation Rotation: {motionTime}", //{currentStateInfo.normalizedTime / (2f / 3f)}",
+                tag: "Turn Normalized Time");
+        var nextStateInfo = mController.Animation.Animator.GetNextAnimatorStateInfo(0);
+        if (nextStateInfo.fullPathHash != 0)
+        {
+            string nextAnimName = AnimStateNameLookUp.names[nextStateInfo.fullPathHash];
+            GameDebug.Log($"Next Animation Name: {nextAnimName}, Anim Normalized Time: {nextStateInfo.normalizedTime}, Animation Rotation: {motionTime}",
+                    tag: "Turn Normalized Time");
+        }
+
+        // if(mTurnType == ETurnType.Run && mTimer > mTurnDuration)
+        if (mTimer > mTurnDuration || Mathf.Approximately(mTimer, mTurnDuration))
+        {
+            if (mbTurnToIdle)
+            {
+                mController.StateMachine.SwitchState<PlayerIdleState>();
+                return;
+            }
+
             // To Move
             if (mController.InputHandler.GetInputRawMagnitude().x > .1f)
             {
@@ -107,6 +191,7 @@ public class PlayerTurnState : PlayerStateBase
 
             // To RunToIdle
             mController.StateMachine.SwitchState<PlayerRunToIdleState>();
+
             return;
         }
 
@@ -170,7 +255,7 @@ public class PlayerTurnState : PlayerStateBase
 
     public override void Standby()
     {
-        mRotationHandler.Standby();
+        // mRotationHandler.Standby();
     }
 
     public void SetTurnType(ETurnType type)
