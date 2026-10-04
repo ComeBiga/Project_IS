@@ -5,6 +5,7 @@ public class RootMotionRotationData : ScriptableObject
 {
     public AnimationClip sourceClip;
 
+    [Header("Rotation")]
     // 원본 애니메이션의 총 회전량
     public float totalYaw;
 
@@ -15,4 +16,12 @@ public class RootMotionRotationData : ScriptableObject
 
     // 0 ~ 1로 정규화된 회전 진행도
     public AnimationCurve normalizedRotation;
+
+    [Header("X")]
+    public float totalX;
+    public AnimationCurve moveXCurve;
+
+    [Header("Z")]
+    public float totalZ;
+    public AnimationCurve moveZCurve;
 }

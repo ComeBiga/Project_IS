@@ -12,7 +12,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d212b5f851ef9864da1043a92ba4b941, type: 3}
   m_Name: GameDebugLogSettings
   m_EditorClassIdentifier: 
-  enabled: 0
+  enabled: 1
   frameCount: 1
   showCategory: 1
   showLevel: 1
@@ -50,7 +50,7 @@ MonoBehaviour:
   - value: ClimbLedge Lerp Pos
     active: 0
   - value: Animation Transition
-    active: 1
+    active: 0
   - value: RunJump LadderCheck
     active: 0
   - value: IsValidStartInMiddle
@@ -76,27 +76,27 @@ MonoBehaviour:
   - value: RunJump Motion Time
     active: 0
   - value: CheckLedge Distance
-    active: 1
+    active: 0
   - value: CheckLedge Detected
-    active: 1
+    active: 0
   - value: CheckLedge MaxHeight
-    active: 1
+    active: 0
   - value: CheckLedge ReachableHeight
-    active: 1
+    active: 0
   - value: PushPull Lerp
     active: 0
   - value: SetPosition
     active: 0
   - value: Animation State Changed
-    active: 1
+    active: 0
   - value: Animation Play
-    active: 1
+    active: 0
   - value: Idle Turn To Idle
-    active: 1
+    active: 0
   - value: Normal Rotation
     active: 1
   - value: Turn Normalized Time
-    active: 1
+    active: 0
   sources:
   - value: PlayerAnimation
     active: 1

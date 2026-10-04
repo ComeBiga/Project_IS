@@ -484,6 +484,11 @@ public class PlayerAnimation : MonoBehaviour
 
     }
 
+    private void Start()
+    {
+        // mAnimator.runtimeAnimatorController.animationClips
+    }
+
     private void FixedUpdate()
     {
         onAnimatorFixedUpdate?.Invoke();

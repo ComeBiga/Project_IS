@@ -1,0 +1,47 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ae8c6ab5afd3fa345b1f628d46db774d, type: 3}
+  m_Name: TestSubject_Turn
+  m_EditorClassIdentifier: 
+  sourceClip: {fileID: 1513884668096346461, guid: f4ca5b2bdce8d4f4388aba8747a69af4,
+    type: 3}
+  turnType: 1
+  useRotationDuration: 1
+  rotationDuration: 0.667
+  idleTurnLAnimation:
+    sourceClip: {fileID: 1513884668096346461, guid: f4ca5b2bdce8d4f4388aba8747a69af4,
+      type: 3}
+    turnType: 1
+    rotationDirection: 0
+    useRotationDuration: 1
+    rotationDuration: 0.667
+  idleTurnRAnimation:
+    sourceClip: {fileID: 1513884668096346461, guid: 2af7a969cf167eb48864a4338633a46c,
+      type: 3}
+    turnType: 1
+    rotationDirection: 1
+    useRotationDuration: 1
+    rotationDuration: 0.833
+  runTurnLAnimation:
+    sourceClip: {fileID: 1513884668096346461, guid: ccc4207541162d34ca9c81c09925e987,
+      type: 3}
+    turnType: 2
+    rotationDirection: 0
+    useRotationDuration: 1
+    rotationDuration: 0.267
+  runTurnRAnimation:
+    sourceClip: {fileID: 1513884668096346461, guid: beadbee806150464ab0c81d7bd4bc423,
+      type: 3}
+    turnType: 2
+    rotationDirection: 1
+    useRotationDuration: 1
+    rotationDuration: 0.267

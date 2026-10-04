@@ -1,3 +1,4 @@
+using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -6,12 +7,13 @@ using static PlayerMovement;
 public class RotationHandler
 {
     public enum EState { StandBy, DirectionChanged, Rotating }
-    public enum EType { AnimationCurve, RootMotion, Offset180, Normal }
+    public enum EType { AnimationCurve, RootMotion, Offset180, Normal, Playable }
     public enum ERotationDirection { Left, Right }
 
     public PlayerController PlayerController => mPlayerController;
     public EState State => mState;
     public ERotationDirection RotationDirection => mRotationDirection;
+    public float NormalizedTime => mCurrentRotation.NormalizedTime;
     public bool IsRotating => mbIsRotating;
     public bool TurnToTurn => mbTurnToTurn;
     public AnimationCurveRotation AnimationCurveRotation => mAnimationCurveRotation;
@@ -21,6 +23,7 @@ public class RotationHandler
     private RootMotionRotation mRootMotionRotation;
     private Offset180Rotation mOffset180Rotation;
     private NormalRotation mNormalRotation;
+    private PlayableRotation mPlayableRotation;
 
     private PlayerController mPlayerController;
     private EState mState = EState.StandBy;
@@ -39,12 +42,12 @@ public class RotationHandler
     {
         mPlayerController = playerController;
 
-        mAnimationCurveRotation = new AnimationCurveRotation(this);
-        mRootMotionRotation = new RootMotionRotation(this);
-        mOffset180Rotation = new Offset180Rotation(this);
-        mNormalRotation = new NormalRotation(this);
+        //mAnimationCurveRotation = new AnimationCurveRotation(this);
+        //mRootMotionRotation = new RootMotionRotation(this);
+        //mOffset180Rotation = new Offset180Rotation(this);
+        //mNormalRotation = new NormalRotation(this);
 
-        mPlayerController.Animation.onAnimatorMove += onAnimatorMove;
+        //mPlayerController.Animation.onAnimatorMove += onAnimatorMove;
 
         mState = EState.StandBy;
         mbIsRotating = false;
@@ -54,11 +57,24 @@ public class RotationHandler
         mInputTimer = mInputInterval;
     }
 
+    public void SetRotation(RotationBase rotation)
+    {
+        mCurrentRotation = rotation;
+    }
+
+    [Obsolete]
+    public void InitPlayableRotation(TurnPlayable turnPlayable)
+    {
+        mPlayableRotation = new PlayableRotation(this, mPlayerController, turnPlayable);
+    }
+
+    [Obsolete]
     public T GetRotationBase<T>() where T : RotationBase
     {
         return mCurrentRotation as T;
     }
 
+    [Obsolete]
     public void SetType(EType type)
     {
         mType = type;
@@ -76,6 +92,9 @@ public class RotationHandler
                 break;
             case EType.Normal:
                 mCurrentRotation = mNormalRotation;
+                break;
+            case EType.Playable:
+                mCurrentRotation = mPlayableRotation;
                 break;
         }
     }
@@ -105,6 +124,16 @@ public class RotationHandler
     public void SetRotationDirection(ERotationDirection rotationDirection)
     {
         mRotationDirection = rotationDirection;
+    }
+
+    public bool Rotate(Vector3 fromEulerAngles, Vector3 toEulerAngles, float deltaTime)
+    {
+        if (NormalizedTime > 0.99f)
+            return false;
+
+        mCurrentRotation.Rotate(fromEulerAngles, toEulerAngles, deltaTime);
+
+        return true;
     }
 
     public void FixedUpdate()
@@ -168,16 +197,28 @@ public class RotationHandler
         standBy();
     }
 
+    public void ChangeDirection()
+    {
+        directionChanged();
+    }
+
     public void SetTurnState(EState state)
     {
         mState = state;
     }
 
-    public void SetTurnType(PlayerTurnState.ETurnType turnType)
+    public void SetTurnType(PlayerTurnState.ETurnType turnType) // , TurnAnimationData turnAnimData)
     {
-        mNormalRotation.SetTurnType(turnType);
+        mCurrentRotation.SetTurnType(turnType);
+        // mNormalRotation.SetTurnType(turnType);
+        // mNormalRotation.SetTurnAnimData(turnAnimData);
 
-        mPlayerController.Animation.SetIndex((turnType == PlayerTurnState.ETurnType.Idle) ? 0 : 1);
+        // mPlayerController.Animation.SetIndex((turnType == PlayerTurnState.ETurnType.Idle) ? 0 : 1);
+    }
+
+    public void SetNormalizedTime(float normalizedTime)
+    {
+        mCurrentRotation.SetNormalizedTime(normalizedTime);
     }
 
     private void onAnimatorMove()

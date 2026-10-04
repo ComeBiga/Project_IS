@@ -12,7 +12,7 @@ public class RootMotionRotation : RotationBase
     private float mRemainAngles;
     private Vector3 mPreviousEulerAngles;
 
-    public RootMotionRotation(RotationHandler rotationHandler) : base(rotationHandler)
+    public RootMotionRotation(RotationHandler rotationHandler, PlayerController playerController) : base(rotationHandler, playerController)
     {
         // mPlayerAnimator.onAnimatorMove += onAnimatorMove;
         // mPlayerAnimator.onEnterState += OnEnterState;

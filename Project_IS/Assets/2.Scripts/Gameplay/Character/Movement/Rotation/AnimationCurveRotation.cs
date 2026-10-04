@@ -33,7 +33,7 @@ public class AnimationCurveRotation : RotationBase
     private const float RUN_TURN_DURATION = 0.23f;
 
 
-    public AnimationCurveRotation(RotationHandler rotationHandler) : base(rotationHandler)
+    public AnimationCurveRotation(RotationHandler rotationHandler, PlayerController playerController) : base(rotationHandler, playerController)
     {
         mPlayerAnimator.onEnterState += OnEnterState;
         mPlayerAnimator.onUpdateState += OnUpdateState;

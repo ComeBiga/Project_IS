@@ -76,7 +76,7 @@ public class AnimatorHashGenerator : EditorWindow
 
         if (GUILayout.Button("Generate Hash"))
         {
-            Generate(controller);
+            GenerateAnimStateHash(controller);
 
             AssetDatabase.Refresh();
         }
@@ -88,13 +88,18 @@ public class AnimatorHashGenerator : EditorWindow
             AssetDatabase.Refresh();
         }
 
+        if (GUILayout.Button("Generate Clip Hash"))
+        {
+
+        }
+
         EditorGUILayout.Space();
 
         if (GUILayout.Button("Generate All"))
         {
             GenerateAnimState(controller);
 
-            Generate(controller);
+            GenerateAnimStateHash(controller);
 
             GenerateAnimStateNameLookUp(controller);
 
@@ -134,7 +139,7 @@ public class AnimatorHashGenerator : EditorWindow
         Debug.Log($"Generated {states.Count} animator state name table.");
     }
 
-    private static void Generate(AnimatorController controller)
+    private static void GenerateAnimStateHash(AnimatorController controller)
     {
         var states = new List<StateData>();
 
@@ -143,11 +148,23 @@ public class AnimatorHashGenerator : EditorWindow
             CollectStates(layer.stateMachine, layer.name, states);
         }
 
-        GenerateFile(states);
+        GenerateAnimStateHashFile(states);
 
         // AssetDatabase.Refresh();
 
         Debug.Log($"Generated {states.Count} animator state hashes.");
+    }
+
+    private static List<StateData> collectStates(AnimatorController controller)
+    {
+        var states = new List<StateData>();
+
+        foreach (var layer in controller.layers)
+        {
+            CollectStates(layer.stateMachine, layer.name, states);
+        }
+
+        return states;
     }
 
     private static void CollectStates(AnimatorStateMachine stateMachine, string path, List<StateData> states)
@@ -241,7 +258,7 @@ public class AnimatorHashGenerator : EditorWindow
         File.WriteAllText(AnimStateNameLookUpPath, builder.ToString(), Encoding.UTF8);
     }
 
-    private static void GenerateFile(List<StateData> states)
+    private static void GenerateAnimStateHashFile(List<StateData> states)
     {
         string directory = Path.GetDirectoryName(OutputPath);
 
@@ -289,6 +306,26 @@ public class AnimatorHashGenerator : EditorWindow
         builder.AppendLine("}");
 
         File.WriteAllText(OutputPath, builder.ToString(), Encoding.UTF8);
+    }
+
+    private static void generateClipHashFile(AnimationClip[] clips)
+    {
+        string directory = Path.GetDirectoryName(OutputPath);
+
+        if (!Directory.Exists(directory))
+            Directory.CreateDirectory(directory);
+
+        var builder = new StringBuilder();
+
+        builder.AppendLine("// Auto-generated. Do not edit manually.");
+        builder.AppendLine("using System.Collections.Generic;");
+        builder.AppendLine("using UnityEngine;");
+        builder.AppendLine();
+        builder.AppendLine("public static class AnimClipName");
+        builder.AppendLine("{");
+
+        builder.AppendLine($"   public static Dictionary<AnimState, int> stateHashes = new()");
+        builder.AppendLine("   {");
     }
 
     private static string CreateVariableName(string fullPath)

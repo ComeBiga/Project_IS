@@ -10,6 +10,8 @@ public class RootMotionExtractorWindow : EditorWindow
     private AnimationClip clip;
 
     private float sampleRate = 60f;
+    private bool mbExtractX = false;
+    private bool mbExtractZ = false;
 
     [MenuItem("Tools/Animation/Root Motion Extractor")]
     private static void Open()
@@ -23,7 +25,10 @@ public class RootMotionExtractorWindow : EditorWindow
 
         clip = (AnimationClip)EditorGUILayout.ObjectField("Animation Clip", clip, typeof(AnimationClip), false);
 
-        sampleRate = EditorGUILayout.FloatField( "Sample Rate", sampleRate);
+        sampleRate = EditorGUILayout.FloatField("Sample Rate", sampleRate);
+
+        mbExtractX = EditorGUILayout.Toggle("Extract X", mbExtractX);
+        mbExtractZ = EditorGUILayout.Toggle("Extract Z", mbExtractZ);
 
         EditorGUILayout.Space();
 
@@ -123,15 +128,21 @@ public class RootMotionExtractorWindow : EditorWindow
             //
 
             List<Keyframe> degreeKeys = new List<Keyframe>();
-
             degreeKeys.Add(new Keyframe(0f, 0f));
 
+            List<Keyframe> axisXKeys = new List<Keyframe>();
+            axisXKeys.Add(new Keyframe(0f, 0f));
+
+            List<Keyframe> axisZKeys = new List<Keyframe>();
+            axisZKeys.Add(new Keyframe(0f, 0f));
+
             float accumulatedYaw = 0f;
+            float accumulatedX = 0f;
+            float accumulatedZ = 0f;
 
             float currentTime = 0f;
 
             int sampleCount = Mathf.CeilToInt(clip.length * sampleRate);
-
 
             for (int i = 1; i <= sampleCount; ++i)
             {
@@ -151,9 +162,10 @@ public class RootMotionExtractorWindow : EditorWindow
 
 
                 //
-                // 방금 평가한 구간의 Root 회전량
+                // 방금 평가한 구간의 Root 회전량 / 이동량
                 //
 
+                Vector3 deltaPosition = animator.deltaPosition;
                 Quaternion deltaRotation = animator.deltaRotation;
 
 
@@ -168,6 +180,18 @@ public class RootMotionExtractorWindow : EditorWindow
                 float normalizedTime = nextTime / clip.length;
 
                 degreeKeys.Add(new Keyframe(normalizedTime, accumulatedYaw));
+
+                if (mbExtractX)
+                {
+                    accumulatedX += deltaPosition.x;
+                    axisXKeys.Add(new Keyframe(normalizedTime, accumulatedX));
+                }
+
+                if (mbExtractZ)
+                {
+                    accumulatedZ += deltaPosition.z;
+                    axisZKeys.Add(new Keyframe(normalizedTime, accumulatedZ));
+                }
 
                 currentTime = nextTime;
             }
@@ -198,6 +222,11 @@ public class RootMotionExtractorWindow : EditorWindow
             SetLinearTangents(degreeCurve);
             SetLinearTangents(normalizedCurve);
 
+            AnimationCurve axisXCurve = new AnimationCurve(axisXKeys.ToArray());
+            SetLinearTangents(axisXCurve);
+
+            AnimationCurve axisZCurve = new AnimationCurve(axisZKeys.ToArray());
+            SetLinearTangents(axisZCurve);
 
             //
             // 5. Asset 저장
@@ -214,6 +243,18 @@ public class RootMotionExtractorWindow : EditorWindow
             data.totalYaw = accumulatedYaw;
             data.rotationDegrees = degreeCurve;
             data.normalizedRotation = normalizedCurve;
+
+            if (mbExtractX)
+            {
+                data.totalX = accumulatedX;
+                data.moveXCurve = axisXCurve;
+            }
+
+            if (mbExtractZ)
+            {
+                data.totalZ = accumulatedZ;
+                data.moveZCurve = axisZCurve;
+            }
 
             AssetDatabase.CreateAsset(data, path);
 

@@ -68,21 +68,21 @@ MonoBehaviour:
     to: 56
     fixedDuration: 0
     duration: 0.05
-    offset: 0.625
+    offset: 0.105
   - name: RunTurn -> Run
     anyFrom: 0
     from: 44
     to: 56
     fixedDuration: 0
     duration: 0.05
-    offset: 0.19
+    offset: 0.552
   - name: RunTurn_R -> Run
     anyFrom: 0
     from: 45
     to: 56
     fixedDuration: 0
     duration: 0.05
-    offset: 0.68
+    offset: 0.056
   - name: Landing_Idle_Soft -> Run
     anyFrom: 0
     from: 37

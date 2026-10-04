@@ -6,7 +6,7 @@ public class Offset180Rotation : RotationBase
 {
     private Vector3 mPreviousForward;
 
-    public Offset180Rotation(RotationHandler rotationHandler) : base(rotationHandler)
+    public Offset180Rotation(RotationHandler rotationHandler, PlayerController playerController) : base(rotationHandler, playerController)
     {
     }
 

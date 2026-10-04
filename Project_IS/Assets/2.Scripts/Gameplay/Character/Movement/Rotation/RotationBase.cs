@@ -12,11 +12,13 @@ public abstract class RotationBase
     protected PlayerAnimation mPlayerAnimator;
     protected Animator mAnimator;
 
-    public RotationBase(RotationHandler rotationHandler)
+    protected PlayerTurnState.ETurnType mTurnType;
+
+    public RotationBase(RotationHandler rotationHandler, PlayerController playerController)
     {
         mRotationHandler = rotationHandler;
 
-        mPlayerController = rotationHandler.PlayerController;
+        mPlayerController = playerController;
         mPlayerAnimator = mPlayerController.Animation;
         mAnimator = mPlayerController.Animation.Animator;
     }
@@ -50,6 +52,36 @@ public abstract class RotationBase
     public virtual void OnEndRotation()
     {
 
+    }
+
+    public virtual void Rotate(Vector3 fromEulerAngles, Vector3 toEulerAngles, float deltaTime)
+    {
+
+    }
+
+    public virtual void SetTurnType(PlayerTurnState.ETurnType turnType)
+    {
+        mTurnType = turnType;
+    }
+
+    public virtual void SetNormalizedTime(float normalizedTime)
+    {
+        NormalizedTime = normalizedTime;
+    }
+
+    protected Quaternion getCurrentRotation()
+    {
+        return mPlayerController.Movement.DirectionToRotation(mPlayerController.Movement.Direction);
+    }
+
+    protected Vector3 getCurrentEulerAngles()
+    {
+        return mPlayerController.Movement.DirectionToRotation(mPlayerController.Movement.Direction).eulerAngles;
+    }
+
+    protected float getRemainAngle(float targetAngle)
+    {
+        return Mathf.DeltaAngle(mPlayerController.Movement.Rotation.eulerAngles.y, targetAngle);
     }
 
     protected Vector3 rotateVector(Vector3 vector3, float angle)

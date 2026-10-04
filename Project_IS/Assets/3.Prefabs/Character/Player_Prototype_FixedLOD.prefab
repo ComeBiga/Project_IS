@@ -4440,10 +4440,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   key: 0
+  turnPlayable: {fileID: 0}
   _rotationType: 3
   _idleTurnDuration: 0.6
   _runTurnDuration: 0.4
   _idleTurnStartRunNormalizedTime: 0.666
+  _turnAnimationData: {fileID: 11400000, guid: 91cfc85c946d87c49b210be0f3b17708, type: 2}
   _idleTurnLTimeOffset: 0.65
   _idleTurnRTimeOffset: 0.65
   _runTurnLTimeOffset: 0.16

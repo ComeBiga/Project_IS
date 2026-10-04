@@ -12436,7 +12436,9 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 044b2b2b94667f34a9d88ce63c141b62, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _rotationData: {fileID: 11400000, guid: 079e4303a382c464b8e273681ff8d0e0, type: 2}
+  _rotationData: {fileID: 11400000, guid: 44ea697bec79d954f96e410c9ef527fb, type: 2}
+  _turnAnimationData: {fileID: 11400000, guid: 91cfc85c946d87c49b210be0f3b17708, type: 2}
+  _blendDuration: 0.05
 --- !u!1 &296730807
 GameObject:
   m_ObjectHideFlags: 0
@@ -12542,7 +12544,7 @@ MonoBehaviour:
   m_Priority: 10
   m_StandbyUpdate: 2
   m_LookAt: {fileID: 0}
-  m_Follow: {fileID: 1805845298}
+  m_Follow: {fileID: 1025873880}
   m_Lens:
     FieldOfView: 60
     OrthographicSize: 5
@@ -22516,7 +22518,7 @@ MonoBehaviour:
   m_LookaheadTime: 0
   m_LookaheadSmoothing: 0
   m_LookaheadIgnoreY: 0
-  m_XDamping: 1
+  m_XDamping: 0
   m_YDamping: 1
   m_ZDamping: 1
   m_TargetMovementOnly: 1
@@ -43827,6 +43829,12 @@ Transform:
   - {fileID: 1409273499}
   m_Father: {fileID: 83851234}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!4 &1025873880 stripped
+Transform:
+  m_CorrespondingSourceObject: {fileID: 1512033826881216647, guid: c80ffc3b7a8e10a4d808ccfaa805b690,
+    type: 3}
+  m_PrefabInstance: {fileID: 8265883774848576980}
+  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1026337881
 GameObject:
   m_ObjectHideFlags: 0
@@ -94112,6 +94120,11 @@ PrefabInstance:
       propertyPath: turnPlayable
       value: 
       objectReference: {fileID: 295399675}
+    - target: {fileID: 2031585343321655527, guid: c80ffc3b7a8e10a4d808ccfaa805b690,
+        type: 3}
+      propertyPath: _rotationType
+      value: 3
+      objectReference: {fileID: 0}
     - target: {fileID: 3089871321631341758, guid: c80ffc3b7a8e10a4d808ccfaa805b690,
         type: 3}
       propertyPath: m_Mesh
