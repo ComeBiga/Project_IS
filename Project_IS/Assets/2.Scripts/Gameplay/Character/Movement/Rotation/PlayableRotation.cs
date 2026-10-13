@@ -36,7 +36,7 @@ public class PlayableRotation : RotationBase
 
         mRemainAngle = getRemainAngle(mTargetEulerAngles.y);
 
-        mTurnPlayable.StartTurn();
+        // mTurnPlayable.StartTurn();
     }
 
     public override void StandBy()

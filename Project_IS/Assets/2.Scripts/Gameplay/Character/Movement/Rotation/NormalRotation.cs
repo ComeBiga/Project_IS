@@ -222,7 +222,7 @@ public class NormalRotation : RotationBase
         float remainAngle = Mathf.DeltaAngle(newYEulerAngle, toEulerAngles.y);
         float angleT = 1 - Mathf.Abs(remainAngle) / Number.DEG_180;
 
-        GameDebug.Log($"Rotation Normalized Time: {NormalizedTime}, Start Angle: {fromEulerAngles.y}, Target Angle: {toEulerAngles.y}, New Angle: {newYEulerAngle}, Remain Angle: {remainAngle}, Angle T: {angleT}", tag: "Normal Rotation");
+        GameDebug.Log($"Rotation Timer: {mTimer}, Rotation Normalized Time: {NormalizedTime}, Start Angle: {fromEulerAngles.y}, Target Angle: {toEulerAngles.y}, New Angle: {newYEulerAngle}, Remain Angle: {remainAngle}, Angle T: {angleT}", tag: "Normal Rotation");
 
         // mTimer += Time.fixedDeltaTime;
         mTimer += deltaTime;
