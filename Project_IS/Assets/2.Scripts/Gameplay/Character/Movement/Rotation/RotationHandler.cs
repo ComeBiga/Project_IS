@@ -7,7 +7,7 @@ using static PlayerMovement;
 public class RotationHandler
 {
     public enum EState { StandBy, DirectionChanged, Rotating }
-    public enum EType { AnimationCurve, RootMotion, Offset180, Normal, Playable }
+    public enum EType { AnimationCurve = 0, RootMotion = 1, Offset180 = 2, Normal = 3 }
     public enum ERotationDirection { Left, Right }
 
     public PlayerController PlayerController => mPlayerController;
@@ -23,7 +23,6 @@ public class RotationHandler
     private RootMotionRotation mRootMotionRotation;
     private Offset180Rotation mOffset180Rotation;
     private NormalRotation mNormalRotation;
-    private PlayableRotation mPlayableRotation;
 
     private PlayerController mPlayerController;
     private EState mState = EState.StandBy;
@@ -64,12 +63,6 @@ public class RotationHandler
     }
 
     [Obsolete]
-    public void InitPlayableRotation(TurnPlayable turnPlayable)
-    {
-        mPlayableRotation = new PlayableRotation(this, mPlayerController, turnPlayable);
-    }
-
-    [Obsolete]
     public T GetRotationBase<T>() where T : RotationBase
     {
         return mCurrentRotation as T;
@@ -93,9 +86,6 @@ public class RotationHandler
                 break;
             case EType.Normal:
                 mCurrentRotation = mNormalRotation;
-                break;
-            case EType.Playable:
-                mCurrentRotation = mPlayableRotation;
                 break;
         }
     }
