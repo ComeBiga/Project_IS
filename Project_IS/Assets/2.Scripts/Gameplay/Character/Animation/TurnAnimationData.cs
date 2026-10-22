@@ -13,8 +13,10 @@ public class TurnAnimationData : ScriptableObject
         public RotationHandler.ERotationDirection rotationDirection;
         public bool useRotationDuration;
         public float rotationDuration;
+        public float startRunTime;
+        [Range(0f, 1f)] public float controllerStartNormalizedTime;
 
-        public float GetDuration()
+        public float GetRotationDuration()
         {
             return useRotationDuration ? rotationDuration : sourceClip.length;
         }
@@ -29,6 +31,8 @@ public class TurnAnimationData : ScriptableObject
     public TurnAnimation idleTurnRAnimation;
     public TurnAnimation runTurnLAnimation;
     public TurnAnimation runTurnRAnimation;
+    public TurnAnimation idleTurnToIdleLAnimation;
+    public TurnAnimation idleTurnToIdleRAnimation;
 
     public TurnAnimation Get(PlayerTurnState.ETurnType turnType, RotationHandler.ERotationDirection rotationDirection)
     {

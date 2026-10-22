@@ -88,13 +88,13 @@ MonoBehaviour:
   - value: SetPosition
     active: 0
   - value: Animation State Changed
-    active: 1
+    active: 0
   - value: Animation Play
     active: 1
   - value: Idle Turn To Idle
     active: 0
   - value: Normal Rotation
-    active: 1
+    active: 0
   - value: Turn Normalized Time
     active: 0
   - value: BlendToTurn
@@ -104,11 +104,11 @@ MonoBehaviour:
   - value: Update
     active: 0
   - value: Evaluate
-    active: 1
+    active: 0
   - value: Into Controller Blending
     active: 0
   - value: SetControllerState
-    active: 1
+    active: 0
   - value: Into Turn Blending
     active: 0
   - value: Playable Mixer Weight
@@ -116,6 +116,16 @@ MonoBehaviour:
   - value: Reset Clip
     active: 0
   - value: Change Direction
+    active: 1
+  - value: Evaluate Validation
+    active: 0
+  - value: Controller Blend
+    active: 1
+  - value: RunToIdle OppositeInput
+    active: 1
+  - value: RunToIdle To Idle
+    active: 1
+  - value: Enter RunToIdleState
     active: 1
   sources:
   - value: PlayerAnimation

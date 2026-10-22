@@ -16,6 +16,12 @@ public class PlayerRunJumpState : PlayerStateBase
     private float mRotationDuration = .2f;
     private bool mbRotationCW = true;
     private bool mbEnterWithoutAnimation = false;
+    private bool mbHasJumpDirection;
+    private bool mbJumpRotationFinished;
+    private PlayerMovement.EDirection mJumpDirection;
+    private Vector3 mJumpStartEulerAngles;
+    private float mJumpRotationDelta;
+    private Quaternion mJumpTargetRotation;
 
     // Ladder
     private float mPathZPosition;
@@ -31,14 +37,37 @@ public class PlayerRunJumpState : PlayerStateBase
 
     public override void EnterState()
     {
+        var turnState = mStateMachine.GetStateBase<PlayerTurnState>();
+        turnState.InterruptTurn();
+
         mMotionTime = 0f;
         mRotationTimer = 0f;
+        mbJumpRotationFinished = false;
+
+        if (mbHasJumpDirection)
+        {
+            mJumpStartEulerAngles = mMovement.Rotation.eulerAngles;
+            mMovement.SetDirection(mJumpDirection);
+            float targetY = mMovement.DirectionToRotation().eulerAngles.y;
+            mJumpRotationDelta = Mathf.DeltaAngle(mJumpStartEulerAngles.y, targetY);
+            mJumpTargetRotation = Quaternion.Euler(mJumpStartEulerAngles.x, targetY, mJumpStartEulerAngles.z);
+            if (!Mathf.Approximately(mJumpRotationDelta, 0f))
+                mbRotationCW = mJumpRotationDelta > 0f;
+        }
 
         if (jumpUpward)
             mController.Movement.JumpFoward();
 
-        if(!mbEnterWithoutAnimation)
-            mController.Animation.Play(AnimState.RunJump_Blend_Tree);
+        if (!mbEnterWithoutAnimation)
+        {
+            if (!turnState.TryPlayControllerBlend(AnimState.RunJump_Blend_Tree))
+                mController.Animation.Play(AnimState.RunJump_Blend_Tree);
+        }
+        else
+        {
+            turnState.BeginControllerBlend();
+        }
+
         // mController.Animator.CrossFadeJump(true);
         // mController.Animator.SetJump(true);
         //mController.Animator.SetIndex(1);
@@ -64,11 +93,31 @@ public class PlayerRunJumpState : PlayerStateBase
         mbLedgeDetected = false;
         mbRotationCW = true;
         mbEnterWithoutAnimation = false;
+        mbHasJumpDirection = false;
+        mbJumpRotationFinished = false;
         // mController.Animator.SetJump(false);
 
         // mController.Animator.SetVertical(0f);
 
         mController.Animation.onAnimatorFixedUpdate -= onAnimatorFixedUpdate;
+    }
+
+    public override void FixedTick()
+    {
+        if (!mbHasJumpDirection || mbJumpRotationFinished)
+            return;
+
+        mRotationTimer += Time.fixedDeltaTime;
+        float t = mRotationDuration > 0f ? Mathf.Clamp01(mRotationTimer / mRotationDuration) : 1f;
+        if (t >= 1f || Mathf.Approximately(mJumpRotationDelta, 0f))
+        {
+            mMovement.SetRotation(mJumpTargetRotation);
+            mbJumpRotationFinished = true;
+            return;
+        }
+
+        float angleY = mJumpStartEulerAngles.y + mJumpRotationDelta * t;
+        mMovement.SetRotation(Quaternion.Euler(mJumpStartEulerAngles.x, angleY, mJumpStartEulerAngles.z));
     }
 
     public override void Tick()
@@ -86,7 +135,7 @@ public class PlayerRunJumpState : PlayerStateBase
                 mMoveInput.x = 0f;
         }
 
-        var currentStateInfo = mController.Animation.Animator.GetCurrentAnimatorStateInfo(0);
+        var currentStateInfo = mController.Animation.GetCurrentStateInfo(0);
 
         // Jump Animation NormalizedTime
         if (currentStateInfo.IsTag("RunJump"))
@@ -129,12 +178,12 @@ public class PlayerRunJumpState : PlayerStateBase
         mController.Animation.SetHorizontal(mController.InputHandler.MoveInput.x);
         mController.Animation.SetInputXMagnitude(Mathf.Abs(mController.InputHandler.MoveInput.x));
 
-        // mController.Movement.UpdateRotation(Time.deltaTime * 20f);
-        float t = mRotationTimer / mRotationDuration;
-        mRotationTimer += Time.deltaTime;
-        // GameDebug.Log($"Rotation Timer: {mRotationTimer}, t: {t}");
-        // mController.Movement.UpdateRotation(t);
-        mMovement.UpdateRotation(mbRotationCW, t);
+        if (!mbHasJumpDirection)
+        {
+            float t = mRotationTimer / mRotationDuration;
+            mRotationTimer += Time.deltaTime;
+            mMovement.UpdateRotation(mbRotationCW, t);
+        }
 
         if (!mController.Movement.Jumping)
         {
@@ -244,6 +293,12 @@ public class PlayerRunJumpState : PlayerStateBase
     public void SetDefaultHeight(float height)
     {
         mDefaultHeight = height;
+    }
+
+    public void SetJumpDirection(PlayerMovement.EDirection direction)
+    {
+        mJumpDirection = direction;
+        mbHasJumpDirection = true;
     }
 
     public void SetRotationDuration(float duration)

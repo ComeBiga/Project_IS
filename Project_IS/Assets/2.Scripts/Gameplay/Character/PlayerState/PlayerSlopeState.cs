@@ -61,7 +61,7 @@ public class PlayerSlopeState : PlayerStateBase
     {
         while(true)
         {
-            AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+            AnimatorStateInfo animatorStateInfo = mAnimation.GetCurrentStateInfo(0);
 
             if (animatorStateInfo.IsTag("EndSlope"))
                 break;
@@ -71,7 +71,7 @@ public class PlayerSlopeState : PlayerStateBase
 
         while (true)
         {
-            AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+            AnimatorStateInfo animatorStateInfo = mAnimation.GetCurrentStateInfo(0);
 
             if(!animatorStateInfo.IsTag("EndSlope"))
             {

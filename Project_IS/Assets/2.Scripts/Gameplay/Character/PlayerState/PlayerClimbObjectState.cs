@@ -211,7 +211,7 @@ public class PlayerClimbObjectState : PlayerStateBase
             //    timer += Time.deltaTime;
             //}
 
-            AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+            AnimatorStateInfo animatorStateInfo = mAnimation.GetCurrentStateInfo(0);
 
             if (!animatorStateInfo.IsTag("ClimbUp"))
             {
@@ -308,7 +308,7 @@ public class PlayerClimbObjectState : PlayerStateBase
         while (mbClimbing)
         {
             // 애니메이션 태크 확인 코드가 없어서 지금 사용되지 않음
-            AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+            AnimatorStateInfo animatorStateInfo = mAnimation.GetCurrentStateInfo(0);
 
             // deltaPosition
             Vector3 deltaPosition = mAnimator.deltaPosition;

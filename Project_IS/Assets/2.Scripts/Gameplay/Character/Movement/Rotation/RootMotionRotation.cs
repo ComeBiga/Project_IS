@@ -101,7 +101,7 @@ public class RootMotionRotation : RotationBase
     {
         // Debug.Log($"[{Time.frameCount}] Entered RootMotionRotation.rotate");
 
-        var currentStateInfo = mPlayerController.Animation.Animator.GetCurrentAnimatorStateInfo(0);
+        var currentStateInfo = mPlayerController.Animation.GetCurrentStateInfo(0);
 
         var deltaPosition = mPlayerController.Animation.Animator.deltaPosition;
         deltaPosition.z = 0f;
@@ -109,7 +109,7 @@ public class RootMotionRotation : RotationBase
         float rootMotionVelocity = deltaPosition.x / Time.deltaTime;
         rootMotionVelocity = Mathf.Clamp(rootMotionVelocity, -mPlayerController.Movement.MoveSpeed, mPlayerController.Movement.MoveSpeed);
 
-        if (!(currentStateInfo.IsTag("Turn") && mPlayerController.Animation.Animator.IsInTransition(0)))
+        if (!(currentStateInfo.IsTag("Turn") && mPlayerController.Animation.IsInTransition(0)))
             mPlayerController.Movement.SetVelocity(Vector3.right * rootMotionVelocity);
         if (Mathf.Abs(rootMotionVelocity) > Mathf.Abs(mRootMotionVelocity))
             mRootMotionVelocity = rootMotionVelocity;

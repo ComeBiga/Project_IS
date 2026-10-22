@@ -42,7 +42,7 @@ public class PlayerJumpState : PlayerStateBase
 
     public override void Tick()
     {
-        var currentStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+        var currentStateInfo = mAnimation.GetCurrentStateInfo(0);
 
         if(currentStateInfo.IsTag("IdleJump"))
         {

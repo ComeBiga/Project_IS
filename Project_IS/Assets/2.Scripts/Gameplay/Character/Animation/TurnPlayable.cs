@@ -27,6 +27,30 @@ public class TurnPlayable : MonoBehaviour
     public bool StartExit => mStartExit;
     public float BlendDuration => _blendDuration;
     public EClipState ClipState => mClipState;
+    public bool IsTurnExitStarted => mbTurnExitStarted;
+    public bool IsTurnPlaybackFinished => mbTurnPlaybackFinished;
+    public bool NeedsControllerBlend => mbNeedsControllerBlend;
+    public float ControllerStartNormalizedTime => mControllerStartNormalizedTime;
+
+    public bool HasTurnOutput   // TurnPlayable이 ControllerPlayable로 Blend 될 수 있는지 판단
+    {
+        get
+        {
+            if (!mGraph.IsValid())
+                return false;
+
+            if (mbNeedsControllerBlend || mClipState == EClipState.BlendIn || mClipState == EClipState.Playing)
+                return true;
+
+            for (int i = 1; i < mMixer.GetInputCount(); ++i)
+            {
+                if (mMixer.GetInputWeight(i) > 0f)
+                    return true;
+            }
+
+            return false;
+        }
+    }
 
     public RootMotionRotationData _rotationData;
 
@@ -64,17 +88,52 @@ public class TurnPlayable : MonoBehaviour
     [Obsolete] private int mClipPort = 1;
     private int mFromPort = 0;
     private int mToPort = 0;
+    private int mSelectedClipPort = 1;
+    private readonly float[] mBlendStartWeights = new float[7];
+    private bool mbTurnExitStarted;
+    private bool mbTurnPlaybackFinished;
+    private bool mbNeedsControllerBlend;
+    private float mControllerStartNormalizedTime;
     private EClipState mClipState = EClipState.Rest;
+    private int mControlledClipPort = -1;   // TurnPlayable 외부에서 제어되고있는 Port
+    private int mLastControlledClipPort = -1;
+    private double mLastControlledFixedTime = double.NegativeInfinity;
     private Dictionary<int, TurnClip> mTurnClipDic = new Dictionary<int, TurnClip>(5);
 
-    public void ResetClip(float normalizedTime = 0f)
+    public void SetClipTime(float time)
     {
-        var turnClip = getTurnClipPlayable(mToPort);
-        turnClip.timer = turnClip.clipPlayable.GetAnimationClip().length * normalizedTime;
-        // turnClip.clipPlayable.SetTime(turnClip.timer);
-        mTurnClipDic[mToPort] = turnClip;
+        if (mControlledClipPort < 0)
+            mControlledClipPort = mSelectedClipPort;
 
-        GameDebug.Log($"clip Timer: {turnClip.timer}, normalizedTime: {normalizedTime}",
+        var turnClip = getTurnClipPlayable(mControlledClipPort);
+        turnClip.timer = time;
+        mTurnClipDic[mControlledClipPort] = turnClip;
+        mLastControlledClipPort = mControlledClipPort;
+        mLastControlledFixedTime = Time.fixedTimeAsDouble;
+    }
+
+    /// <summary>
+    /// TurnPlayable 외부 제어 해제
+    /// </summary>
+    public void ReleaseClipTime()
+    {
+        mControlledClipPort = -1;
+    }
+
+    /// <summary>
+    /// 현재 클립의 타이머를 리셋
+    /// </summary>
+    /// <param name="startTime"></param>
+    public void ResetClip(float startTime = 0f)
+    {
+        ReleaseClipTime();
+
+        var turnClip = getTurnClipPlayable(mSelectedClipPort);
+        turnClip.timer = startTime;
+        // turnClip.clipPlayable.SetTime(turnClip.timer);
+        mTurnClipDic[mSelectedClipPort] = turnClip;
+
+        GameDebug.Log($"clip Timer: {turnClip.timer}, startTime: {startTime}",
             tag: "Reset Clip");
     }
 
@@ -87,16 +146,68 @@ public class TurnPlayable : MonoBehaviour
 
     public void ChangePort(int port)
     {
-        SetMixerWeight(mFromPort, mToPort, 1f);
+        mSelectedClipPort = port;
+    }
 
-        mFromPort = mToPort;
-        mToPort = port;
-        //mClipPort = port;
+    /// <summary>
+    /// ControllerPlayable로 전환
+    /// </summary>
+    public void InterruptToController()
+    {
+        ReleaseClipTime();
+        BeginControllerBlend();
+    }
+
+    public void BeginControllerBlend()
+    {
+        mbNeedsControllerBlend = false;
+
+        if (!mGraph.IsValid() || mClipState == EClipState.BlendOut)
+            return;
+
+        if (HasTurnOutput)
+        {
+            mbTurnExitStarted = true;
+            beginBlend(0, EClipState.BlendOut);
+        }
+        else
+        {
+            mClipState = EClipState.Rest;
+        }
+    }
+
+    public bool TryStartIdleTurnToIdle(
+        RotationHandler.ERotationDirection direction,
+        float normalizedRotation,
+        out float rotationDuration)
+    {
+        bool isLeft = direction == RotationHandler.ERotationDirection.Left;
+        int port = isLeft ? 5 : 6;
+
+        TurnAnimationData.TurnAnimation animation = isLeft ? _turnAnimationData.idleTurnToIdleLAnimation :
+            _turnAnimationData.idleTurnToIdleRAnimation;
+        rotationDuration = 0f;
+
+        if (animation.sourceClip == null || !mTurnClipDic.ContainsKey(port))
+            return false;
+
+        rotationDuration = animation.GetRotationDuration();
+        if (rotationDuration <= 0f)
+            return false;
+
+        mSelectedClipPort = port;
+        mControllerStartNormalizedTime = animation.controllerStartNormalizedTime;
+        ResetClip(Mathf.Clamp01(normalizedRotation) * rotationDuration);
+        StartClip();
+
+        return true;
     }
 
     public void ChangeClip(PlayerTurnState.ETurnType turnType, RotationHandler.ERotationDirection rotationDirection)
     {
-        switch(turnType)
+        mControllerStartNormalizedTime = _turnAnimationData.Get(turnType, rotationDirection).controllerStartNormalizedTime;
+
+        switch (turnType)
         {
             case PlayerTurnState.ETurnType.Idle:
                 ChangePort(rotationDirection == RotationHandler.ERotationDirection.Left ? 1 : 2);
@@ -129,8 +240,11 @@ public class TurnPlayable : MonoBehaviour
 
     public void StartClip()
     {
-        mClipState = EClipState.BlendIn;
-        ResetBlend();
+        mbTurnExitStarted = false;
+        mbTurnPlaybackFinished = false;
+        mbNeedsControllerBlend = false;
+
+        beginBlend(mSelectedClipPort, EClipState.BlendIn);
 
         mStarted = true;
 
@@ -250,24 +364,69 @@ public class TurnPlayable : MonoBehaviour
 
     public void Evaluate(float deltaTime)
     {
+        var currentState = mControllerPlayables.GetCurrentAnimatorStateInfo(0);
+        GameDebug.Log($"Before Evaluate - DeltaTime: {deltaTime}, ControllerPlayable Time: {mControllerPlayables.GetTime()}",
+            tag: "Evaluate Validation");
+        GameDebug.Log($"Before Evaluate - Current State: {AnimStateNameLookUp.names[currentState.fullPathHash]}, normalizedTime: {currentState.normalizedTime}, length: {currentState.length}, speed: {currentState.speed}, speedMultiplier: {currentState.speedMultiplier}",
+            tag: "Evaluate Validation");
+
+        var transitionState = mControllerPlayables.GetAnimatorTransitionInfo(0);
+        var nextState = mControllerPlayables.GetNextAnimatorStateInfo(0);
+        if (mControllerPlayables.IsInTransition(0))
+            GameDebug.Log($"Before Evaluate - IsInTransition: {mControllerPlayables.IsInTransition(0)}, Next State: {AnimStateNameLookUp.names[nextState.fullPathHash]}, normalizedTime: {nextState.normalizedTime}, transition normalizedTime: {transitionState.normalizedTime}, duration: {transitionState.duration}, durationUnit: {transitionState.durationUnit}",
+                tag: "Evaluate Validation");
+
+        GameDebug.Log($"Before Evaluate - Mixer Port 0 Weight: {mMixer.GetInputWeight(0)}, clip State: {mClipState}",
+            tag: "Evaluate Validation");
+
         //bool bBlendingToTurn = BlendToTurn();
         //bool bBlendingToController = BlendToAnimatorController();
-
-        float controllerSetTime = (float)mControllerPlayables.GetTime() + deltaTime;
-        mControllerPlayables.SetTime(controllerSetTime);
 
         //AnimationClipPlayable turnClip = getTurnClipPlayable();
         //float turnSetTime = turnClip.GetAnimationClip().length * normalizedTime;
         //turnClip.SetTime(turnSetTime);
-        foreach(KeyValuePair<int, TurnClip> pair in mTurnClipDic)
+        foreach (KeyValuePair<int, TurnClip> pair in mTurnClipDic)
         {
             TurnClip turnClip = pair.Value;
-            turnClip.clipPlayable.SetTime(turnClip.timer);
+            float length = turnClip.clipPlayable.GetAnimationClip().length;
+            float sampleTime = Mathf.Min(turnClip.timer, length);
+
+            if (mbNeedsControllerBlend && pair.Key == mSelectedClipPort)
+                sampleTime = Mathf.Min(sampleTime, Mathf.Max(0f, length - _blendDuration));
+
+            turnClip.clipPlayable.SetTime(sampleTime);
+
+            GameDebug.Log($"Before Evaluate - Clip port: {pair.Key}, Clip Set Time: {turnClip.timer}",
+                tag: "Evaluate Validation");
         }
 
-        mGraph.Evaluate(0f);
+        mGraph.Evaluate(deltaTime);
+        mAnimation.NotifyControllerEvaluated(mControllerPlayables);
 
-        GameDebug.Log($"fromPortTime({mFromPort}): {GetTurnClipTime(mFromPort)}, toPortTime({mToPort}): {GetTurnClipTime(mToPort)}, Controller Time: {controllerSetTime}",
+        currentState = mControllerPlayables.GetCurrentAnimatorStateInfo(0);
+        GameDebug.Log($"After Evaluate - DeltaTime: {deltaTime}, ControllerPlayable Time: {mControllerPlayables.GetTime()}",
+            tag: "Evaluate Validation");
+        GameDebug.Log($"After Evaluate - Current State: {AnimStateNameLookUp.names[currentState.fullPathHash]}, normalizedTime: {currentState.normalizedTime}, length: {currentState.length}, speed: {currentState.speed}, speedMultiplier: {currentState.speedMultiplier}",
+            tag: "Evaluate Validation");
+
+        transitionState = mControllerPlayables.GetAnimatorTransitionInfo(0);
+        nextState = mControllerPlayables.GetNextAnimatorStateInfo(0);
+        if (mControllerPlayables.IsInTransition(0))
+            GameDebug.Log($"After Evaluate - IsInTransition: {mControllerPlayables.IsInTransition(0)}, Next State: {AnimStateNameLookUp.names[nextState.fullPathHash]}, normalizedTime: {nextState.normalizedTime}, transition normalizedTime: {transitionState.normalizedTime}, duration: {transitionState.duration}, durationUnit: {transitionState.durationUnit}",
+                tag: "Evaluate Validation");
+
+        GameDebug.Log($"After Evaluate - Mixer Port 0 Weight: {mMixer.GetInputWeight(0)}, clip State: {mClipState}",
+            tag: "Evaluate Validation");
+
+        foreach (KeyValuePair<int, TurnClip> pair in mTurnClipDic)
+        {
+            TurnClip turnClip = pair.Value;
+
+            GameDebug.Log($"After Evaluate - Clip port: {pair.Key}, Clip timer: {turnClip.clipPlayable.GetTime()}",
+                tag: "Evaluate Validation");
+        }
+
+        GameDebug.Log($"fromPortTime({mFromPort}): {GetTurnClipTime(mFromPort)}, toPortTime({mToPort}): {GetTurnClipTime(mToPort)}, Controller Time: {mControllerPlayables.GetTime()}",
             tag: "Evaluate");
     }
 
@@ -326,9 +485,13 @@ public class TurnPlayable : MonoBehaviour
         mGraphTimer += Time.fixedDeltaTime;
         mBlendTimer += Time.fixedDeltaTime;
 
-        for(int i = 0; i <= 5; ++i)
+        for (int i = 0; i < mMixer.GetInputCount(); ++i)
         {
-            if(mTurnClipDic.TryGetValue(i, out TurnClip turnClip))
+            // A released clip may already have received its time in this fixed step.
+            bool updatedThisStep = i == mLastControlledClipPort &&
+                mLastControlledFixedTime == Time.fixedTimeAsDouble;
+
+            if (i != mControlledClipPort && !updatedThisStep && mTurnClipDic.TryGetValue(i, out TurnClip turnClip))
             {
                 turnClip.timer += Time.fixedDeltaTime;
                 mTurnClipDic[i] = turnClip;
@@ -477,56 +640,83 @@ public class TurnPlayable : MonoBehaviour
         //}
     }
 
+    private void OnDestroy()
+    {
+        if (mAnimation != null)
+            mAnimation.UnbindControllerPlayable(mControllerPlayables);
+
+        if (mGraph.IsValid())
+            mGraph.Destroy();
+    }
+
+    private void beginBlend(int targetPort, EClipState state)
+    {
+        for (int i = 0; i < mBlendStartWeights.Length; ++i)
+            mBlendStartWeights[i] = mMixer.GetInputWeight(i);
+
+        mFromPort = mToPort;
+        mToPort = targetPort;
+        mClipState = state;
+
+        ResetBlend();
+    }
+
+    private bool blendToTarget()
+    {
+        float t = _blendDuration > 0f ? Mathf.Clamp01(mBlendTimer / _blendDuration) : 1f;
+
+        for (int i = 0; i < mBlendStartWeights.Length; ++i)
+        {
+            float targetWeight = i == mToPort ? 1f : 0f;
+            mMixer.SetInputWeight(i, Mathf.Lerp(mBlendStartWeights[i], targetWeight, t));
+        }
+
+        return t < 1f;
+    }
+
     private void rest()
     {
+        evaluateTurnClip();
 
+        var currentState = mControllerPlayables.GetCurrentAnimatorStateInfo(0);
+        GameDebug.Log($"Rest - ControllerPlayable Time: {mControllerPlayables.GetTime()}",
+            tag: "Evaluate Validation");
+        GameDebug.Log($"Rest - Current State: {AnimStateNameLookUp.names[currentState.fullPathHash]}, normalizedTime: {currentState.normalizedTime}, length: {currentState.length}, speed: {currentState.speed}, speedMultiplier: {currentState.speedMultiplier}",
+            tag: "Evaluate Validation");
     }
 
     private void blendIn()
     {
-        evaluateTurnClip();
+        bool bBlending = blendToTarget();
 
-        if(!Blend(mFromPort, mToPort))
-        {
+        if (!bBlending)
             mClipState = EClipState.Playing;
-            SetControllerState(AnimStateHash.stateHashes[AnimState.Run], 0, .75f);
 
-            SetMixerWeight(mFromPort, mToPort, 1f);
-        }
-        //if(!BlendToTurn())
-        //{
-        //    mClipState = EClipState.Playing;
-        //    SetControllerState(AnimStateHash.stateHashes[AnimState.Run], 0, .75f);
-        //}
+        evaluateTurnClip();
     }
 
     private void playing()
     {
+        TurnClip clip = getTurnClipPlayable(mSelectedClipPort);
+        float length = clip.clipPlayable.GetAnimationClip().length;
+
+        if (clip.timer >= Mathf.Max(0f, length - _blendDuration))
+            mbNeedsControllerBlend = true;
+
         evaluateTurnClip();
-
-        // SetMixerWeight(mFromPort, mToPort, 1f);
-        float time = (float)getTurnClipPlayable(mToPort).clipPlayable.GetTime();
-        float length = getTurnClipPlayable(mToPort).clipPlayable.GetAnimationClip().length;
-
-        if (time > length - _blendDuration)
-        {
-            mClipState = EClipState.BlendOut;
-
-            ChangePort(0);
-            ResetBlend();
-        }
     }
 
     private void blendOut()
     {
-        evaluateTurnClip();
+        bool bBlending = blendToTarget();
 
-        if(!Blend(mFromPort, mToPort))
+        if (!bBlending)
         {
             mClipState = EClipState.Finished;
-
-            SetMixerWeight(mFromPort, mToPort, 1f);
+            mbTurnPlaybackFinished = true;
         }
+
+        evaluateTurnClip();
 
         //if(!BlendToAnimatorController())
         //{
@@ -539,6 +729,7 @@ public class TurnPlayable : MonoBehaviour
         // SetMixerWeight(0f);
 
         mClipState = EClipState.Rest;
+        evaluateTurnClip();
     }
 
     private void evaluateTurnClip()
@@ -575,7 +766,7 @@ public class TurnPlayable : MonoBehaviour
         //    }
         //}
 
-        mMixer = AnimationMixerPlayable.Create(mGraph, 5);
+        mMixer = AnimationMixerPlayable.Create(mGraph, 7);
 
         mGraph.Connect(mControllerPlayables, 0, mMixer, 0);
 
@@ -588,6 +779,12 @@ public class TurnPlayable : MonoBehaviour
         registerTurnClip(_turnAnimationData.runTurnLAnimation.sourceClip, 3);
         registerTurnClip(_turnAnimationData.runTurnRAnimation.sourceClip, 4);
 
+        if (_turnAnimationData.idleTurnToIdleLAnimation.sourceClip != null)
+            registerTurnClip(_turnAnimationData.idleTurnToIdleLAnimation.sourceClip, 5);
+
+        if (_turnAnimationData.idleTurnToIdleRAnimation.sourceClip != null)
+            registerTurnClip(_turnAnimationData.idleTurnToIdleRAnimation.sourceClip, 6);
+
         mMixer.SetInputWeight(0, 1f);
         mMixer.SetInputWeight(1, 0f);
         mMixer.SetInputWeight(2, 0f);
@@ -597,6 +794,7 @@ public class TurnPlayable : MonoBehaviour
         AnimationPlayableOutput output = AnimationPlayableOutput.Create(mGraph, "Animation", mAnimation.Animator);
 
         output.SetSourcePlayable(mMixer);
+        mAnimation.BindControllerPlayable(mControllerPlayables);
 
         // mGraph.Play();
     }
@@ -604,6 +802,9 @@ public class TurnPlayable : MonoBehaviour
     private TurnClip registerTurnClip(AnimationClip sourceClip, int portNumber)
     {
         var newClipPlayable = AnimationClipPlayable.Create(mGraph, sourceClip);
+
+        // Clip time is supplied explicitly; only the controller advances with the graph.
+        newClipPlayable.SetSpeed(0d);
         mGraph.Connect(newClipPlayable, 0, mMixer, portNumber);
 
         var newTurnClip = new TurnClip();

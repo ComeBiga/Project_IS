@@ -49,6 +49,8 @@ public class PlayerMoveState : PlayerStateBase
     [SerializeField] private float _ladderRadius = .5f;   // 사다리 탐지 반경
 
     private RotationHandler mRotationHandler = new RotationHandler();
+    private PlayerTurnState mTurnState;
+    private bool mbTransferRotationToRunToIdle;
 
     private bool mbEnterToIdle = false;     // MoveState로 전환될 때 키입력 초기화
     private float mDefaultHeight;           // 낙하 상태로 전환할 때 기준이 되는 높이
@@ -76,7 +78,11 @@ public class PlayerMoveState : PlayerStateBase
 
     public override void EnterState()
     {
-        if(!mController.Animation.Play(AnimState.Run))
+        mTurnState = mController.StateMachine.GetStateBase<PlayerTurnState>();
+        mbTransferRotationToRunToIdle = false;
+
+        if (!mTurnState.TryPlayControllerBlend(AnimState.Run, mTurnState.ControllerStartNormalizedTime) &&
+            !mController.Animation.Play(AnimState.Run))
         {
             // mController.Animator.CrossFadeRun(mEnterTransitionSettings);
         }
@@ -109,6 +115,9 @@ public class PlayerMoveState : PlayerStateBase
 
     public override void ExitState()
     {
+        if (!mbTransferRotationToRunToIdle)
+            mTurnState.CancelRemainingRotation();
+
         mController.Animation.SetRunning(false);
 
         mController.Animation.onAnimatorMove -= updateAnimatorMove;
@@ -122,6 +131,7 @@ public class PlayerMoveState : PlayerStateBase
     public override void FixedTick()
     {
         sidePass();
+        mTurnState.ContinueRemainingRotation();
     }
 
     public override void Tick()
@@ -140,6 +150,7 @@ public class PlayerMoveState : PlayerStateBase
         // To RunToIdle
         if(mController.InputHandler.GetInputRawMagnitude().x < .1f)
         {
+            mbTransferRotationToRunToIdle = mTurnState.HasRemainingRotation;
             mController.StateMachine.SwitchState<PlayerRunToIdleState>();
 
             return;

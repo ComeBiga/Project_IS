@@ -112,7 +112,7 @@ public class AnimationCurveRotation : RotationBase
     public override void FixedUpdate()
     {
         Debug.Log($"[{Time.frameCount}] Entered AnimationCurveRotation.FixedUpdate");
-        AnimatorStateInfo currentStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+        AnimatorStateInfo currentStateInfo = mPlayerAnimator.GetCurrentStateInfo(0);
         // Debug.Log($"Animation Curve Nomalized Time: {currentStateInfo.normalizedTime}");
         // float t = mAnimationCurveTimer / mAnimationCurveDuration;
         float t = mAnimationTimerFixedUpdate / mAnimationCurveDuration;
@@ -215,7 +215,7 @@ public class AnimationCurveRotation : RotationBase
             mAnimationCurveTimer = mAnimationCurveDuration;
         }
 
-        AnimatorStateInfo currentStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+        AnimatorStateInfo currentStateInfo = mPlayerAnimator.GetCurrentStateInfo(0);
         Debug.Log($"Animation Curve Nomalized Time: {currentStateInfo.normalizedTime}");
         Debug.Log($"[{Time.frameCount}] Animation Curve Timer: {mAnimationCurveTimer}, Curve Duration: {mAnimationCurveDuration}, t: {mAnimationCurveTimer/mAnimationCurveDuration}");
         mAnimationTimer += Time.deltaTime;

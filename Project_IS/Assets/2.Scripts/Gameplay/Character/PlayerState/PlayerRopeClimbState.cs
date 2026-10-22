@@ -77,7 +77,7 @@ public class PlayerRopeClimbState : PlayerStateBase
     {
         if (!mbClimbOnce)
         {
-            AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+            AnimatorStateInfo animatorStateInfo = mAnimation.GetCurrentStateInfo(0);
             Vector2 moveInput = mController.InputHandler.MoveInput;
 
             // if (Input.GetKey(KeyCode.U))
@@ -174,7 +174,7 @@ public class PlayerRopeClimbState : PlayerStateBase
 
         if (mbClimbOnce)
         {
-            AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+            AnimatorStateInfo animatorStateInfo = mAnimation.GetCurrentStateInfo(0);
             // Debug.Log(animatorStateInfo.normalizedTime);
 
             float normalizedTime = animatorStateInfo.normalizedTime - (int)animatorStateInfo.normalizedTime;
@@ -378,7 +378,7 @@ public class PlayerRopeClimbState : PlayerStateBase
     {
         while(true)
         {
-            AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+            AnimatorStateInfo animatorStateInfo = mAnimation.GetCurrentStateInfo(0);
 
             if (animatorStateInfo.IsTag("ClimbRope"))
                 break;

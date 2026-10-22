@@ -574,7 +574,7 @@ public class PlayerLadderState : PlayerStateBase
         // Climb Up 애니메이션이 아니면 아래를 계산하지 않음
         while(true)
         {
-            AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+            AnimatorStateInfo animatorStateInfo = mAnimation.GetCurrentStateInfo(0);
 
             if (animatorStateInfo.IsTag("ClimbUp"))
                 break;
@@ -595,7 +595,7 @@ public class PlayerLadderState : PlayerStateBase
 
         while (mbClimbLoop)
         {
-            AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+            AnimatorStateInfo animatorStateInfo = mAnimation.GetCurrentStateInfo(0);
 
             // Idle 상태에서 키 입력이 들어올 때 처리
             if (!mbClimbing)
@@ -1028,7 +1028,7 @@ public class PlayerLadderState : PlayerStateBase
 
         while (mbClimbLoop)
         {
-            var stateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+            var stateInfo = mAnimation.GetCurrentStateInfo(0);
 
             if (!stateInfo.IsTag("LookBack"))
             {
@@ -1058,7 +1058,7 @@ public class PlayerLadderState : PlayerStateBase
 
         while (mbClimbLoop)
         {
-            var stateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+            var stateInfo = mAnimation.GetCurrentStateInfo(0);
 
             if(stateInfo.normalizedTime < 0f)
             {
@@ -1082,7 +1082,7 @@ public class PlayerLadderState : PlayerStateBase
                 continue;
             }
 
-            AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+            AnimatorStateInfo animatorStateInfo = mAnimation.GetCurrentStateInfo(0);
 
             mClimbUpMotionTime += mClimbMultiplier * (1f / CLIMB_ANIMATION_LENGTH) * Time.fixedDeltaTime; // 부호 * 변화속도 * 시간
             mController.Animation.SetMotionTime(mClimbUpMotionTime);
@@ -1332,7 +1332,7 @@ public class PlayerLadderState : PlayerStateBase
         {
             while (true)
             {
-                AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+                AnimatorStateInfo animatorStateInfo = mAnimation.GetCurrentStateInfo(0);
 
                 mController.Animation.SetVertical(mClimbMultiplier);
 
@@ -1376,7 +1376,7 @@ public class PlayerLadderState : PlayerStateBase
 
         while (mbLadderTop)
         {
-            AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+            AnimatorStateInfo animatorStateInfo = mAnimation.GetCurrentStateInfo(0);
 
             Vector3 deltaPosition = mController.Animation.Animator.deltaPosition;
 
@@ -1606,7 +1606,7 @@ public class PlayerLadderState : PlayerStateBase
         {
             yield return new WaitForFixedUpdate();
 
-            var stateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+            var stateInfo = mAnimation.GetCurrentStateInfo(0);
 
             if(stateInfo.normalizedTime > .99f)
             {

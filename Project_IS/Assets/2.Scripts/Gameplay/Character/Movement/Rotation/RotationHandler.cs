@@ -30,6 +30,7 @@ public class RotationHandler
     private EType mType = EType.AnimationCurve;
     private ERotationDirection mRotationDirection;
     private bool mbIsRotating = false;
+    private bool mbRotationCompleted = false;
     private bool mbDirectionChanged = false;
     private bool mbEnterUpdate = false;
     private bool mbEnterFixedUpdate = false;
@@ -126,9 +127,21 @@ public class RotationHandler
         mRotationDirection = rotationDirection;
     }
 
+    public bool RotateAtNormalizedTime(Vector3 fromEulerAngles, Vector3 toEulerAngles, float normalizedTime)
+    {
+        if (mbRotationCompleted)
+            return false;
+
+        mCurrentRotation.SetNormalizedTime(Mathf.Clamp01(normalizedTime));
+        mCurrentRotation.Rotate(fromEulerAngles, toEulerAngles, 0f);
+        mbRotationCompleted = NormalizedTime >= 1f;
+
+        return !mbRotationCompleted;
+    }
+
     public bool Rotate(Vector3 fromEulerAngles, Vector3 toEulerAngles, float deltaTime)
     {
-        if (NormalizedTime > 0.99f)
+        if (NormalizedTime >= 1f)
             return false;
 
         mCurrentRotation.Rotate(fromEulerAngles, toEulerAngles, deltaTime);
@@ -218,7 +231,8 @@ public class RotationHandler
 
     public void SetNormalizedTime(float normalizedTime)
     {
-        mCurrentRotation.SetNormalizedTime(normalizedTime);
+        mbRotationCompleted = false;
+        mCurrentRotation.SetNormalizedTime(Mathf.Clamp01(normalizedTime));
     }
 
     private void onAnimatorMove()

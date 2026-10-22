@@ -2,6 +2,8 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Animations;
+using UnityEngine.Playables;
 using UnityEngine.Animations.Rigging;
 using static PlayerMovement;
 
@@ -9,6 +11,8 @@ using static PlayerMovement;
 public class PlayerAnimation : MonoBehaviour
 {
     public Animator Animator => mAnimator;
+    public bool UsesControllerPlayable => mControllerPlayable.IsValid();
+    public uint StateEvaluationCount => mStateEvaluationCount;
     public AnimationEventReceiver AnimationEventReceiver => _animationEventReceiver;
 
     public event Action onAnimatorFixedUpdate = null;
@@ -70,142 +74,235 @@ public class PlayerAnimation : MonoBehaviour
     private readonly int MultiplierHash = Animator.StringToHash("Multiplier");
 
     private Animator mAnimator;
+    private AnimatorControllerPlayable mControllerPlayable;
+    private uint mStateEvaluationCount;
+
+    public void BindControllerPlayable(AnimatorControllerPlayable controller)
+    {
+        if (!controller.IsValid())
+            return;
+
+        // Copy settings made before the manual graph was created.
+        foreach (AnimatorControllerParameter parameter in mAnimator.parameters)
+        {
+            int hash = parameter.nameHash;
+
+            switch (parameter.type)
+            {
+                case AnimatorControllerParameterType.Float:
+                    controller.SetFloat(hash, mAnimator.GetFloat(hash));
+                    break;
+                case AnimatorControllerParameterType.Int:
+                    controller.SetInteger(hash, mAnimator.GetInteger(hash));
+                    break;
+                case AnimatorControllerParameterType.Bool:
+                    controller.SetBool(hash, mAnimator.GetBool(hash));
+                    break;
+            }
+        }
+
+        for (int layer = 0; layer < mAnimator.layerCount; ++layer)
+        {
+            AnimatorStateInfo state = mAnimator.GetCurrentAnimatorStateInfo(layer);
+
+            if (state.fullPathHash != 0 && controller.HasState(layer, state.fullPathHash))
+                controller.Play(state.fullPathHash, layer, state.normalizedTime);
+        }
+
+        mControllerPlayable = controller;
+        mStateEvaluationCount = 0;
+        mLogicalCurrentAnimStateHash = -1;
+        mCurrentAnimatorStateHash = -1;
+        mbWasInTransition = false;
+        mbSelfTransition = false;
+    }
+
+    public void UnbindControllerPlayable(AnimatorControllerPlayable controller)
+    {
+        if (mControllerPlayable.GetHandle() != controller.GetHandle())
+            return;
+
+        mControllerPlayable = default;
+        mLogicalCurrentAnimStateHash = -1;
+        mCurrentAnimatorStateHash = -1;
+        mbWasInTransition = false;
+        mbSelfTransition = false;
+    }
+
+    public void NotifyControllerEvaluated(AnimatorControllerPlayable controller)
+    {
+        if (UsesControllerPlayable && mControllerPlayable.GetHandle() == controller.GetHandle())
+            ++mStateEvaluationCount;
+    }
+
+    public AnimatorStateInfo GetCurrentStateInfo(int layer)
+    {
+        return UsesControllerPlayable ? mControllerPlayable.GetCurrentAnimatorStateInfo(layer) :
+            mAnimator.GetCurrentAnimatorStateInfo(layer);
+    }
+
+    public AnimatorStateInfo GetNextStateInfo(int layer)
+    {
+        return UsesControllerPlayable ? mControllerPlayable.GetNextAnimatorStateInfo(layer) :
+            mAnimator.GetNextAnimatorStateInfo(layer);
+    }
+
+    public AnimatorTransitionInfo GetTransitionInfo(int layer)
+    {
+        return UsesControllerPlayable ? mControllerPlayable.GetAnimatorTransitionInfo(layer) :
+            mAnimator.GetAnimatorTransitionInfo(layer);
+    }
+
+    public bool IsInTransition(int layer)
+    {
+        return UsesControllerPlayable ? mControllerPlayable.IsInTransition(layer) : mAnimator.IsInTransition(layer);
+    }
+
+    public float GetFloat(int hash)
+    {
+        return UsesControllerPlayable ? mControllerPlayable.GetFloat(hash) : mAnimator.GetFloat(hash);
+    }
+
+    public float GetFloat(string name)
+    {
+        return GetFloat(Animator.StringToHash(name));
+    }
 
     public void SetMultiplier(float value)
     {
-        mAnimator.SetFloat(MultiplierHash, value);
+        setFloat(MultiplierHash, value);
     }
 
     public void SetMotionTime(float value)
     {
-        mAnimator.SetFloat(MotionTimeHash, value);
+        setFloat(MotionTimeHash, value);
     }
 
     public float GetVertical()
     {
-        return mAnimator.GetFloat(VerticalHash);
+        return GetFloat(VerticalHash);
     }
 
     public void SetState(int value)
     {
-        mAnimator.SetInteger(StateHash, value);
+        setInteger(StateHash, value);
     }
 
     public void SetHorizontal(float value)
     {
-        mAnimator.SetFloat(HorizontalHash, value);
+        setFloat(HorizontalHash, value);
     }
 
     public void SetVertical(float value)
     {
-        mAnimator.SetFloat(VerticalHash, value);
+        setFloat(VerticalHash, value);
 
         // GameDebug.Log($"Set Vertical: {value}", tag: "Ladder LookBack");
     }
 
     public void SetIsLeftFoot(bool value)
     {
-        mAnimator.SetBool(IsLeftFootHash, value);
+        setBool(IsLeftFootHash, value);
     }
 
     public void SetMoveInputXTapped(bool value)
     {
-        mAnimator.SetBool(MoveInputXTappedHash, value);
+        setBool(MoveInputXTappedHash, value);
     }
 
     public void SetMoveInputXPressed(bool value)
     {
-        mAnimator.SetBool(MoveInputXPressedHash, value);
+        setBool(MoveInputXPressedHash, value);
     }
 
     public void SetMoveInputXHeld(bool value)
     {
-        mAnimator.SetBool(MoveInputXHeldHash, value);
+        setBool(MoveInputXHeldHash, value);
     }
 
     public void SetMoveInputYTapped(bool value)
     {
-        mAnimator.SetBool(MoveInputYTappedHash, value);
+        setBool(MoveInputYTappedHash, value);
     }
 
     public void SetMoveInputYPressed(bool value)
     {
-        mAnimator.SetBool(MoveInputYPressedHash, value);
+        setBool(MoveInputYPressedHash, value);
     }
 
     public void SetMoveInputYHeld(bool value)
     {
-        mAnimator.SetBool(MoveInputYHeldHash, value);
+        setBool(MoveInputYHeldHash, value);
     }
 
     public void SetInputXMagnitude(float value)
     {
-        mAnimator.SetFloat(InputXMagnitudeHash, value);
+        setFloat(InputXMagnitudeHash, value);
     }
 
     public void SetInputX(bool value)
     {
-        mAnimator.SetBool(InputXHash, value);
+        setBool(InputXHash, value);
     }
 
     public void SetInputXRaw(float value)
     {
-        mAnimator.SetFloat(InputXRawHash, value);
+        setFloat(InputXRawHash, value);
     }
 
     public void SetInputYMagnitude(float value)
     {
-        mAnimator.SetFloat(InputYMagnitudeHash, value);
+        setFloat(InputYMagnitudeHash, value);
     }
 
     public void SetVelocityY(float value)
     {
-        mAnimator.SetFloat(VelocityYHash, value);
+        setFloat(VelocityYHash, value);
     }
 
     public void SetTurn(bool value)
     {
-        mAnimator.SetBool(TurnHash, value);
+        setBool(TurnHash, value);
     }
 
     public void SetTurnTrigger()
     {
-        mAnimator.SetTrigger(TurnTriggerHash);
+        setTrigger(TurnTriggerHash);
     }
 
     public void ResetTurnTrigger()
     {
-        mAnimator.ResetTrigger(TurnTriggerHash);
+        resetTrigger(TurnTriggerHash);
     }
 
     public void TurnL(bool value)
     {
-        mAnimator.SetBool(TurnLHash, value);
+        setBool(TurnLHash, value);
     }
     
     public void TurnR(bool value)
     {
-        mAnimator.SetBool(TurnRHash, value);
+        setBool(TurnRHash, value);
     }
 
     public void SetIsGrounded(bool value)
     {
-        mAnimator.SetBool(IsGroundedHash, value);
+        setBool(IsGroundedHash, value);
     }
 
     public void SetJump(bool value)
     {
-        mAnimator.SetBool(JumpHash, value);
+        setBool(JumpHash, value);
     }
 
     public void SetFall(bool value)
     {
-        mAnimator.SetBool(FallHash, value);
+        setBool(FallHash, value);
     }
 
     public void ResetFall()
     {
-        mAnimator.ResetTrigger(FallHash);
+        resetTrigger(FallHash);
     }
 
     //public void SetLanding()
@@ -215,7 +312,7 @@ public class PlayerAnimation : MonoBehaviour
 
     public void SetLanding(bool value)
     {
-        mAnimator.SetBool(LandingHash, value);
+        setBool(LandingHash, value);
     }
 
     //public void ResetLanding()
@@ -225,67 +322,95 @@ public class PlayerAnimation : MonoBehaviour
 
     public void SetHeavyLanding()
     {
-        mAnimator.SetTrigger(HeavyLandingHash);
+        setTrigger(HeavyLandingHash);
     }
 
     public void SetLadderTop(bool value)
     {
-        mAnimator.SetBool(LadderTopHash, value);
+        setBool(LadderTopHash, value);
     }
 
     public void SetIndex(int value)
     {
-        mAnimator.SetInteger(IndexHash, value);
+        setInteger(IndexHash, value);
     }
 
     public void SetClimbObject()
     {
-        mAnimator.SetTrigger(ClimbObjectHash);
+        setTrigger(ClimbObjectHash);
     }
 
     public void SetClimbLedge()
     {
-        mAnimator.SetTrigger(ClimbLedgeHash);
+        setTrigger(ClimbLedgeHash);
     }
 
     public void SetClimbLadder()
     {
-        mAnimator.SetTrigger(ClimbLadderHash);
+        setTrigger(ClimbLadderHash);
     }
 
     public void SetFootPosition(int value)
     {
-        mAnimator.SetInteger(FootPositionHash, value);
+        setInteger(FootPositionHash, value);
     }
 
     public void SetFrontWall(bool value)
     {
-        mAnimator.SetBool(FrontWallHash, value);
+        setBool(FrontWallHash, value);
     }
 
     public void SetRunning(bool value)
     {
-        mAnimator.SetBool(RunningHash, value);
+        setBool(RunningHash, value);
     }
 
     public void SetIdleToRun(bool value)
     {
-        mAnimator.SetBool(IdleToRunHash, value);
+        setBool(IdleToRunHash, value);
     }
 
     public void SetRunToIdle(bool value)
     {
-        mAnimator.SetBool(RunToIdleHash, value);
+        setBool(RunToIdleHash, value);
     }
 
     public void SetActivate()
     {
-        mAnimator.SetTrigger(ActivateHash);
+        setTrigger(ActivateHash);
+    }
+
+    /// <summary>
+    /// ControllerPlayable ì „í™˜ ìš© Play ë©”ì„œë“œ
+    /// </summary>
+    /// <param name="controller"></param>
+    /// <param name="state"></param>
+    /// <param name="normalizedTime"></param>
+    /// <returns></returns>
+    public bool PlayForControllerBlend(
+        AnimatorControllerPlayable controller,
+        AnimState state,
+        float normalizedTime)
+    {
+        if (!controller.IsValid() || !AnimStateHash.stateHashes.TryGetValue(state, out int stateHash) ||
+            !controller.HasState(0, stateHash))
+        {
+            Debug.LogError($"Cannot prepare Controller Blend state: {state}");
+            return false;
+        }
+
+        controller.Play(stateHash, 0, Mathf.Clamp01(normalizedTime));
+        mLogicalCurrentAnimStateHash = stateHash;
+
+        GameDebug.Log($"Controller Blend Target: {state}, normalizedTime: {Mathf.Clamp01(normalizedTime)}",
+            tag: "Controller Blend");
+
+        return true;
     }
 
     public bool Play(AnimState nextAnimState)
     {
-        AnimatorStateInfo currentStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+        AnimatorStateInfo currentStateInfo = GetCurrentStateInfo(0);
         int currentAnimStateHash = (mLogicalCurrentAnimStateHash == -1) ? currentStateInfo.fullPathHash : mLogicalCurrentAnimStateHash;
 
         if (!TryGetAnimState(currentAnimStateHash, out AnimState currentState))
@@ -306,8 +431,8 @@ public class PlayerAnimation : MonoBehaviour
 
         //if(stateHash == -1)
         //{
-        //    // Debug.LogError($"stateHash Á¤º¸¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù! currentStateHash: {currentStateInfo.fullPathHash}");
-        //    Debug.LogError($"stateHash Á¤º¸¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù! currentStateHash: {currentAnimStateHash}");
+        //    // Debug.LogError($"stateHash ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½! currentStateHash: {currentStateInfo.fullPathHash}");
+        //    Debug.LogError($"stateHash ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½! currentStateHash: {currentAnimStateHash}");
         //    return false;
         //}
 
@@ -336,14 +461,14 @@ public class PlayerAnimation : MonoBehaviour
         else
         {
             int stateHash = AnimStateHash.stateHashes[currentState];
-            Debug.LogError($"Enforced Transition Error - stateHashÀÇ transitionData¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù! currentState: {currentState}({stateHash}), nextState: {nextAnimState}({nextStateHash})");
+            Debug.LogError($"Enforced Transition Error - stateHashï¿½ï¿½ transitionDataï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½! currentState: {currentState}({stateHash}), nextState: {nextAnimState}({nextStateHash})");
             return false;
         }
     }
 
     public bool Play(AnimState nextAnimState, float offset)
     {
-        AnimatorStateInfo currentStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+        AnimatorStateInfo currentStateInfo = GetCurrentStateInfo(0);
         int currentAnimStateHash = (mLogicalCurrentAnimStateHash == -1) ? currentStateInfo.fullPathHash : mLogicalCurrentAnimStateHash;
 
         if (!TryGetAnimState(currentAnimStateHash, out AnimState currentState))
@@ -366,14 +491,14 @@ public class PlayerAnimation : MonoBehaviour
         else
         {
             int stateHash = AnimStateHash.stateHashes[currentState];
-            Debug.LogError($"Enforced Transition Error - stateHashÀÇ transitionData¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù! currentState: {currentState}({stateHash}), nextState: {nextAnimState}({nextStateHash})");
+            Debug.LogError($"Enforced Transition Error - stateHashï¿½ï¿½ transitionDataï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½! currentState: {currentState}({stateHash}), nextState: {nextAnimState}({nextStateHash})");
             return false;
         }
     }
 
     public bool Play(AnimState nextAnimState, bool fixedTime, float duration, float offset)
     {
-        AnimatorStateInfo currentStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+        AnimatorStateInfo currentStateInfo = GetCurrentStateInfo(0);
         int currentAnimStateHash = (mLogicalCurrentAnimStateHash == -1) ? currentStateInfo.fullPathHash : mLogicalCurrentAnimStateHash;
 
         AnimState currentState = AnimState.Idle;
@@ -391,7 +516,7 @@ public class PlayerAnimation : MonoBehaviour
 
         if (stateHash == -1)
         {
-            Debug.LogError($"stateHash Á¤º¸¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù! currentStateHash: {currentAnimStateHash}");
+            Debug.LogError($"stateHash ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½! currentStateHash: {currentAnimStateHash}");
             return false;
         }
 
@@ -417,11 +542,17 @@ public class PlayerAnimation : MonoBehaviour
     {
         if (fixedTime)
         {
-            mAnimator.CrossFadeInFixedTime(nextStateHash, duration, 0, offset);
+            if (UsesControllerPlayable)
+                mControllerPlayable.CrossFadeInFixedTime(nextStateHash, duration, 0, offset);
+            else
+                mAnimator.CrossFadeInFixedTime(nextStateHash, duration, 0, offset);
         }
         else
         {
-            mAnimator.CrossFade(nextStateHash, duration, 0, offset);
+            if (UsesControllerPlayable)
+                mControllerPlayable.CrossFade(nextStateHash, duration, 0, offset);
+            else
+                mAnimator.CrossFade(nextStateHash, duration, 0, offset);
         }
     }
 
@@ -441,7 +572,7 @@ public class PlayerAnimation : MonoBehaviour
             }
         }
 
-        Debug.LogError($"stateHash Á¤º¸¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù! StateHash: {animStateHash}");
+        Debug.LogError($"stateHash ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½! StateHash: {animStateHash}");
         return false;
     }
 
@@ -456,7 +587,7 @@ public class PlayerAnimation : MonoBehaviour
             }
         }
 
-        Debug.LogError($"stateHash Á¤º¸¸¦ Ã£À» ¼ö ¾ø½À´Ï´Ù! StateHash: {animStateHash}");
+        Debug.LogError($"stateHash ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ Ã£ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½! StateHash: {animStateHash}");
 
         animState = AnimState.Idle;
         return false;
@@ -494,17 +625,17 @@ public class PlayerAnimation : MonoBehaviour
         onAnimatorFixedUpdate?.Invoke();
     }
 
-    // ÀÌ ÇÔ¼öÀÇ À¯¹«¿¡ µû¶ó Animator°¡ ¾î¶»°Ô ´Þ¶óÁö´Â Áö È®ÀÎ ÇÊ¿ä
-    // ÀÌ ÇÔ¼ö°¡ ¾øÀ¸¸é RootMotionÀÌ Á÷Á¢ °è»ê µÇ´Â °Í °°À½
-    // °è»ê¿¡ ¹®Á¦°¡ ¾øµµ·Ï ³²°ÜµÑ ÇÊ¿ä°¡ ÀÖÀ½
+    // ï¿½ï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ Animatorï¿½ï¿½ ï¿½î¶»ï¿½ï¿½ ï¿½Þ¶ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ È®ï¿½ï¿½ ï¿½Ê¿ï¿½
+    // ï¿½ï¿½ ï¿½Ô¼ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ RootMotionï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ ï¿½Ç´ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
+    // ï¿½ï¿½ê¿¡ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½Üµï¿½ ï¿½Ê¿ä°¡ ï¿½ï¿½ï¿½ï¿½
     private void OnAnimatorMove()
     {
         onAnimatorMove?.Invoke();
 
-        if(mAnimator.IsInTransition(0))
+        if (IsInTransition(0))
         {
-            AnimatorTransitionInfo transitionInfo = mAnimator.GetAnimatorTransitionInfo(0);
-            AnimatorStateInfo nextStateInfo = mAnimator.GetNextAnimatorStateInfo(0);
+            AnimatorTransitionInfo transitionInfo = GetTransitionInfo(0);
+            AnimatorStateInfo nextStateInfo = GetNextStateInfo(0);
 
             AnimStateNameLookUp.names.TryGetValue(mCurrentAnimatorStateHash, out string currentStateName);
             AnimStateNameLookUp.names.TryGetValue(nextStateInfo.fullPathHash, out string nextStateName);
@@ -528,7 +659,10 @@ public class PlayerAnimation : MonoBehaviour
             }
         }
 
-        AnimatorStateInfo currentStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+        AnimatorStateInfo currentStateInfo = GetCurrentStateInfo(0);
+
+        if (!IsInTransition(0) && currentStateInfo.fullPathHash != 0)
+            mLogicalCurrentAnimStateHash = currentStateInfo.fullPathHash;
 
         if(mCurrentAnimatorStateHash != currentStateInfo.fullPathHash)
         {
@@ -559,4 +693,44 @@ public class PlayerAnimation : MonoBehaviour
     //{
     //    // Debug.Log("Left Foot Step");
     //}
+    private void setFloat(int hash, float value)
+    {
+        if (UsesControllerPlayable)
+            mControllerPlayable.SetFloat(hash, value);
+        else
+            mAnimator.SetFloat(hash, value);
+    }
+
+    private void setBool(int hash, bool value)
+    {
+        if (UsesControllerPlayable)
+            mControllerPlayable.SetBool(hash, value);
+        else
+            mAnimator.SetBool(hash, value);
+    }
+
+    private void setInteger(int hash, int value)
+    {
+        if (UsesControllerPlayable)
+            mControllerPlayable.SetInteger(hash, value);
+        else
+            mAnimator.SetInteger(hash, value);
+    }
+
+    private void setTrigger(int hash)
+    {
+        if (UsesControllerPlayable)
+            mControllerPlayable.SetTrigger(hash);
+        else
+            mAnimator.SetTrigger(hash);
+    }
+
+    private void resetTrigger(int hash)
+    {
+        if (UsesControllerPlayable)
+            mControllerPlayable.ResetTrigger(hash);
+        else
+            mAnimator.ResetTrigger(hash);
+    }
+
 }

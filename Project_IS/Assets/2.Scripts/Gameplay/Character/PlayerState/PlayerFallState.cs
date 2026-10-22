@@ -51,6 +51,9 @@ public class PlayerFallState : PlayerStateBase
 
     public override void EnterState()
     {
+        var turnState = mStateMachine.GetStateBase<PlayerTurnState>();
+        turnState.InterruptTurn();
+
         mbLanding = false;
         mMinVelocityY = 0f;
         mStartMoveInputX = 0f;
@@ -61,7 +64,10 @@ public class PlayerFallState : PlayerStateBase
         mController.Animation.SetLanding(false);
         // mController.Animator.SetInputXMagnitude(0f);
         // mController.Animator.CrossFadeFall(mFallType == EFallType.FromJump ? true : false);
-        mController.Animation.Play(mFallType == EFallType.FromJump ? AnimState.Fall_FromJump : AnimState.Fall_FromRun);
+        AnimState fallAnimation = mFallType == EFallType.FromJump ? AnimState.Fall_FromJump : AnimState.Fall_FromRun;
+
+        if (!turnState.TryPlayControllerBlend(fallAnimation))
+            mController.Animation.Play(fallAnimation);
 
         var moveState = mController.StateMachine.GetStateBase<PlayerMoveState>();
         mPathZPosition = moveState.PathZPosition;
@@ -222,7 +228,7 @@ public class PlayerFallState : PlayerStateBase
             return;
         }
 
-        var currentStateInfo = mController.Animation.Animator.GetCurrentAnimatorStateInfo(0);
+        var currentStateInfo = mController.Animation.GetCurrentStateInfo(0);
 
         // Jump Animation NormalizedTime
         if (currentStateInfo.IsTag("RunJump"))
@@ -514,7 +520,7 @@ public class PlayerFallState : PlayerStateBase
 
         while(true)
         {
-            AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+            AnimatorStateInfo animatorStateInfo = mAnimation.GetCurrentStateInfo(0);
 
             if (animatorStateInfo.IsTag("RunningLanding"))
                 break;
@@ -524,7 +530,7 @@ public class PlayerFallState : PlayerStateBase
 
         while(true)
         {
-            AnimatorStateInfo animatorStateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+            AnimatorStateInfo animatorStateInfo = mAnimation.GetCurrentStateInfo(0);
 
             if (!animatorStateInfo.IsTag("RunningLanding"))
                 break;

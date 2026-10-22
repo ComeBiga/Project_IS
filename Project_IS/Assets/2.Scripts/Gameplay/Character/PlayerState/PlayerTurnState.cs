@@ -1,12 +1,11 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Playables;
-using static PlayerTurnState;
 
 public class PlayerTurnState : PlayerStateBase
 {
     public enum ETurnType { None = 0, Idle, Run }
+
+    public bool HasRemainingRotation => mbContinueRemainingRotation;
+    public float ControllerStartNormalizedTime => turnPlayable.ControllerStartNormalizedTime;
 
     [SerializeField] private TurnPlayable turnPlayable;
     [SerializeField] private RotationHandler.EType _rotationType = RotationHandler.EType.Normal;
@@ -29,7 +28,7 @@ public class PlayerTurnState : PlayerStateBase
     [SerializeField] private AnimationCurve _runTurnRotationCurve;
     [SerializeField] private AnimationCurve _runTurnPositionCurve;
 
-    // Rotation ∞¥√º
+    // Rotation ÔøΩÔøΩ√º
     private AnimationCurveRotation mAnimationCurveRotation;
     private RootMotionRotation mRootMotionRotation;
     private Offset180Rotation mOffset180Rotation;
@@ -38,350 +37,262 @@ public class PlayerTurnState : PlayerStateBase
 
     private ETurnType mTurnType = ETurnType.None;
     private RotationHandler mRotationHandler = new RotationHandler();
-    private bool mbEnableTimer = false;
-    /// <summary>
-    /// ¿Ã¿¸ AnimatorStateø°º≠ TurnState∑Œ ∆Æ∑£¡ˆº«¿Ã ≥°≥≠ Ω√¡°∫Œ≈Õ¿« Ω√∞£
-    /// </summary>
-    private float mTimerFromTransitionEnd = 0f;
-    private TurnAnimationData mTurnAnimData;
     private TurnAnimationData.TurnAnimation mTurnAnimation;
-    private float mTurnDuration = 0f;
-    private bool mbTurnToIdle = false;
-    private float mFixedDeltaTime = 0f;
-
     private Vector3 mStartEulerAngles;
     private Vector3 mTargetEulerAngles;
     private float mRemainAngle;
+    private float mTurnTime;
+    private bool mbContinueRemainingRotation;
+    private bool mbIdleStopPlayback;
+    private bool mbControllerIdlePrepared;
+    private float mStopClipTime;
+    private float mStopRotationDuration;
 
     public override void Initialize(PlayerController controller)
     {
         base.Initialize(controller);
 
         initRotation();
-
         mRotationHandler.Init(mController);
-        // mRotationHandler.InitPlayableRotation(turnPlayable);
-        // mRotationHandler.SetType(_rotationType);
         mRotationHandler.SetRotation(getRotation(_rotationType));
-        // mRotationHandler.AnimationCurveRotation.SetAnimationCurve(_idleTurnPositionCurve, _idleTurnRotationCurve, _runTurnPositionCurve, _runTurnRotationCurve);
-
     }
 
     public override void EnterState()
     {
-        mbEnableTimer = false;
-        mbTurnToIdle = false;
-        mFixedDeltaTime = 0f;
+        mbContinueRemainingRotation = false;
+        mbIdleStopPlayback = false;
+        mbControllerIdlePrepared = false;
 
-        // mRotationHandler.SetTurnState(RotationHandler.EState.DirectionChanged);
-        // mRotationHandler.ChangeDirection();
         changeDirection();
-
-        mController.InputHandler.ResetMoveInput();
-
-        //switch(mTurnType)
-        //{
-        //    case ETurnType.Idle:
-        //        mTurnAnimData = _turnAnimationData;
-        //        // mTurnDuration = _idleTurnDuration;
-        //        mTurnDuration = mTurnAnimData.sourceClip.length;
-        //        break;
-        //    case ETurnType.Run:
-        //        mTurnAnimData = _turnAnimationData;
-        //        //mTurnDuration = _runTurnDuration;
-        //        mTurnDuration = mTurnAnimData.sourceClip.length;
-        //        break;
-        //    default:
-        //        mTurnDuration = 0f;
-        //        break;
-        //}
-
-        //mTurnAnimation = _turnAnimationData.Get(mTurnType, mRotationHandler.RotationDirection);
-        mTimerFromTransitionEnd = 0f;
-
-        mController.Animation.onEndTransition -= startTimer;
-        mController.Animation.onEndTransition += startTimer;
-
-        //mController.Animator.onAnimatorStateChanged -= startTimer;
-        //mController.Animator.onAnimatorStateChanged += startTimer;
+        mInputHandler.ResetMoveInput();
     }
 
     public override void ExitState()
     {
-        mbEnableTimer = false;
+        if (!mbContinueRemainingRotation)
+        {
+            turnPlayable.ReleaseClipTime();
+            mRotationHandler.SetTurnState(RotationHandler.EState.StandBy);
+        }
 
-        mRotationHandler.SetTurnState(RotationHandler.EState.StandBy);
-
-        mController.Animation.SetTurn(false);
-
-        mController.Animation.onEndTransition -= startTimer;
-
-        // mController.Animator.onAnimatorStateChanged -= startTimer;
+        mAnimation.SetTurn(false);
     }
 
     public override void FixedTick()
     {
-        // mRotationHandler.FixedUpdate();
-        // return;
-
-        bool bRotating = mRotationHandler.Rotate(mStartEulerAngles, mTargetEulerAngles, Time.fixedDeltaTime);
-
-        // Turn Animationø°º≠ Master∞° »∏¿¸«œ¥¬ µøæ»ø° ¥Î«— normalizedTime
-        // float rotationNormalizedTime = mRotationHandler.GetRotationBase<NormalRotation>().NormalizedTime;// - .12f;
-        float rotationNormalizedTime = mRotationHandler.NormalizedTime;// - .12f;
-
-        // IdleTurn To Idle æ÷¥œ∏ﬁ¿Ãº«ø°º≠ Master∞° »∏¿¸«œ¥¬ Ω√∞£
-        float idleTurnToIdleAnimRotationLength = 2f / 3f;
-
-        // Turn ¡ﬂø° Input X∞° 0¿Ã µ«∏È Idle∑Œ ¿¸»Ø
-        if (false && !mbTurnToIdle && mController.InputHandler.GetInputRawMagnitude().x < .1f)
-        {
-            mbTurnToIdle = true;
-
-            if(mTurnType == ETurnType.Idle)
-            {
-                // Run µø¿€¿∏∑Œ ø¨∞·µ∆¿ª ∂ß RunToIdle∑Œ ¿¸»Ø
-                // if (mTimer > mTurnDuration * _idleTurnStartRunNormalizedTime)
-                // if (mTimerFromTransitionEnd > mTurnAnimation.GetDuration() * _idleTurnStartRunNormalizedTime)
-                if(!bRotating)
-                {
-                    // To RunToIdle
-                    mController.StateMachine.SwitchState<PlayerRunToIdleState>();
-                }
-                // IdleTurn To Idle∑Œ ¿¸»Ø
-                else
-                {
-                    // mAnimation.Play(AnimState.Idle_Turn_To_Idle_R, true, .25f, mTimer / mTurnDuration * 2f / 3f);
-                    AnimState animState = (mRotationHandler.RotationDirection == RotationHandler.ERotationDirection.Right) ? AnimState.Idle_Turn_To_Idle_R : AnimState.Idle_Turn_To_Idle_L;
-                    mAnimation.Play(animState, true, .25f, rotationNormalizedTime * idleTurnToIdleAnimRotationLength * .75f);
-
-                    // 0 ~ 0.6667, IdleTurn To Idle æ÷¥œ∏ﬁ¿Ãº«¿« »∏¿¸ ±∏∞£ø° ∏¬∞‘ ∏≈«Œ
-                    float motionTime_IdleTurnToIdle = rotationNormalizedTime * idleTurnToIdleAnimRotationLength;
-                    mAnimation.SetMotionTime(motionTime_IdleTurnToIdle);
-                    GameDebug.Log($"Rotation Normalized Time: {rotationNormalizedTime}, Animation Rotation Length: {idleTurnToIdleAnimRotationLength}, Animation Offset: {rotationNormalizedTime * idleTurnToIdleAnimRotationLength}", tag: "Idle Turn To Idle");
-                }
-            }
-            else
-            {
-                var moveInput = mInputHandler.MoveInput;
-                moveInput.x = PlayerMovement.DirectionToVector(mMovement.Direction).x * .8f;
-                mInputHandler.SetMoveInput(moveInput);
-
-                // To RunToIdle
-                mController.StateMachine.SwitchState<PlayerRunToIdleState>();
-            }
-
-            //if(mTimer < .1f)
-            //{
-            //    mAnimation.Play(AnimState.Idle_Turn_To_Idle_R);
-            //}
-            //else
-            //{
-            //    var moveInput = mInputHandler.MoveInput;
-            //    moveInput.x = PlayerMovement.DirectionToVector(mMovement.Direction).x * .8f;
-            //    mInputHandler.SetMoveInput(moveInput);
-
-            //    // To RunToIdle
-            //    mController.StateMachine.SwitchState<PlayerRunToIdleState>();
-            //}
-
-            return;
-        }
-
-        var currentStateInfo = mController.Animation.Animator.GetCurrentAnimatorStateInfo(0);
-
-        float motionTime = 0f;
-
-        // Turn To Idle ¡ﬂ¿œ ∂ß
-        if(mbTurnToIdle)
-        {
-            // Master∞° »∏¿¸«œ¥¬ µøæ»
-            if (rotationNormalizedTime < 1f)
-            {
-                motionTime = rotationNormalizedTime * idleTurnToIdleAnimRotationLength;
-                mAnimation.SetMotionTime(motionTime);
-            }
-            // Master∞° »∏¿¸¿ª ≥°≥Ω »ƒ
-            else
-            {
-                //float deltaMotionTime = mFixedDeltaTime / mTurnDuration;
-                float deltaMotionTime = mFixedDeltaTime / mTurnAnimation.GetDuration();
-                motionTime = idleTurnToIdleAnimRotationLength + deltaMotionTime;
-                mAnimation.SetMotionTime(motionTime);
-                mFixedDeltaTime += Time.fixedDeltaTime;
-            }
-        }
-
-        string currentAnimName = AnimStateNameLookUp.names[currentStateInfo.fullPathHash];
-        GameDebug.Log($"Current Animation Name: {currentAnimName}, Anim Normalized Time: {currentStateInfo.normalizedTime}, Animation Rotation: {motionTime}", //{currentStateInfo.normalizedTime / (2f / 3f)}",
-                tag: "Turn Normalized Time");
-        var nextStateInfo = mController.Animation.Animator.GetNextAnimatorStateInfo(0);
-        if (nextStateInfo.fullPathHash != 0)
-        {
-            string nextAnimName = AnimStateNameLookUp.names[nextStateInfo.fullPathHash];
-            GameDebug.Log($"Next Animation Name: {nextAnimName}, Anim Normalized Time: {nextStateInfo.normalizedTime}, Animation Rotation: {motionTime}",
-                    tag: "Turn Normalized Time");
-        }
-
-        // if(mTurnType == ETurnType.Run && mTimer > mTurnDuration)
-        // if (mTimer > mTurnDuration || Mathf.Approximately(mTimer, mTurnDuration))
-        // if (mTimer > mTurnAnimation.GetDuration() || Mathf.Approximately(mTimer, mTurnAnimation.GetDuration()))
-        if (false && mTimerFromTransitionEnd > mTurnAnimation.sourceClip.length || Mathf.Approximately(mTimerFromTransitionEnd, mTurnAnimation.GetDuration()))
-        {
-            if (mbTurnToIdle)
-            {
-                mController.StateMachine.SwitchState<PlayerIdleState>();
-                return;
-            }
-
-            // To Move
-            if (mController.InputHandler.GetInputRawMagnitude().x > .1f)
-            {
-                // GameDebug.LogAndPause($"To Move - timer/duration: {mTimer.ToString("G9")}/{mTurnDuration}, {mTimer.CompareTo(mTurnDuration)}, normalized time: {currentStateInfo.normalizedTime}", GameDebug.LogCategory.State, GameDebug.LogLevel.Info);
-                switchToMoveState();
-                return;
-            }
-
-            // To RunToIdle
-            mController.StateMachine.SwitchState<PlayerRunToIdleState>();
-
-            return;
-        }
-
-        //GameDebug.Log($"timer/duration: {mTimer.ToString("G9")}/{mTurnDuration}, {mTimer.CompareTo(mTurnDuration)}, normalized time: {currentStateInfo.normalizedTime}", 
-        //    tag: "", category: GameDebug.LogCategory.State, level: GameDebug.LogLevel.Verbose);
-
-        if(mbEnableTimer)
-            mTimerFromTransitionEnd += Time.fixedDeltaTime;
+        if (_rotationType == RotationHandler.EType.Normal)
+            advanceNormalRotation();
+        else
+            mRotationHandler.Rotate(mStartEulerAngles, mTargetEulerAngles, Time.fixedDeltaTime);
     }
 
     public override void Tick()
     {
-        // turnPlayable.Evaluate(mRotationHandler.NormalizedTime, Time.deltaTime);
-
-        //turnPlayable.BlendToTurn();
-        //turnPlayable.BlendToAnimatorController();
-
-        //if(turnPlayable.GetTurnClipTime() > turnPlayable.BlendDuration)
-        //{
-        //    GameDebug.Log($"TurnPlayable Turn Clip Time: {turnPlayable.GetTurnClipTime()}, Bleding Time: {turnPlayable.BlendDuration}", 
-        //        tag: "End Turn Blending");
-        //    turnPlayable.SetControllerState(AnimStateHash.stateHashes[AnimState.Run], 0, .75f);
-        //    return;
-        //}
-
-        // if (turnPlayable.GetTurnClipTime() > turnPlayable.GetTurnClipLength() - turnPlayable.BlendDuration)
-        if(turnPlayable.ClipState == TurnPlayable.EClipState.BlendOut)
+        if (mInputHandler.JumpPressed)
         {
-            //GameDebug.Log($"TurnPlayable Turn Clip Time: {turnPlayable.GetTurnClipTime()}, Bleding Time: {turnPlayable.GetTurnClipLength() - turnPlayable.BlendDuration}", 
-            //    tag: "Into Controller Blending");
+            mInputHandler.ResetJump();
 
-            // turnPlayable.SetControllerState(AnimStateHash.stateHashes[AnimState.Run], 0, .75f);
-            switchToMoveState();
-            return;
-        }
-        // if(turnPlayable.StartExit)
-            // mController.Movement.Move(mController.InputHandler.MoveInput);
+            PlayerMovement.EDirection jumpDirection =
+                PlayerMovement.MoveInputXToDirection(mInputHandler.MoveInput.x);
 
-        //mRotationHandler.UpdateTurnState();
-        //return;
+            if (jumpDirection == PlayerMovement.EDirection.Neutral)
+                jumpDirection = mMovement.Direction;
 
-        // To Jump
-        if(mController.InputHandler.JumpPressed)
-        {
-            mController.InputHandler.ResetJump();
-            mController.StateMachine.SwitchState<PlayerRunJumpState>();
+            mStateMachine.SwitchState<PlayerRunJumpState>((state) => state.SetJumpDirection(jumpDirection));
             return;
         }
 
-        // To Fall
-        if(!mController.Movement.IsGrounded)
+        if (!mMovement.IsGrounded)
         {
-            mController.StateMachine.SwitchState<PlayerFallState>((fallState) =>
-            {
-                fallState.SetFallType(PlayerFallState.EFallType.FromRun);
-            });
+            mStateMachine.SwitchState<PlayerFallState>(
+                (state) => state.SetFallType(PlayerFallState.EFallType.FromRun));
             return;
         }
 
-        //// Rotation End
-        //if (mTurnType == ETurnType.Idle && mRotationHandler.State == RotationHandler.EState.StandBy)
-        //{
-        //    // To Move
-        //    if (mController.InputHandler.GetInputRawMagnitude().x > .1f)
-        //    {
-        //        switchToMoveState();
-        //        return;
-        //    }
-
-        //    // To RunToIdle
-        //    mController.StateMachine.SwitchState<PlayerRunToIdleState>();
-        //    return;
-        //}
-
-
-        mController.Movement.Move(mMovement.DirectionToVector());
-        // mController.Movement.Move(mController.InputHandler.MoveInput);
-        mRotationHandler.UpdateTurnState();
-        mController.Animation.SetInputXMagnitude(mController.InputHandler.GetInputRawMagnitude().x);
-
-        // To Turn
         if (mController.CheckOppositeInputX())
         {
-            //float time = (float)turnPlayable.getTurnClipPlayable().GetTime();
-            //GameDebug.Log($"CheckOppositeInput - clipTime: {time}");
-            //UnityEditor.EditorApplication.isPaused = true;
-            mController.StateMachine.SwitchState<PlayerTurnState>((turnType) =>
-            {
-                turnType.SetTurnType(mTurnType);
-            });
-
+            mStateMachine.SwitchState<PlayerTurnState>((state) => state.SetTurnType(mTurnType));
             return;
+        }
+
+        bool hasInput = mInputHandler.GetInputRawMagnitude().x >= .1f;
+
+        // IdleTurn Ïï†ÎãàÎ©îÏù¥ÏÖòÏù¥ Î©àÏ∑ÑÏùÑ Îïå
+        if (mbIdleStopPlayback)
+        {
+            if (hasInput)
+            {
+                // Retain the original rotation clock when resuming toward the same target.
+                turnPlayable.ChangeClip(mTurnType, mRotationHandler.RotationDirection);
+                turnPlayable.ResetClip(mTurnTime);
+                turnPlayable.SetClipTime(mTurnTime);
+                mbIdleStopPlayback = false;
+                mbControllerIdlePrepared = false;
+                turnPlayable.StartClip();
+            }
+            else
+            {
+                mMovement.Move(Vector2.zero);
+
+                if (turnPlayable.NeedsControllerBlend)
+                {
+                    mAnimation.SetInputX(false);
+                    mAnimation.SetInputXMagnitude(0f);
+
+                    mbControllerIdlePrepared = TryPlayControllerBlend(AnimState.Idle, ControllerStartNormalizedTime);
+                }
+
+                if (turnPlayable.IsTurnPlaybackFinished && mRotationHandler.NormalizedTime >= 1f)
+                {
+                    mStateMachine.SwitchState<PlayerIdleState>((state) =>
+                    {
+                        if (mbControllerIdlePrepared)
+                            state.EnterWithoutAnimation();
+                    });
+                }
+
+                return;
+            }
+        }
+
+        // Ïù¥Îèô Ïù∏Ìíã Ìï¥Ï†ú Ïãú
+        if (!hasInput && _rotationType == RotationHandler.EType.Normal)
+        {
+            float rotationProgress = mTurnAnimation.GetRotationDuration() > 0f ? mRotationHandler.NormalizedTime : 1f;
+
+            if (mTurnType == ETurnType.Idle && mTurnTime < mTurnAnimation.startRunTime &&
+                turnPlayable.TryStartIdleTurnToIdle(
+                    mRotationHandler.RotationDirection,
+                    rotationProgress,
+                    out mStopRotationDuration))
+            {
+                mbIdleStopPlayback = true;
+                mStopClipTime = rotationProgress * mStopRotationDuration;
+                turnPlayable.SetClipTime(mStopClipTime);
+                mMovement.Move(Vector2.zero);
+                return;
+            }
+
+            PrepareRemainingRotationTransfer();
+
+            mStateMachine.SwitchState<PlayerRunToIdleState>();
+            return;
+        }
+
+        if (turnPlayable.NeedsControllerBlend || turnPlayable.IsTurnExitStarted)
+        {
+            PrepareRemainingRotationTransfer();
+            mStateMachine.SwitchState<PlayerMoveState>();
+            return;
+        }
+
+        // mMovement.Move(mMovement.DirectionToVector());
+        mMovement.Move(mInputHandler.MoveInput);
+        mRotationHandler.UpdateTurnState();
+        mAnimation.SetInputXMagnitude(mInputHandler.GetInputRawMagnitude().x);
+    }
+
+    /// <summary>
+    /// ÎÇ®ÏùÄ ÌöåÏ†ÑÏù¥ ÏûàÎäîÏßÄ Ï≤¥ÌÅ¨
+    /// </summary>
+    public void PrepareRemainingRotationTransfer()
+    {
+        mbContinueRemainingRotation = _rotationType == RotationHandler.EType.Normal &&
+            mRotationHandler.NormalizedTime < 1f;
+    }
+
+    public void InterruptTurn()
+    {
+        CancelRemainingRotation();
+        turnPlayable.ReleaseClipTime();
+        mRotationHandler.SetTurnState(RotationHandler.EState.StandBy);
+    }
+
+    public bool TryPlayControllerBlend(AnimState state, float normalizedTime = 0f)
+    {
+        if (!turnPlayable.HasTurnOutput)
+            return false;
+
+        if (!mAnimation.PlayForControllerBlend(turnPlayable.ControllerPlayable, state, normalizedTime))
+            mAnimation.Play(state);
+
+        turnPlayable.BeginControllerBlend();
+
+        return true;
+    }
+
+    public void LogControllerPlayable()
+    {
+        var currentStateInfo = turnPlayable.ControllerPlayable.GetCurrentAnimatorStateInfo(0);
+        var currentState = AnimStateNameLookUp.names[currentStateInfo.fullPathHash];
+        var nextStateInfo = turnPlayable.ControllerPlayable.GetNextAnimatorStateInfo(0);
+        var nextState = nextStateInfo.fullPathHash == 0 ? "" : AnimStateNameLookUp.names[nextStateInfo.fullPathHash];
+        GameDebug.Log($"Enter RunToIdleState Playable - Current State: {currentState}, Next State: {nextState}, normalizedTime: {currentStateInfo.normalizedTime}",
+        tag: "Enter RunToIdleState");
+    }
+
+    public void BeginControllerBlend()
+    {
+        turnPlayable.BeginControllerBlend();
+    }
+
+    public void ContinueRemainingRotation()
+    {
+        if (mbContinueRemainingRotation && !advanceNormalRotation())
+        {
+            mbContinueRemainingRotation = false;
+            turnPlayable.ReleaseClipTime();
         }
     }
 
-    public override void Standby()
+    public void CancelRemainingRotation()
     {
-        // mRotationHandler.Standby();
+        if (!mbContinueRemainingRotation)
+            return;
+
+        mbContinueRemainingRotation = false;
+        turnPlayable.ReleaseClipTime();
+        mRotationHandler.SetTurnState(RotationHandler.EState.StandBy);
     }
 
     public void SetTurnType(ETurnType type)
     {
         mTurnType = type;
-
-        // TurnAnimationData turnAnimData = _turnAnimationData;
-
-        //switch(type)
-        //{
-        //    case ETurnType.Idle:
-        //        turnAnimData = _turnAnimationData;
-        //        break;
-        //    case ETurnType.Run:
-        //        turnAnimData = _turnAnimationData;
-        //        break;
-        //    default:
-        //        turnAnimData = _turnAnimationData;
-        //        break;
-        //}
-
-        mRotationHandler.SetTurnType(mTurnType); //, turnAnimData);
-
-        mAnimation.SetIndex((mTurnType == PlayerTurnState.ETurnType.Idle) ? 0 : 1);
+        mRotationHandler.SetTurnType(type);
+        mAnimation.SetIndex(type == ETurnType.Idle ? 0 : 1);
     }
 
     public void StopStanbyRotation()
     {
-        // mRotationHandler.GetRotationBase<NormalRotation>().StopStanbyRotation();
         mNormalRotation.StopStanbyRotation();
+    }
+
+    private bool advanceNormalRotation()
+    {
+        float duration = mTurnAnimation.GetRotationDuration();
+
+        if (mbIdleStopPlayback)
+        {
+            float rotationStep = Mathf.Min(Time.fixedDeltaTime, Mathf.Max(0f, duration - mTurnTime));
+            mStopClipTime += (duration > 0f ? rotationStep * mStopRotationDuration / duration : 0f) +
+                Time.fixedDeltaTime - rotationStep;
+        }
+
+        mTurnTime += Time.fixedDeltaTime;
+        turnPlayable.SetClipTime(mbIdleStopPlayback ? mStopClipTime : mTurnTime);
+
+        float normalizedTime = duration > 0f ? mTurnTime / duration : 1f;
+        return mRotationHandler.RotateAtNormalizedTime(mStartEulerAngles, mTargetEulerAngles, normalizedTime);
     }
 
     private void initRotation()
     {
         mAnimationCurveRotation = new AnimationCurveRotation(mRotationHandler, mController);
-        mAnimationCurveRotation.SetAnimationCurve(_idleTurnPositionCurve, 
-                                                _idleTurnRotationCurve, 
-                                                _runTurnPositionCurve, 
-                                                _runTurnRotationCurve);
+        mAnimationCurveRotation.SetAnimationCurve(
+            _idleTurnPositionCurve,
+            _idleTurnRotationCurve,
+            _runTurnPositionCurve,
+            _runTurnRotationCurve);
 
         mRootMotionRotation = new RootMotionRotation(mRotationHandler, mController);
         mOffset180Rotation = new Offset180Rotation(mRotationHandler, mController);
@@ -391,7 +302,7 @@ public class PlayerTurnState : PlayerStateBase
         mPlayableRotation = new PlayableRotation(mRotationHandler, mController, turnPlayable);
     }
 
-    public RotationBase getRotation(RotationHandler.EType type)
+    private RotationBase getRotation(RotationHandler.EType type)
     {
         RotationBase rotation = null;
 
@@ -417,11 +328,6 @@ public class PlayerTurnState : PlayerStateBase
         return rotation;
     }
 
-    private void switchToMoveState()
-    {
-        mController.StateMachine.SwitchState<PlayerMoveState>();
-    }
-
     private void changeDirection()
     {
         mStartEulerAngles = getCurrentEulerAngles();
@@ -430,107 +336,49 @@ public class PlayerTurnState : PlayerStateBase
         mTargetEulerAngles = getCurrentEulerAngles();
         mRemainAngle = getRemainAngle(mTargetEulerAngles.y);
 
-        // Rotation L
         if(mRemainAngle < 0f)
         {
             mRotationHandler.SetRotationDirection(RotationHandler.ERotationDirection.Left);
 
-            // playAnimation(mTurnType, RotationHandler.ERotationDirection.Left);
             turnPlayable.ChangeClip(mTurnType, RotationHandler.ERotationDirection.Left);
         }
-        // Rotation R
         else if(mRemainAngle > 0f)
         {
             mRotationHandler.SetRotationDirection(RotationHandler.ERotationDirection.Right);
 
-            // playAnimation(mTurnType, RotationHandler.ERotationDirection.Right);
             turnPlayable.ChangeClip(mTurnType, RotationHandler.ERotationDirection.Right);
         }
 
-        float normalizedTime = 1f - Mathf.Abs(mRemainAngle) / Number.DEG_180;
+        float normalizedTime = Mathf.Clamp01(1f - Mathf.Abs(mRemainAngle) / Number.DEG_180);
         mRotationHandler.SetNormalizedTime(normalizedTime);
 
         mTurnAnimation = getTurnAnimation(mTurnType, mRotationHandler.RotationDirection);
-        turnPlayable.ResetClip(mRotationHandler.NormalizedTime);
+        float startTime = mRotationHandler.NormalizedTime * mTurnAnimation.GetRotationDuration();
+        mTurnTime = startTime;
+
+        turnPlayable.ResetClip(startTime);
+
+        if (_rotationType == RotationHandler.EType.Normal)
+            turnPlayable.SetClipTime(mTurnTime);
+
         turnPlayable.StartClip();
 
-        GameDebug.Log($"Remain Angle: {mRemainAngle}, NormalizedTime: {normalizedTime}, Rotation Direction: {mRotationHandler.RotationDirection}", 
+        GameDebug.Log($"Turn Type: {mTurnType}, Rotation Direction: {mRotationHandler.RotationDirection}, Remain Angle: {mRemainAngle}, NormalizedTime: {normalizedTime}, Rotation Direction: {mRotationHandler.RotationDirection}",
             tag: "Change Direction");
     }
 
-    private void playAnimation(ETurnType type, RotationHandler.ERotationDirection rotationDirection)
+    private TurnAnimationData.TurnAnimation getTurnAnimation(ETurnType type, RotationHandler.ERotationDirection direction)
     {
-        AnimState animState = mTurnType == ETurnType.Run ? AnimState.RunTurn : AnimState.IdleTurn;
-
-        switch(mTurnType)
-        {
-            case ETurnType.Idle:
-                animState = (rotationDirection == RotationHandler.ERotationDirection.Left) ? AnimState.IdleTurn : AnimState.IdleTurn_R;
-                break;
-            case ETurnType.Run:
-                animState = (rotationDirection == RotationHandler.ERotationDirection.Left) ? AnimState.RunTurn : AnimState.RunTurn_R;
-                break;
-        }
-
-        mAnimation.Play(animState);
-    }
-
-    private TurnAnimationData.TurnAnimation getTurnAnimation(ETurnType type, RotationHandler.ERotationDirection rotationDirection)
-    {
-        return _turnAnimationData.Get(type, rotationDirection);
-    }
-
-    private void startTimer()
-    {
-        mbEnableTimer = true;
-
-        var currentStateInfo = mController.Animation.Animator.GetCurrentAnimatorStateInfo(0);
-
-        // mTimer = mTurnDuration * currentStateInfo.normalizedTime;
-        mTimerFromTransitionEnd = mTurnAnimation.GetDuration() * currentStateInfo.normalizedTime;
-
-        GameDebug.Log($"Turn Timer(G9): {mTimerFromTransitionEnd.ToString("G9")}, Turn Animator Normalized Time: {currentStateInfo.normalizedTime}",
-                    category: GameDebug.LogCategory.State);
-    }
-
-    private void startTimer(bool selfTransition)
-    {
-        mbEnableTimer = true;
-
-        var currentStateInfo = mController.Animation.Animator.GetCurrentAnimatorStateInfo(0);
-
-        // mTimer = mTurnDuration * currentStateInfo.normalizedTime;
-        mTimerFromTransitionEnd = mTurnAnimation.GetDuration() * currentStateInfo.normalizedTime;
-
-        GameDebug.Log($"Turn Timer(G9): {mTimerFromTransitionEnd.ToString("G9")}, Turn Animator Normalized Time: {currentStateInfo.normalizedTime}", 
-            category: GameDebug.LogCategory.State);
-        // GameDebug.Log($"TurnState.onEndTransition", GameDebug.LogCategory.State, GameDebug.LogLevel.Info);
-    }
-
-    private Quaternion getCurrentRotation()
-    {
-        return mController.Movement.DirectionToRotation(mController.Movement.Direction);
+        return _turnAnimationData.Get(type, direction);
     }
 
     private Vector3 getCurrentEulerAngles()
     {
-        return mController.Movement.DirectionToRotation(mController.Movement.Direction).eulerAngles;
+        return mMovement.DirectionToRotation(mMovement.Direction).eulerAngles;
     }
 
     private float getRemainAngle(float targetAngle)
     {
-        return Mathf.DeltaAngle(mController.Movement.Rotation.eulerAngles.y, targetAngle);
+        return Mathf.DeltaAngle(mMovement.Rotation.eulerAngles.y, targetAngle);
     }
-
-    private Vector3 rotateVector(Vector3 vector3, float angle)
-    {
-        float rad = angle * Mathf.Deg2Rad;
-        float cos = Mathf.Cos(rad);
-        float sin = Mathf.Sin(rad);
-        float newX = vector3.x * cos - vector3.z * sin;
-        float newZ = vector3.x * sin + vector3.z * cos;
-
-        return new Vector3(newX, vector3.y, newZ);
-    }
-
 }

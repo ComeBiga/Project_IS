@@ -636,7 +636,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
             else
             {
                 // normalizedTime이 일정 비율이 넘으면 상태 전환
-                AnimatorStateInfo stateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+                AnimatorStateInfo stateInfo = mAnimation.GetCurrentStateInfo(0);
 
                 if (mAnimatorMoveTimer < hangingDuration)
                 {
@@ -784,7 +784,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
             if (mbClimb)
             {
                 // normalizedTime이 일정 비율이 넘으면 상태 전환
-                AnimatorStateInfo stateInfo = mAnimator.GetCurrentAnimatorStateInfo(0);
+                AnimatorStateInfo stateInfo = mAnimation.GetCurrentStateInfo(0);
 
                 Vector3 deltaPosition = mAnimator.deltaPosition;
 
@@ -820,7 +820,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
         if (mbClimb)
             _headAimIK.weight = 0f;
 
-        float leftHandWeight = mAnimator.GetFloat("LeftHandWeight");
+        float leftHandWeight = mAnimation.GetFloat("LeftHandWeight");
 
         {
             Vector3 leftShoulderBonePos = mAnimator.GetBoneTransform(HumanBodyBones.LeftShoulder).position;
@@ -853,7 +853,7 @@ public class PlayerClimbLedgeState : PlayerStateBase
             _leftHandIK.data.targetRotationWeight = 1f;
         }
 
-        float rightHandWeight = mAnimator.GetFloat("RightHandWeight");
+        float rightHandWeight = mAnimation.GetFloat("RightHandWeight");
 
         {
             Vector3 rightShoulderBonePos = mAnimator.GetBoneTransform(HumanBodyBones.RightShoulder).position;

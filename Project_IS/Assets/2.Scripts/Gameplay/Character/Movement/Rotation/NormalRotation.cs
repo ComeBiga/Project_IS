@@ -108,7 +108,7 @@ public class NormalRotation : RotationBase
 
         NormalizedTime = 1f - Mathf.Abs(mDeltaAngle) / Number.DEG_180;
         //mTimer = NormalizedTime * mDuration;
-        mTimer = NormalizedTime * mTurnAnimation.GetDuration();
+        mTimer = NormalizedTime * mTurnAnimation.GetRotationDuration();
 
         GameDebug.Log($"DeltaAngle: {mDeltaAngle}, RemainAngles: {remainAngles}, timer: {mTimer}, Rotation Normalized Time: {NormalizedTime}", tag: "Normal Rotation");
     }
@@ -144,7 +144,7 @@ public class NormalRotation : RotationBase
     public override void OnAnimatorMove()
     {
         //if (mTimer > mDuration)
-        if (mTimer > mTurnAnimation.GetDuration())
+        if (mTimer > mTurnAnimation.GetRotationDuration())
         {
             NormalizedTime = 1f;
             mbRotationFinished = true;
@@ -154,7 +154,7 @@ public class NormalRotation : RotationBase
         }
 
         //float t = mTimer / mDuration;
-        float t = mTimer / mTurnAnimation.GetDuration();
+        float t = mTimer / mTurnAnimation.GetRotationDuration();
         NormalizedTime = t;
 
         float newYEulerAngle;
@@ -192,7 +192,8 @@ public class NormalRotation : RotationBase
 
     public override void Rotate(Vector3 fromEulerAngles, Vector3 toEulerAngles, float deltaTime)
     {
-        if (mTimer > getTurnAnimation().GetDuration())
+        float duration = getTurnAnimation().GetRotationDuration();
+        if (duration <= 0f || NormalizedTime >= 1f || mTimer >= duration)
         {
             NormalizedTime = 1f;
             mbRotationFinished = true;
@@ -202,7 +203,7 @@ public class NormalRotation : RotationBase
             return;
         }
 
-        float t = mTimer / getTurnAnimation().GetDuration();
+        float t = Mathf.Clamp01(mTimer / duration);
         NormalizedTime = t;
 
         float newYEulerAngle;
@@ -255,7 +256,7 @@ public class NormalRotation : RotationBase
     {
         base.SetNormalizedTime(normalizedTime);
 
-        mTimer = normalizedTime * getTurnAnimation().GetDuration();
+        mTimer = normalizedTime * getTurnAnimation().GetRotationDuration();
     }
 
     public void StopStanbyRotation()
