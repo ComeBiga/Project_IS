@@ -99,7 +99,9 @@ public class ScreenRenderPass : ScriptableRenderPass {
             return;
         }
 
-#if UNITY_2022_3_OR_NEWER
+#if UNITY_6000_0_OR_NEWER
+        CommandBuffer cmd = CommandBufferPool.Get();
+#elif UNITY_2022_3_OR_NEWER
         CommandBuffer cmd = renderingData.commandBuffer;
 #else
         CommandBuffer cmd = CommandBufferPool.Get();
@@ -108,7 +110,9 @@ public class ScreenRenderPass : ScriptableRenderPass {
 
         using (new ProfilingScope(cmd, profilingSampler)) {
             if (requiresColor) {
-#if UNITY_2022_3_OR_NEWER
+#if UNITY_6000_0_OR_NEWER               
+                var source = cameraData.renderer.cameraColorTargetHandle;
+#elif UNITY_2022_3_OR_NEWER
                 var source = passData.isBeforeTransparents
                     ? cameraData.renderer.GetCameraColorBackBuffer(cmd)
                     : cameraData.renderer.cameraColorTargetHandle;
@@ -121,14 +125,21 @@ public class ScreenRenderPass : ScriptableRenderPass {
                 passMaterial.SetTexture(BlitTextureShaderID, copiedColor);
             }
 
-#if UNITY_2022_3_OR_NEWER
+#if UNITY_6000_0_OR_NEWER
+            CoreUtils.SetRenderTarget(cmd, cameraData.renderer.cameraColorTargetHandle);
+#elif UNITY_2022_3_OR_NEWER
             CoreUtils.SetRenderTarget(cmd, cameraData.renderer.GetCameraColorBackBuffer(cmd));
 #else
             CoreUtils.SetRenderTarget(cmd, cameraData.renderer.cameraColorTarget);
 #endif
             CoreUtils.DrawFullScreen(cmd, passMaterial);
             context.ExecuteCommandBuffer(cmd);
+
+#if UNITY_6000_0_OR_NEWER || !UNITY_2022_3_OR_NEWER
+            CommandBufferPool.Release(cmd);
+#else
             cmd.Clear();
+#endif
         }
     }
 

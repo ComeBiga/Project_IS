@@ -13,7 +13,6 @@ Material:
   m_ModifiedSerializedProperties: 0
   m_ValidKeywords:
   - DR_CEL_EXTRA_ON
-  - DR_ENABLE_LIGHTMAP_DIR
   - DR_RIM_ON
   - _ALPHATEST_ON
   - _DETAILMAPBLENDINGMODE_MULTIPLY
@@ -207,3 +206,4 @@ Material:
     - _TopColor: {r: 1, g: 0.6415998, b: 0, a: 1}
     - _UnityShadowColor: {r: 0.85023, g: 0.85034, b: 0.8504499, a: 0.85056}
   m_BuildTextureStacks: []
+  m_AllowLocking: 1

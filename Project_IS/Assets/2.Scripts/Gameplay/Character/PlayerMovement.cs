@@ -5,7 +5,7 @@ using UnityEngine;
 [RequireComponent(typeof(Rigidbody))]
 public class PlayerMovement : MonoBehaviour
 {
-    public Vector3 Velocity => mRigidbody.velocity;
+    public Vector3 Velocity => mRigidbody.linearVelocity;
     public float MoveSpeed => _moveSpeed;
     public bool Jumping => mbJumping;
     public bool IsGrounded => mbIsGrounded;
@@ -45,7 +45,7 @@ public class PlayerMovement : MonoBehaviour
     [SerializeField] private Transform _trGroundCheck;
     [SerializeField] private Vector3 _groundCheckPosOffset;
     [SerializeField] private float _groundCheckRadius = .1f;
-    [SerializeField] private float _groundCheckDisableDuration = .2f;   // Á¡ÇÁ Á÷ÈÄ Á¡ÇÁ Áßº¹ ¹æÁö¸¦ À§ÇØ ¹Ù´Ú Ã¼Å©ÇÏÁö ¾Ê´Â ½Ã°£
+    [SerializeField] private float _groundCheckDisableDuration = .2f;   // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ßºï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½Ù´ï¿½ Ã¼Å©ï¿½ï¿½ï¿½ï¿½ ï¿½Ê´ï¿½ ï¿½Ã°ï¿½
     [SerializeField] private LayerMask _groundLayer;
 
     [Header("Animator")]
@@ -56,7 +56,7 @@ public class PlayerMovement : MonoBehaviour
 
     private Rigidbody mRigidbody;
     private CapsuleCollider mCapsuleCollider;
-    private PhysicMaterial mPhysicsMaterial;
+    private PhysicsMaterial mPhysicsMaterial;
     private EDirection mDirection = EDirection.Right;
     private bool mbJumping = false;
     private bool mbIsGrounded = true;
@@ -100,37 +100,37 @@ public class PlayerMovement : MonoBehaviour
 
     public void Move(Vector2 moveInput)
     {
-        Vector3 velocity = mRigidbody.velocity;
+        Vector3 velocity = mRigidbody.linearVelocity;
         velocity.x = moveInput.x * _moveSpeed;
-        mRigidbody.velocity = velocity;
+        mRigidbody.linearVelocity = velocity;
 
         checkStep();
     }
     
     public void Move(Vector2 moveInput, float speed)
     {
-        Vector3 velocity = mRigidbody.velocity;
+        Vector3 velocity = mRigidbody.linearVelocity;
         velocity.x = moveInput.x * speed;
-        mRigidbody.velocity = velocity;
+        mRigidbody.linearVelocity = velocity;
     }
 
     public void SetVelocity(Vector3 velocity)
     {
-        mRigidbody.velocity = velocity;
+        mRigidbody.linearVelocity = velocity;
         // Debug.Log($"[{Time.frameCount}] SetVelocity - Velocity: {mRigidbody.velocity}");
 
         GameDebug.Log($"Set Velocity: {velocity}", tag: "Set Velocity");
     }
 
-    // ÇöÀç ¹æÇâ°ú ¹Ý´ë ¹æÇâÀ¸·Î º¯¼ö¸¦ ¼³Á¤ÇÏ´Â ÇÔ¼ö
-    // Ä³¸¯ÅÍÀÇ È¸ÀüÀ» Update ÇÏÁö´Â ¾ÊÀ½
+    // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½Ý´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½Ô¼ï¿½
+    // Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ï¿½ï¿½ Update ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     public void ChangeDirection()
     {
         mDirection = mDirection == EDirection.Right ? EDirection.Left : EDirection.Right;
     }
 
-    // ¹æÇâÀ» ¼³Á¤ÇÏ´Â ÇÔ¼ö
-    // Ä³¸¯ÅÍÀÇ È¸ÀüÀ» Update ÇÏÁö´Â ¾ÊÀ½
+    // ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ï´ï¿½ ï¿½Ô¼ï¿½
+    // Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ï¿½ï¿½ Update ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
     public void SetDirection(EDirection direction)
     {
         mDirection = direction;
@@ -167,7 +167,7 @@ public class PlayerMovement : MonoBehaviour
         return false;
     }
 
-    // Ä³¸¯ÅÍÀÇ È¸ÀüÀ» UpdateÇÏ´Â ÇÔ¼ö
+    // Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ï¿½ï¿½ Updateï¿½Ï´ï¿½ ï¿½Ô¼ï¿½
     public void UpdateRotation()
     {
         Quaternion targetRotation = DirectionToRotation(mDirection);
@@ -243,7 +243,7 @@ public class PlayerMovement : MonoBehaviour
         return DirectionToRotation(mDirection);
     }
 
-    // ÇØ´ç ¹æÇâÀ» ³ªÅ¸³»´Â Quaternion °ªÀ» ¹ÝÈ¯
+    // ï¿½Ø´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ï¿½ï¿½ Quaternion ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
     public Quaternion DirectionToRotation(EDirection direction)
     {
         Quaternion targetRotation = Quaternion.identity;
@@ -265,7 +265,7 @@ public class PlayerMovement : MonoBehaviour
         return DirectionToVector(mDirection);
     }
 
-    // ÇØ´ç ¹æÇâÀ» ³ªÅ¸³»´Â Vector3 °ªÀ» ¹ÝÈ¯
+    // ï¿½Ø´ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Å¸ï¿½ï¿½ï¿½ï¿½ Vector3 ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
     public static Vector3 DirectionToVector(EDirection direction)
     {
         if (direction == EDirection.Right)
@@ -276,8 +276,8 @@ public class PlayerMovement : MonoBehaviour
             return Vector3.zero;
     }
 
-    // Quaternion °ªÀ¸·ÎºÎÅÍ ¹æÇâÀ» ¹ÝÈ¯
-    // 1 : right(90), -1 : left(-90, 270), 0 : ±× ¿Ü
+    // Quaternion ï¿½ï¿½ï¿½ï¿½ï¿½Îºï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯
+    // 1 : right(90), -1 : left(-90, 270), 0 : ï¿½ï¿½ ï¿½ï¿½
     public static int RotationToDirection(Quaternion rotation)
     {
         if (Mathf.Approximately(rotation.eulerAngles.y, 90f))
@@ -302,7 +302,7 @@ public class PlayerMovement : MonoBehaviour
             return Vector3.zero;
     }
 
-    // 1 : right(90), -1 : left(-90, 270), 0 : ±× ¿Ü
+    // 1 : right(90), -1 : left(-90, 270), 0 : ï¿½ï¿½ ï¿½ï¿½
     public static EDirection MoveInputXToDirection(float moveInputX)
     {
         if (moveInputX < -.001f)
@@ -324,7 +324,7 @@ public class PlayerMovement : MonoBehaviour
 
         Vector3 direction = Vector3.up;
 
-        mRigidbody.velocity = direction * _jumpForce;
+        mRigidbody.linearVelocity = direction * _jumpForce;
     }
 
     public void JumpFoward()
@@ -339,7 +339,7 @@ public class PlayerMovement : MonoBehaviour
         else if (mDirection == EDirection.Left)
             direction += Vector3.left;
 
-        mRigidbody.velocity = new Vector3(direction.x * _minJumpVelocityX,
+        mRigidbody.linearVelocity = new Vector3(direction.x * _minJumpVelocityX,
                                         direction.y * _jumpForce,
                                         direction.z);
     }
@@ -353,7 +353,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void UpdateJump(Vector2 moveInput)
     {
-        Vector3 velocity = mRigidbody.velocity;
+        Vector3 velocity = mRigidbody.linearVelocity;
         velocity.x = moveInput.x * _moveSpeed;
 
         if (mDirection == EDirection.Left)
@@ -367,7 +367,7 @@ public class PlayerMovement : MonoBehaviour
                 velocity.x = _minJumpVelocityX;
         }
 
-        mRigidbody.velocity = velocity;
+        mRigidbody.linearVelocity = velocity;
     }
 
     public void StopJump()
@@ -376,7 +376,7 @@ public class PlayerMovement : MonoBehaviour
         mbIsGrounded = true;
 
         mRigidbody.isKinematic = true;
-        mRigidbody.velocity = Vector3.zero;
+        mRigidbody.linearVelocity = Vector3.zero;
         mRigidbody.isKinematic = false;
     }
 
@@ -421,17 +421,17 @@ public class PlayerMovement : MonoBehaviour
 
     public bool CheckInteractableToDown(out RaycastHit hitInfo)
     {
-        // z°¡ 0ÀÏ ¶§ÀÇ À§Ä¡
+        // zï¿½ï¿½ 0ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡
         //Vector3 pathOrigin = transform.position;
         //pathOrigin.y += mInteractableOffsetY;
         //// pathOrigin.z = 0f;
         //pathOrigin.z = mPathZPosition;
 
-        // ÇöÀç Ä³¸¯ÅÍÀÇ À§Ä¡
+        // ï¿½ï¿½ï¿½ï¿½ Ä³ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½Ä¡
         //Vector3 characterOrigin = transform.position;
         //characterOrigin.y += _interactableOffsetY;
 
-        // ÇöÀç Ä³¸¯ÅÍ ¹ßÀ» ±âÁØÀ¸·Î ÇÑ À§Ä¡
+        // ï¿½ï¿½ï¿½ï¿½ Ä³ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½Ä¡
         Vector3 characterFeetOrigin = Position;
 
         bool bUnderCasted = Physics.Raycast(characterFeetOrigin,
@@ -484,7 +484,7 @@ public class PlayerMovement : MonoBehaviour
 
     public void Tick()
     {
-        _animator.SetVelocityY(mRigidbody.velocity.y);
+        _animator.SetVelocityY(mRigidbody.linearVelocity.y);
 
         GameDebug.Log($"Velocity: {Velocity}",
                         tag: "Velocity",
@@ -531,7 +531,7 @@ public class PlayerMovement : MonoBehaviour
         }
         else
         {
-            // ¹Ù´ÚÀ» Sphere·Î Ã¼Å©ÇÏ°í ÀÖ´Âµ¥ ´Ù¸¥ ±â´ÉµéÀ» »ý°¢ÇØ¼­ Laycast·Î ¹Ù²ã¾ß µÉ °Í °°À½
+            // ï¿½Ù´ï¿½ï¿½ï¿½ Sphereï¿½ï¿½ Ã¼Å©ï¿½Ï°ï¿½ ï¿½Ö´Âµï¿½ ï¿½Ù¸ï¿½ ï¿½ï¿½Éµï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ï¿½Ø¼ï¿½ Laycastï¿½ï¿½ ï¿½Ù²ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
             mbIsGrounded = Physics.CheckSphere(_trGroundCheck.position + _groundCheckPosOffset, _groundCheckRadius, _groundLayer);
             Collider[] groundColliders = Physics.OverlapSphere(_trGroundCheck.position, _groundCheckRadius, _groundLayer, QueryTriggerInteraction.Ignore);
             if(groundColliders.Length > 0)

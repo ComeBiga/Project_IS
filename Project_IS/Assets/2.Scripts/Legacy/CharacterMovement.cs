@@ -51,7 +51,7 @@ public class CharacterMovement : MonoBehaviour
         // Move
         float horizontal = Input.GetAxis("Horizontal");
         float finalMoveSpeed = mbPushPull ? _pushPullSpeed : _moveSpeed;
-        mRigidbody.velocity = new Vector3(horizontal * finalMoveSpeed, mRigidbody.velocity.y, 0f);
+        mRigidbody.linearVelocity = new Vector3(horizontal * finalMoveSpeed, mRigidbody.linearVelocity.y, 0f);
         _animator.SetFloat("Horizontal", horizontal);   // Move Anim
 
         if((horizontal > .001f || horizontal < -.001f) && !mbPushPull)
@@ -105,7 +105,7 @@ public class CharacterMovement : MonoBehaviour
 
                 mRigidbody.isKinematic = true;
                 transform.position = new Vector3(transform.position.x, bounds.max.y, bounds.min.z + (bounds.size.z / 2f));
-                mRigidbody.velocity = Vector3.zero; 
+                mRigidbody.linearVelocity = Vector3.zero; 
                 mRigidbody.isKinematic = false;
 
                 mIsGrounded = true;
@@ -126,7 +126,7 @@ public class CharacterMovement : MonoBehaviour
                 rotateTowards(Vector3.forward, 0f);
 
                 mPushPullObject = pushPullColliders[0].gameObject;
-                mPushPullObject.GetComponent<Rigidbody>().velocity = mRigidbody.velocity;
+                mPushPullObject.GetComponent<Rigidbody>().linearVelocity = mRigidbody.linearVelocity;
 
                 mbPushPull = true;
                 _animator.SetBool("PushPull", true);
@@ -154,7 +154,7 @@ public class CharacterMovement : MonoBehaviour
         if (mbClimbing)
         {
             float vertical = Input.GetAxis("Vertical");
-            mRigidbody.velocity = new Vector3(mRigidbody.velocity.x, vertical * _ladderSpeed, mRigidbody.velocity.z);
+            mRigidbody.linearVelocity = new Vector3(mRigidbody.linearVelocity.x, vertical * _ladderSpeed, mRigidbody.linearVelocity.z);
 
             if (Input.GetButtonDown("Fire1"))
             {

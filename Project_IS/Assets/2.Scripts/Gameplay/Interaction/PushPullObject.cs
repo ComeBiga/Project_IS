@@ -7,7 +7,7 @@ public class PushPullObject : InteractableObject
 {
     public float PushPullSpeed => _pushPullSpeed;
     // public BoxCollider BoxCollider => mBoxCollider;
-    public float VelocityX => mRigidbody.velocity.x;
+    public float VelocityX => mRigidbody.linearVelocity.x;
     public Transform HandlePointL => _handlePointL;
     public Transform HandlePointR => _handlePointR;
     public Rigidbody Rigidbody => mRigidbody;
@@ -16,7 +16,7 @@ public class PushPullObject : InteractableObject
     [SerializeField] private bool _logVelocity = false;
     [SerializeField] private float _pushPullSpeed = 1f;
     [SerializeField] private float _pushPullMaxSpeed = 1f;
-    [SerializeField] private PhysicMaterial _matNoFriction;
+    [SerializeField] private PhysicsMaterial _matNoFriction;
     [SerializeField] private Transform _handlePointL;
     [SerializeField] private Transform _handlePointR;
 
@@ -50,7 +50,7 @@ public class PushPullObject : InteractableObject
     {
         mRigidbody.AddForce(force, ForceMode.Force);
 
-        GameDebug.Log($"PushPullObject Velocity: {mRigidbody.velocity}", tag: "PushPullObject Velocity");
+        GameDebug.Log($"PushPullObject Velocity: {mRigidbody.linearVelocity}", tag: "PushPullObject Velocity");
     }
 
     public bool PushPull(PlayerController playerController, Vector3 velocity)
@@ -58,10 +58,10 @@ public class PushPullObject : InteractableObject
         // mRigidbody.AddForce(velocity * Time.fixedDeltaTime, ForceMode.Acceleration);
         mRigidbody.AddForce(velocity * 10f, ForceMode.Acceleration);
 
-        Vector3 finalVelocity = mRigidbody.velocity;
-        if (Mathf.Abs(mRigidbody.velocity.x) > _pushPullMaxSpeed)
-            finalVelocity.x = Mathf.Sign(mRigidbody.velocity.x) * _pushPullMaxSpeed;
-        mRigidbody.velocity = finalVelocity;
+        Vector3 finalVelocity = mRigidbody.linearVelocity;
+        if (Mathf.Abs(mRigidbody.linearVelocity.x) > _pushPullMaxSpeed)
+            finalVelocity.x = Mathf.Sign(mRigidbody.linearVelocity.x) * _pushPullMaxSpeed;
+        mRigidbody.linearVelocity = finalVelocity;
 
         //Vector3 finalVelocity = mRigidbody.velocity;
         //finalVelocity.x = Mathf.Abs(mRigidbody.velocity.x) > Mathf.Abs(velocity.x) ? mRigidbody.velocity.x : velocity.x;
@@ -81,7 +81,7 @@ public class PushPullObject : InteractableObject
 
     public float GetVelocityXRatio()
     {
-        return mRigidbody.velocity.x / _pushPullMaxSpeed;
+        return mRigidbody.linearVelocity.x / _pushPullMaxSpeed;
     }
 
     // Start is called before the first frame update
@@ -96,6 +96,6 @@ public class PushPullObject : InteractableObject
     private void Update()
     {
         if(_logVelocity)
-            Debug.Log($"velocity {mRigidbody.velocity}");
+            Debug.Log($"velocity {mRigidbody.linearVelocity}");
     }
 }

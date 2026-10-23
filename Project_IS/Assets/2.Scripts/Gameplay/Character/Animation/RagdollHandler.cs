@@ -47,9 +47,9 @@ public class RagdollHandler : MonoBehaviour
         // mRagdollRigidbodies[0].velocity = velocity;
         foreach (Rigidbody rb in mRagdollRigidbodies)
         {
-            rb.velocity = velocity;
+            rb.linearVelocity = velocity;
         }
-        Debug.Log($"{mRagdollRigidbodies[0].name} Ragdoll Velocity: " + mRagdollRigidbodies[0].velocity);
+        Debug.Log($"{mRagdollRigidbodies[0].name} Ragdoll Velocity: " + mRagdollRigidbodies[0].linearVelocity);
     }
 
     public void AddForce(Vector3 force)
@@ -59,7 +59,7 @@ public class RagdollHandler : MonoBehaviour
 
     public void DebugVelocity()
     {
-        Debug.Log("Ragdoll Velocity: " + mRagdollRigidbodies[0].velocity);
+        Debug.Log("Ragdoll Velocity: " + mRagdollRigidbodies[0].linearVelocity);
     }
 
     // Start is called before the first frame update

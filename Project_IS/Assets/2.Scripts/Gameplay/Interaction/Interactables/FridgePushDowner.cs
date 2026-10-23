@@ -7,7 +7,7 @@ public class FridgePushDowner : MonoBehaviour
     [SerializeField]
     private GameObject _goTopGround;
     [SerializeField]
-    private PhysicMaterial _pmNoneFriction;
+    private PhysicsMaterial _pmNoneFriction;
     [SerializeField]
     private BoxCollider _boxCollider;
 

@@ -38,21 +38,21 @@ namespace URPMovement
         {
             float moveInput = Input.GetAxis("Horizontal");
 
-            // ÁÂ¿ì ÀÌµ¿ (2.5D¶ó¼­ zÃàÀº °íÁ¤)
+            // ï¿½Â¿ï¿½ ï¿½Ìµï¿½ (2.5Dï¿½ï¿½ zï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
             mAnimator.SetFloat("Horizontal", moveInput);
 
-            // ÁÂ¿ì ÀÌµ¿
-            Vector3 velocity = mRb.velocity;
-            mRb.velocity = new Vector3(moveInput * _moveSpeed, velocity.y, 0f); // z´Â °íÁ¤
+            // ï¿½Â¿ï¿½ ï¿½Ìµï¿½
+            Vector3 velocity = mRb.linearVelocity;
+            mRb.linearVelocity = new Vector3(moveInput * _moveSpeed, velocity.y, 0f); // zï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½
 
-            // ¹æÇâ ÀüÈ¯ Ã³¸® (¿òÁ÷ÀÏ ¶§¸¸ È¸Àü)
+            // ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½È¯ Ã³ï¿½ï¿½ (ï¿½ï¿½ï¿½ï¿½ï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½ È¸ï¿½ï¿½)
             if (moveInput != 0)
             {
                 targetDirection = moveInput > 0 ? Vector3.right : Vector3.left;
                 rotateTowards(targetDirection);
             }
 
-            // Á¡ÇÁ
+            // ï¿½ï¿½ï¿½ï¿½
             mbisGrounded = Physics.CheckSphere(transform.position, _groundCheckRadius, _groundLayer);
             if (Input.GetButtonDown("Jump") && mbisGrounded)
             {
@@ -63,8 +63,8 @@ namespace URPMovement
 
         private void rotateTowards(Vector3 direction)
         {
-            // 2D Æò¸é »ó¿¡¼­¸¸ È¸Àü (yÃà ±âÁØ)
-            Quaternion targetRotation = Quaternion.LookRotation(Vector3.forward, Vector3.up); // ±âº» zÃà ¹Ù¶óº¸´Â È¸Àü
+            // 2D ï¿½ï¿½ï¿½ ï¿½ó¿¡¼ï¿½ï¿½ï¿½ È¸ï¿½ï¿½ (yï¿½ï¿½ ï¿½ï¿½ï¿½ï¿½)
+            Quaternion targetRotation = Quaternion.LookRotation(Vector3.forward, Vector3.up); // ï¿½âº» zï¿½ï¿½ ï¿½Ù¶óº¸´ï¿½ È¸ï¿½ï¿½
 
             if (direction == Vector3.right)
                 targetRotation = Quaternion.Euler(0, 90, 0);

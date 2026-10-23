@@ -46,11 +46,12 @@ Material:
   m_ValidKeywords:
   - BACKFACE_NORMAL_MODE_MIRROR
   - _WINDQUALITY_FAST
-  m_InvalidKeywords: []
+  m_InvalidKeywords:
+  - _EMISSION
   m_LightmapFlags: 2
   m_EnableInstancingVariants: 1
   m_DoubleSidedGI: 1
-  m_CustomRenderQueue: 2450
+  m_CustomRenderQueue: 2000
   stringTagMap:
     MotionVector: User
   disabledShaderPasses:
@@ -186,6 +187,7 @@ Material:
     - _Smoothness_Remap: {r: 0, g: 0.4, b: 0, a: 0}
     - _SubsurfaceColor: {r: 0.328803, g: 0.3962264, b: 0.18465644, a: 1}
   m_BuildTextureStacks: []
+  m_AllowLocking: 1
 --- !u!114 &5542877050181216837
 MonoBehaviour:
   m_ObjectHideFlags: 11
@@ -198,4 +200,4 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d0353a89b1f911e48b9e16bdc9f2e058, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  version: 7
+  version: 10
